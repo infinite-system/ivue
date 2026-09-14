@@ -263,7 +263,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If the frame loop finds nothing to paint — no input arriving (`virtualScrolling` false), no lerp remaining (`isScrolling === false` and target within half a pixel of animated), and no creep (`isAutoPlaying` false) — then it parks itself (`frame = null`) instead of requesting the next frame, and the next input wakes it; a scroller nobody touches requests no frames.
 
-**Scope:** `VirtualScroller.ts` `loop`, `isAtRest`, the wake in `onVirtualScroll`; the creep keeps its own frame under autoplay.
+**Scope:** `VirtualScroller.ts` `loop`, `isAtRest`, `parkLoopFrame`, `restartLoop`, the wake in `onVirtualScroll`; `VirtualScrollerAutoplay.ts` keeps the creep's own frame, which is why both are cancelled together.
 
 **Mechanism:** The loop paints `lenis.targetScroll` every frame while Lenis lerps. A seek animates through the inner element's CSS transition, not the loop, so once Lenis is at rest there is nothing for the loop to write. `onVirtualScroll` already requests a frame only when none is armed, so parking and waking need no new state. Rest depends on [A lerp completes within half a pixel of any target](../../lenis/lenis.invariants.md#a-lerp-completes-within-half-a-pixel-of-any-target): without it a glide never settles and the loop never parks.
 
@@ -349,19 +349,19 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If a seek bar asks for a 0..1 fraction, then the fraction names an item plus a fraction inside it (index space), the landing rides `scrollToIndex`, and the converge loop re-applies that same anchor as sizes refine so the CONTENT stays still.
 
-**Scope:** `VirtualScroller.ts` `seekToFraction`, `seekToProgress`, `scrollToIndex`, `snapAlignOffset`; `VirtualScrollerGeometry.ts` `ratioPosition` and `anchoredPosition`, which turn a ratio into the item it names.
+**Scope:** `VirtualScrollerLanding.ts` whole — `toFraction`, `toProgress`, `toIndex`, `alignOffset`, `snapToNearest` and the converge holder; `VirtualScrollerGeometry.ts` `ratioPosition` and `anchoredPosition`, which turn a ratio into the item it names. The scroller forwards `seekToFraction`, `seekToProgress`, `scrollToIndex` and `cancelSeek` to it.
 
-**Mechanism:** `ratioPosition` scales the fraction over `itemCount − 1` and anchors at the floor item plus the remainder; `scrollToIndex` computes the target from `getIndexPosition` on every wave and stops only after the position has been quiet for 600 ms or the reader takes over — a wheel glide, the reading creep moving on from the landing, a scroll position that no longer matches the last landing (a glide that ended between two waves), or the owner calling `cancelSeek()` because the reader acted on the content instead of scrolling (a creep that kept mounting rows shifted the target at every mount, and every shift snapped the content back under it, for as long as the creep ran). `seekToProgress` is the built-in track's inverse of `scrollbarProgress`: position space resolved to an item plus a fraction, so a marquee chunk wider than the container still reaches its tail.
+**Mechanism:** `ratioPosition` scales the fraction over `itemCount − 1` and anchors at the floor item plus the remainder; `toIndex` computes the target from the geometry on every wave and stops only after the position has been quiet for `QUIET_MS` or the reader takes over — a wheel glide, the reading creep moving on from the landing, a scroll position that no longer matches the last landing (a glide that ended between two waves), or the owner calling `cancelSeek()` because the reader acted on the content instead of scrolling (a creep that kept mounting rows shifted the target at every mount, and every shift snapped the content back under it, for as long as the creep ran). `seekToProgress` is the built-in track's inverse of `scrollbarProgress`: position space resolved to an item plus a fraction, so a marquee chunk wider than the container still reaches its tail.
 
 **Generates:** The `endGapPx` dead-zone that keeps the promised item clear of the top edge; the `snapAlign` center placement.
 
 **Rejected alternatives:** A raw `lenis.scrollTo` — translates the content without rebasing the window.
 
-**Evidence:** `VirtualScrollerGeometry.ts` `ratioPosition`; `VirtualScroller.ts` `scrollToIndex`. Tests: "a ratio names an item plus a fraction inside it, and the end gap keeps the next item’s top clear of the viewport top", "seeking to a fraction lands on the item that fraction names, flush to the start by default and centered when asked".
+**Evidence:** `VirtualScrollerGeometry.ts` `ratioPosition`; `VirtualScrollerLanding.ts` `toIndex`. Tests: "a ratio names an item plus a fraction inside it, and the end gap keeps the next item’s top clear of the viewport top", "a landing re-applies its target on every size wave and lets go once the position has been quiet", "the reader moving the content ends the loop on the next wave, and nothing is re-pinned", "seeking to a fraction lands on the item that fraction names, flush to the start by default and centered when asked".
 
 **Impossible if true:** A seek landing that moves to different content when a late size wave arrives.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "a ratio names an item|seeking to a fraction"`
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerLanding.test.ts`
 
 **Status:** provisional
 
@@ -413,7 +413,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If the class touches a DOM dimension, a transform, a padding or thumb property, a gesture delta or a track coordinate, then it does so through one of the seam members (`offsetSize`, `rectSize`, `transformFor`, `axisDelta`, `axisPaddingProps`, `axisThumbProps`, `trackPointerFraction`, `containerSize`, `containerOuterSize`, `lenisOrientation`, `lenisGestureOrientation`, `selectionAxis`), and a subclass changes axis by overriding only those.
 
-**Scope:** `VirtualScroller.ts` (the seams) and `HorizontalVirtualScroller.ts` (the only overrides). The cursor, the clamp, the rebase, the creep, the converge loop and the padding never fork.
+**Scope:** `VirtualScroller.ts` (the seams) and `HorizontalVirtualScroller.ts` (the only overrides). The geometry, the clamp, the rebase, the autoplay, the landing and the padding never fork — each is one hosted class both axes share.
 
 **Mechanism:** Vertical defaults on the base class; the horizontal subclass is the seam overrides plus one re-tuned default, and the text selection takes its axis from `selectionAxis`.
 
@@ -587,7 +587,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If code runs on every frame or every scroll read — the frame loop's position write, the clamp, Lenis's limit, the walk — then it reads the container's size from the resize observer's cell (`containerOuterSize`, through `containerSpan`) and never the element's `offsetHeight`, `scrollTop`, `scrollHeight` or a rect; before the observer's first report `containerSpan` falls back to the element once. A row's own capture reads one rect, on mount only; the wrapper observer reads the rendered rows' rects once per wave.
 
-**Scope:** `VirtualScroller.ts` `containerSpan`, `setScrollPosition`, `clampScrollPosition`, the `virtualLimit` callback, `scrollToIndex`'s centring, `snapToNearest`; `VirtualScrollerItem.ts` `capture` (mount only); `VirtualScrollerSelection.ts` `applyHighlight` (returns before `getSelection` when nothing is shown). Three layout reads survive on purpose and are not hot paths: `wrapperScale` reads the wrapper twice per remeasure wave (once, not per row); `onScroll` reads `scrollTop` only when the browser itself nudged the frame (a find-in-page match, a selection scroll), never on a scroll of ours; and `nudgePaint` forces one read per autoscroll frame on WebKit alone, which is the point of it — [WebKit re-rasterizes the layer on every autoscroll write](#webkit-re-rasterizes-the-layer-on-every-autoscroll-write).
+**Scope:** `VirtualScroller.ts` `containerSpan`, `setScrollPosition`, `clampScrollPosition`, the `virtualLimit` callback; `VirtualScrollerLanding.ts` `alignOffset` and `snapToNearest`; `VirtualScrollerItem.ts` `capture` (mount only); `VirtualScrollerSelection.ts` `applyHighlight` (returns before `getSelection` when nothing is shown). Three layout reads survive on purpose and are not hot paths: `wrapperScale` reads the wrapper twice per remeasure wave (once, not per row); `onScroll` reads `scrollTop` only when the browser itself nudged the frame (a find-in-page match, a selection scroll), never on a scroll of ours; and `nudgePaint` forces one read per autoscroll frame on WebKit alone, which is the point of it — [WebKit re-rasterizes the layer on every autoscroll write](#webkit-re-rasterizes-the-layer-on-every-autoscroll-write).
 
 **Mechanism:** A layout read after a patch forces the layout the browser was going to do at paint, and forces it again for every read that a later write invalidates. A CPU profile of two flicks on a phone profile put 191 ms in live `offsetHeight` reads, 163 ms in a `scrollTop` read on the position write, 711 ms in the rows' unmount captures and 191 ms in the highlight pass reading the document selection on every window change — none of them on the walk or the render. The observer's cell is already the size; reading it costs nothing and forces nothing.
 

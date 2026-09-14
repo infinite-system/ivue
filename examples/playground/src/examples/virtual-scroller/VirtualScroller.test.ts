@@ -112,7 +112,7 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
   }
 
   probeConverging() {
-    return this.stopScrollToIndexReapply !== null;
+    return this.landing.isConverging;
   }
 
   probeGeometryVersion() {
@@ -124,11 +124,11 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
   }
 
   probeStartCreep() {
-    this.creepFrame = 1;
+    this.autoplay.markCreeping();
   }
 
   probeCreepMsPerPx() {
-    return this.creepMsPerPx;
+    return this.autoplay.msPerPx;
   }
 
   probeRenderBias() {
@@ -333,7 +333,9 @@ test('a thumb drag never stops autoplay: it re-arms on release either way, start
   track.setPointerCapture = () => {};
   const pointer = (clientY: number) =>
     ({ currentTarget: track, pointerId: 1, clientX: 6, clientY }) as unknown as PointerEvent;
-  const play = vi.spyOn(instance, 'play').mockImplementation(() => undefined);
+  // the creep's own play: the resume timer arms it through the autoplay, and
+  // the scroller's play() is a forwarder to exactly this
+  const play = vi.spyOn(instance.autoplay, 'play').mockImplementation(() => undefined);
   instance.isAutoPlaying.value = true;
   // Forward: down at 20 %, released at 60 % — autoplay stays and re-arms.
   instance.onTrackPointerDown(pointer(20));
@@ -394,7 +396,9 @@ test('a list without autoPlay never arms the creep: not from a forward wheel, no
   track.setPointerCapture = () => {};
   const pointer = (clientY: number) =>
     ({ currentTarget: track, pointerId: 1, clientX: 6, clientY }) as unknown as PointerEvent;
-  const play = vi.spyOn(instance, 'play').mockImplementation(() => undefined);
+  // the creep's own play: the resume timer arms it through the autoplay, and
+  // the scroller's play() is a forwarder to exactly this
+  const play = vi.spyOn(instance.autoplay, 'play').mockImplementation(() => undefined);
   instance.onVirtualScroll({ deltaX: 0, deltaY: 120 });
   expect(instance.isAutoPlaying.value).toBe(false);
   instance.onTrackPointerDown(pointer(20));

@@ -24,7 +24,9 @@ import { Lenis } from '../../lenis/Lenis';
 import { nestedProps, type NestedPartial, type NestedProps } from '../../nestedProps';
 import { Static } from '../../Static';
 import type { Kit } from '../../kit/Kit';
+import { VirtualScrollerAutoplay } from './VirtualScrollerAutoplay';
 import { VirtualScrollerGeometry } from './VirtualScrollerGeometry';
+import { VirtualScrollerLanding } from './VirtualScrollerLanding';
 import { VirtualScrollerPadding } from './VirtualScrollerPadding';
 import { VirtualScrollerSelection } from './VirtualScrollerSelection';
 
@@ -32,12 +34,16 @@ import { VirtualScrollerSelection } from './VirtualScrollerSelection';
  * Virtualized scroller (ivue v2 `Reactive` class).
  *
  * Scrolling is driven by a customized Lenis over translateY — not native
- * scroll — and the feel is hand-tuned. The autoplay SPEED (CREEP_MS_PER_PX,
- * the original 1px/150ms cadence) and every Lenis option are load-bearing;
- * treat them as constants. The creep DELIVERY is a per-frame integrator
- * (see creepStep) — do not go back to timer ticks smoothed by CSS
- * transitions; that produced a velocity sawtooth felt as judder on low-DPI
- * screens.
+ * scroll — and the feel is hand-tuned: every Lenis option is load-bearing,
+ * so treat them as constants.
+ *
+ * Five capabilities are hosted, each its own class behind an owner
+ * interface, each built once in the constructor: the GEOMETRY answers where
+ * every item sits, the PADDING sizes the rows mounted beyond the window, the
+ * LANDING seeks and holds a row while sizes settle, the AUTOPLAY runs the
+ * reading creep, and the SELECTION owns the range, the gestures and copy.
+ * What is left here is the scroller itself: the window walk, the position
+ * write, the frame loop, the gesture locks and the scrollbar.
  *
  * POSITION MODEL: rendered items are NORMAL-FLOW block elements between two
  * spacer divs — the browser stacks the window at real sizes for free; no
@@ -193,10 +199,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     typeof navigator !== 'undefined' &&
     /^((?!chrome|chromium|android).)*safari/i.test(navigator.userAgent);
 
-  /** Reading-creep speed: ms of wall time per px of content — the original
-   *  cadence (1px per 150ms tick ≈ 6.7px/s), now integrated per FRAME. */
-  protected static readonly CREEP_MS_PER_PX = 150;
-
   /** The tuned motion: how far a wheel notch or a finger's pixel moves the
    *  content (gain), how fast the transform chases its target (follow —
    *  the lerp, higher is snappier), how far a flick carries (inertia), and
@@ -234,10 +236,19 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     public emit: VirtualScroller.Emits
   ) {
     this.props = nestedProps(props, this.self.propsDefaults as VirtualScroller.KnobDefaults);
-    this.geometry = this.createGeometry();
     this.outerElementSize = useElementSize(this.scrollElement, undefined, {
       box: 'border-box'
     });
+
+    // The hosted capabilities, built once, in dependency order: the
+    // geometry answers positions, the pad reads the motion, the selection
+    // watches the window — and the selection's first watch evaluates the
+    // window walk, which reads the container size observed just above.
+    this.geometry = this.createGeometry();
+    this.padding = this.createPadding();
+    this.landing = this.createLanding();
+    this.autoplay = this.createAutoplay();
+    this.selection = this.createSelection();
 
     // ONE observer per scroller — on the items wrapper, whose size only
     // changes when a rendered item's real size does (spacers are siblings).
@@ -272,78 +283,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
     if (this.autoPlay.value) this.startAutoPlay(this.props.autoPlayDelay);
 
-    onMounted(() => {
-      if (!this.scrollElement.value || !this.scrollElementInner.value) return;
-
-      this.lenis = new Lenis.Class({
-        wrapper: this.scrollElement.value,
-        content: this.scrollElementInner.value,
-        orientation: this.lenisOrientation,
-        gestureOrientation: this.lenisGestureOrientation,
-        ignoreNativeScroll: this.lenisIgnoreNativeScroll,
-        syncTouch: true, // Sync touch events
-        overscroll: this.props.overscroll,
-        smoothWheel: true,
-        // a scrollable element inside a row — a wide code block, a diff — takes the wheel
-        // until it reaches its own edge; only then does the gesture move the list
-        allowNestedScroll: true,
-        autoRaf: false, // we drive it ourselves
-        ...this.lenisMotion
-      });
-      this.lenis.on('virtual-scroll', this.onVirtualScroll);
-      // The motion knobs are live: a page re-tuning them re-tunes Lenis.
-      watch(
-        () => this.lenisMotion,
-        (motion) => this.tuneMotion(motion)
-      );
-
-      // Gesture-axis lock (touch). Lenis only refuses a gesture whose
-      // cross-axis delta is EXACTLY zero, and a finger swiping down a
-      // page always drifts a pixel or two sideways — so a horizontal
-      // strip would claim the swipe and preventDefault the page's own
-      // scroll. These run in the CAPTURE phase (lenis binds on bubble),
-      // decide the axis once per touch, and hand cross-axis gestures
-      // back by marking the event lenis already knows to skip.
-      const element = this.scrollElement.value;
-      element.addEventListener('touchstart', this.onTouchStartCapture, {
-        capture: true,
-        passive: true
-      });
-      element.addEventListener('touchmove', this.onTouchMoveCapture, {
-        capture: true,
-        passive: true
-      });
-      element.addEventListener('touchend', this.onTouchEndCapture, {
-        capture: true,
-        passive: true
-      });
-
-      // The DOM is much shorter than the virtual content (content-sized
-      // layer + capped tail — see trailingSpacerPx), so lenis takes its
-      // wheel-clamp limit from the COMPUTED size — same box as
-      // setScrollPosition's own bottom clamp. A pull callback, not a
-      // watcher: lenis reads it at clamp time, the computed caches, and it
-      // can never be stale.
-      this.$selection.attach(element);
-
-      this.lenis.virtualLimit = () => Math.max(0, this.scrollExtent.value - this.containerSpan);
-    });
-
-    onBeforeUnmount(() => {
-      const element = this.scrollElement.value;
-      if (element) {
-        element.removeEventListener('touchstart', this.onTouchStartCapture, true);
-        element.removeEventListener('touchmove', this.onTouchMoveCapture, true);
-        element.removeEventListener('touchend', this.onTouchEndCapture, true);
-      }
-      clearTimeout(this.snapTimeout);
-      this.cancelFrames();
-      this.$selection.dispose();
-      this.$padding.dispose();
-      this.stopScrollToIndexReapply?.();
-      this.lenis?.stop();
-      this.lenis?.destroy();
-    });
+    onMounted(() => this.onMount());
+    onBeforeUnmount(() => this.onUnmount());
   }
 
   /* Template refs */
@@ -359,6 +300,29 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   // first touch to be lazy about, and the window walk reads it every frame.
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   readonly geometry: VirtualScrollerGeometry.Instance;
+
+  // RENDER PADDING — a hosted VirtualScrollerPadding: the base pad on both
+  // ends, plus rows ahead of the motion sized by velocity. The window walk
+  // asks it once per evaluation, which is every frame there is motion.
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  readonly padding: VirtualScrollerPadding.Instance;
+
+  // LANDING — a hosted VirtualScrollerLanding: a seek, a thumb drag and a
+  // step-mode snap all name an item and hold it while the sizes settle.
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  readonly landing: VirtualScrollerLanding.Instance;
+
+  // AUTOPLAY — a hosted VirtualScrollerAutoplay: the reading creep and its
+  // handoff with the wheel. A plain list never arms it.
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  readonly autoplay: VirtualScrollerAutoplay.Instance;
+
+  // TEXT SELECTION — a hosted VirtualScrollerSelection: the logical range
+  // over the DATA, the highlight, the gestures, copy. The scroller supplies
+  // what only it knows (the Owner interface); the template reads the
+  // instance.
+  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  readonly selection: VirtualScrollerSelection.Instance;
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {
@@ -504,7 +468,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  patch forces a layout, and the frame loop, the clamp and the limit each
    *  read it every frame (measured: 191 ms of forced layouts over two flicks).
    *  Before the first report it falls back to the element once. */
-  protected get containerSpan(): number {
+  get containerSpan(): number {
     const observed = this.containerOuterSize.value;
     return observed > 0 ? observed : this.offsetSize(this.scrollElement.value);
   }
@@ -518,20 +482,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   get scrollDirection() {
     return ref('down');
-  }
-
-  // TEXT SELECTION — owned by a hosted VirtualScrollerSelection: the
-  // logical range over the DATA, the highlight, the gestures, copy. The
-  // scroller supplies what only it knows (the Owner interface) and
-  // exposes the instance for the template.
-  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  protected get $selection() {
-    return new VirtualScrollerSelection.Class(this);
-  }
-
-  /** The selection, exposed for the template's dotted reads and handlers. */
-  get selection() {
-    return this.$selection;
   }
 
   /** The axis seam — rows stack down; the horizontal subclass says 'x'. */
@@ -562,7 +512,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** The drag autoscroll's speed factor: a faster reading creep is a
    *  faster drag. */
   get creepFactor() {
-    return this.self.CREEP_MS_PER_PX / this.creepMsPerPx;
+    return this.autoplay.factor;
   }
 
   /** The motion knobs as Lenis reads them — one object, so a watch over
@@ -588,7 +538,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** Reactive autoplay state — true while the reading creep is armed.
    *  Consumers bind buttons to it; a user scroll UP flips it off. */
   get isAutoPlaying() {
-    return ref(false);
+    return this.autoplay.isPlaying;
   }
 
   /** Measured main-axis pixel sizes by item index (unmeasured fall back to the estimate). */
@@ -659,19 +609,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   get halfPaddingQuantity() {
     return Math.ceil(this.paddingQuantity.value / 2);
-  }
-
-  // RENDER PADDING — owned by a hosted VirtualScrollerPadding: the base
-  // pad on both ends, plus rows ahead of the motion sized by velocity.
-  // The window walk asks it once per evaluation.
-  // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  protected get $padding() {
-    return new VirtualScrollerPadding.Class(this);
-  }
-
-  /** The pad, exposed for anyone who wants to show what the walk mounted. */
-  get padding() {
-    return this.$padding;
   }
 
   /** The content's velocity in px per animation frame, signed: positive
@@ -756,6 +693,51 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return ref(false);
   }
 
+  /** The creep speed the author set, if any — unset means the tuned
+   *  reading cadence, which the autoplay owns. */
+  get creepMsPerPxSetting(): number | undefined {
+    return this.props.creepMsPerPx;
+  }
+
+  /** Whether reaching the end restarts the creep from the top. */
+  get autoRepeat(): boolean {
+    return this.props.autoRepeat;
+  }
+
+  /** How long the pause before reading resumes. */
+  get autoPlayDelay(): number {
+    return this.props.autoPlayDelay;
+  }
+
+  /** False before mount: there is nothing to land in yet. */
+  get hasFrame(): boolean {
+    return this.scrollElement.value !== null;
+  }
+
+  /** Where a snapped or stepped landing places its item. */
+  get snapAlign(): 'start' | 'center' {
+    return this.props.snapAlign;
+  }
+
+  /** The reader is moving the content themselves — a glide still lerping, or
+   *  the reading creep moving on from a landing. A converge loop ends on it:
+   *  a creep that kept mounting rows shifted the target at every mount, and
+   *  every shift re-pinned the landing under it, a 6 px snap-back every few
+   *  frames for as long as the creep ran. */
+  get readerIsMoving(): boolean {
+    return Boolean(this.lenis?.isScrolling) || this.autoplay.isCreeping;
+  }
+
+  /** Input is still arriving: a snap waits rather than fighting it. */
+  get inputLive(): boolean {
+    return this.virtualScrolling;
+  }
+
+  /** A lerp is still travelling: a snap waits for it to land. */
+  get lerpRunning(): boolean {
+    return Boolean(this.lenis?.isScrolling);
+  }
+
   /** nothing left for the frame loop to paint: no input arriving, no lerp remaining, no creep */
   get isAtRest(): boolean {
     const lenis = this.lenisRequired;
@@ -796,16 +778,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     };
   }
 
-  /** Stop handle for the latest scrollToIndex re-apply watcher (see below). */
-  protected stopScrollToIndexReapply: (() => void) | null = null;
-  /** The live seek's re-apply step and its quiet timer (one seek is live
-   *  at a time). */
-  protected reapplyScrollToIndex: (() => void) | null = null;
-  protected scrollToIndexQuietTimer: ReturnType<typeof setTimeout> | null = null;
-  /** The position the converge loop last landed on (after the clamp) — a
-   *  scroll position that differs from it is the reader having moved on. */
-  protected seekAppliedPosition: number | null = null;
-
   /* Autoplay (Lenis-driven) */
 
   lenis: Lenis.Model | null = null;
@@ -826,25 +798,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   protected pendingAnchor: VirtualScroller.Anchor | undefined = undefined;
 
   protected virtualScrollTimeout: ReturnType<typeof setTimeout> | undefined;
-
-  protected autoscrollTimeout: ReturnType<typeof setTimeout> | undefined;
-
-  protected autoRepeatTimeout: ReturnType<typeof setTimeout> | undefined;
-
-  protected snapTimeout: ReturnType<typeof setTimeout> | undefined;
-
-  /** Speed as a SETTING: the optional creepMsPerPx prop overrides the
-   *  tuned reading cadence (which stays the sacred default). A marquee
-   *  reads a live value here every creep frame, so a speed slider takes
-   *  effect mid-glide. */
-  protected get creepMsPerPx(): number {
-    return this.props.creepMsPerPx ?? this.self.CREEP_MS_PER_PX;
-  }
-
-  /** rAF handle + last frame timestamp of the creep integrator. */
-  protected creepFrame: number | null = null;
-
-  protected lastCreepTs: number | null = null;
 
   onTouchStartCapture(event: TouchEvent) {
     const touch = event.touches[0];
@@ -932,10 +885,126 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return (event.clientY - rect.top) / rect.height;
   }
 
+  /**
+   * The frame exists: build Lenis over it, take the touch-axis lock, hand
+   * the element to the selection, and give Lenis the limit to clamp against.
+   * A subclass overrides this to change what a mount sets up.
+   */
+  protected onMount() {
+    const element = this.scrollElement.value;
+    const inner = this.scrollElementInner.value;
+    if (!element || !inner) return;
+
+    this.lenis = this.createLenis(element, inner);
+    this.lenis.on('virtual-scroll', this.onVirtualScroll);
+    // The motion knobs are live: a page re-tuning them re-tunes Lenis.
+    watch(
+      () => this.lenisMotion,
+      (motion) => this.tuneMotion(motion)
+    );
+
+    this.attachGestureLock(element);
+    this.selection.attach(element);
+
+    // The DOM is much shorter than the virtual content (content-sized layer
+    // + capped tail — see trailingSpacerPx), so lenis takes its wheel-clamp
+    // limit from the COMPUTED size — same box as setScrollPosition's own
+    // bottom clamp. A pull callback, not a watcher: lenis reads it at clamp
+    // time, the computed caches, and it can never be stale.
+    this.lenis.virtualLimit = () => Math.max(0, this.scrollExtent.value - this.containerSpan);
+  }
+
+  /** The scroll integrator this scroller drives — a factory so a subclass
+   *  swaps the engine, or its options, by overriding one method. */
+  protected createLenis(wrapper: HTMLElement, content: HTMLElement): Lenis.Model {
+    return new Lenis.Class({
+      wrapper,
+      content,
+      orientation: this.lenisOrientation,
+      gestureOrientation: this.lenisGestureOrientation,
+      ignoreNativeScroll: this.lenisIgnoreNativeScroll,
+      syncTouch: true, // Sync touch events
+      overscroll: this.props.overscroll,
+      smoothWheel: true,
+      // a scrollable element inside a row — a wide code block, a diff — takes the wheel
+      // until it reaches its own edge; only then does the gesture move the list
+      allowNestedScroll: true,
+      autoRaf: false, // we drive it ourselves
+      ...this.lenisMotion
+    });
+  }
+
+  /**
+   * Gesture-axis lock (touch). Lenis only refuses a gesture whose cross-axis
+   * delta is EXACTLY zero, and a finger swiping down a page always drifts a
+   * pixel or two sideways — so a horizontal strip would claim the swipe and
+   * preventDefault the page's own scroll. These run in the CAPTURE phase
+   * (lenis binds on bubble), decide the axis once per touch, and hand
+   * cross-axis gestures back by marking the event lenis already knows to skip.
+   */
+  protected attachGestureLock(element: HTMLElement) {
+    element.addEventListener('touchstart', this.onTouchStartCapture, {
+      capture: true,
+      passive: true
+    });
+    element.addEventListener('touchmove', this.onTouchMoveCapture, {
+      capture: true,
+      passive: true
+    });
+    element.addEventListener('touchend', this.onTouchEndCapture, {
+      capture: true,
+      passive: true
+    });
+  }
+
+  protected detachGestureLock(element: HTMLElement) {
+    element.removeEventListener('touchstart', this.onTouchStartCapture, true);
+    element.removeEventListener('touchmove', this.onTouchMoveCapture, true);
+    element.removeEventListener('touchend', this.onTouchEndCapture, true);
+  }
+
+  /** The frame is going: every capability disposes, both rAF loops park,
+   *  and Lenis is torn down. A subclass overrides this to add its own. */
+  protected onUnmount() {
+    const element = this.scrollElement.value;
+    if (element) this.detachGestureLock(element);
+    this.landing.dispose();
+    this.autoplay.dispose();
+    this.cancelFrames();
+    this.selection.dispose();
+    this.padding.dispose();
+    this.lenis?.stop();
+    this.lenis?.destroy();
+  }
+
   /** The position model, built once at construction — a factory so a
    *  subclass swaps the model by overriding one method. */
   protected createGeometry(): VirtualScrollerGeometry.Instance {
     return new VirtualScrollerGeometry.Class(this);
+  }
+
+  /** The render pad this scroller walks with — a factory so a subclass
+   *  swaps the pad by overriding one method. */
+  protected createPadding(): VirtualScrollerPadding.Instance {
+    return new VirtualScrollerPadding.Class(this);
+  }
+
+  /** The landing this scroller seeks with — a factory so a subclass swaps
+   *  the whole capability by overriding one method. */
+  protected createLanding(): VirtualScrollerLanding.Instance {
+    return new VirtualScrollerLanding.Class(this);
+  }
+
+  /** The reading creep this scroller plays with — a factory so a subclass
+   *  swaps the whole capability by overriding one method. */
+  protected createAutoplay(): VirtualScrollerAutoplay.Instance {
+    return new VirtualScrollerAutoplay.Class(this);
+  }
+
+  /** The selection this scroller hosts — a factory so a subclass swaps the
+   *  whole capability by overriding one method. */
+  protected createSelection(): VirtualScrollerSelection.Instance {
+    return new VirtualScrollerSelection.Class(this);
   }
 
   protected bumpGeometryVersion() {
@@ -1025,7 +1094,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // the lerp converges, and a walk mid-tail would trim the rows it no longer needs — a burst
     // of unmounts while the content still crawls. Held, they release once, at rest.
     // invariant: The pad covers the lerp gap exactly (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-    const pad = this.$padding;
+    const pad = this.padding;
     const padding = pad.pad();
     const behindPx = pad.gapEndPx;
     let end = start;
@@ -1240,7 +1309,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  with it, so the converge loop does not mistake this for the reader. */
   protected shiftScroll(delta: number) {
     this.shiftMark.total += delta;
-    if (this.seekAppliedPosition !== null) this.seekAppliedPosition += delta;
+    this.landing.shiftLanding(delta);
     const lenis = this.lenis;
     if (lenis && lenis.isScrolling) {
       // the glide moves with the content: its lerp keeps its remaining
@@ -1457,38 +1526,16 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (element) element.scrollTop = 0;
   }
 
-  /** Seek to a 0..1 track fraction in ITEM-INDEX space through the full
-   *  scrollToIndex pipeline (spacer rebase + converge loop) — a raw
-   *  lenis.scrollTo would translate content out of the viewport without
-   *  rebasing the window. Index space is the external seek-bar contract:
-   *  the landing promises an ITEM, size-independent, so it survives the
-   *  estimate→real refinement. */
-  // invariant: A seek names an item not a pixel (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  /** Seek to a 0..1 track fraction in ITEM-INDEX space — the external seek
+   *  bar's contract (see the landing). */
   seekToFraction(fraction: number) {
-    const lastIndex = this.items.value.length - 1;
-    if (lastIndex < 0) return;
-    const clamped = Math.min(Math.max(fraction, 0), 1);
-    this.scrollToIndex(Math.round(clamped * lastIndex), undefined, false);
+    this.landing.toFraction(fraction);
   }
 
-  /**
-   * Seek to a 0..1 fraction of the SCROLLABLE RANGE — the exact inverse
-   * of scrollbarProgress, which is what the built-in track needs: the
-   * thumb RENDERS position-space, so its drag must land where it points.
-   * Index space cannot express this when one item outsizes the container
-   * (a marquee chunk is ~3 containers wide): the last item's START is
-   * far from the end of the content, so an index-anchored drag leaves the
-   * tail unreachable. The target position still resolves to an item plus
-   * an in-item fraction and rides the scrollToIndex converge loop, so the
-   * landing stays on the same CONTENT as late sizes refine.
-   */
+  /** Seek to a 0..1 fraction of the SCROLLABLE RANGE — the thumb's own
+   *  inverse, so a drag lands where it points (see the landing). */
   seekToProgress(fraction: number) {
-    const clamped = Math.min(Math.max(fraction, 0), 1);
-    const container = this.containerSpan;
-    const target = clamped * Math.max(0, this.scrollExtent.value - container);
-    const at = this.getIndexAtPosition(target);
-    if (!at) return;
-    this.scrollToIndex(at.index, undefined, false, 0, at.fraction);
+    this.landing.toProgress(fraction);
   }
 
   /** A thumb drag never stops autoplay: a reader repositioning by the
@@ -1502,7 +1549,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.scrollbarDragging.value = true;
     this.virtualScrolling = true;
     clearTimeout(this.virtualScrollTimeout);
-    clearTimeout(this.autoscrollTimeout);
+    this.autoplay.cancelResume();
     const fraction = this.trackPointerFraction(event, track.getBoundingClientRect());
     this.thumbDrag.from = fraction;
     this.thumbDrag.to = fraction;
@@ -1536,8 +1583,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (forward && this.props.autoPlay && !this.props.snapToItems) this.isAutoPlaying.value = true;
     if (this.isAutoPlaying.value) {
       this.scrollDirection.value = 'down';
-      clearTimeout(this.autoscrollTimeout);
-      this.autoscrollTimeout = setTimeout(this.play, 3);
+      this.autoplay.armResume();
     }
   }
 
@@ -1580,22 +1626,16 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.seekToProgress(this.trackPointerFraction(event, track.getBoundingClientRect()));
   }
 
-  /** Main-axis offset that places item `index` per the snapAlign prop —
-   *  0 for 'start'; half the free space for 'center' (clamped landings at
-   *  the bounds come free from setScrollPosition's own clamps). */
+  /** Main-axis offset that places item `index` per the snapAlign prop (see
+   *  the landing). */
   snapAlignOffset(index: number): number {
-    if (this.props.snapAlign !== 'center') return 0;
-    const size = this.geometry.sizeOf(index);
-    // The rendered flow starts AFTER the container's leading main-axis
-    // padding, but prefix-sum positions do not include it — subtract it,
-    // or every "centered" landing sits paddingStart px past center.
-    return Math.max(0, (this.containerSpan - size) / 2 - this.mainAxisPaddingStart());
+    return this.landing.alignOffset(index);
   }
 
   /** Leading main-axis padding of the scroll container (see
    *  axisPaddingProps) — the offset between position space and the
    *  rendered flow. */
-  protected mainAxisPaddingStart(): number {
+  mainAxisPaddingStart(): number {
     const element = this.scrollElement.value;
     if (!element) return 0;
     const [paddingStartProp] = this.axisPaddingProps;
@@ -1603,14 +1643,14 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   /**
+   * Land on item `index` and hold it there while the sizes settle — the
+   * landing's converge loop (see VirtualScrollerLanding).
+   *
    * @param topOffsetPx pushes the landing DOWN so the target sits this many
-   * pixels below the viewport top — context above a jumped-to item (and
-   * clear of any fade overlay at the reading area's top edge).
-   * @param innerFraction 0..1 point WITHIN the item to align to (0 = its
-   * top). A search match deep inside a paragraph taller than the viewport
-   * would otherwise land below the fold — the item's size keeps refining
-   * through the settle loop, so this converges onto the real text position.
+   * pixels below the viewport top.
+   * @param innerFraction 0..1 point WITHIN the item to align to (0 = its top).
    */
+  // invariant: A seek names an item not a pixel (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   scrollToIndex(
     index: number,
     afterCallback?: () => void,
@@ -1620,96 +1660,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     topOffsetPx = this.snapAlignOffset(index),
     innerFraction = 0
   ) {
-    const targetPosition = () => {
-      const position = this.getIndexPosition(index);
-      if (position === undefined) return undefined;
-      const size = this.geometry.sizeOf(index);
-      return Math.max(0, position + innerFraction * size - topOffsetPx);
-    };
-
-    const position = targetPosition();
-
-    if (position === undefined || !this.scrollElement.value) return;
-
-    this.resetScrollTop();
-
-    this.setScrollPosition(-position, animate);
-
-    const setScroll = () => {
-      nextTick(() => {
-        const position = targetPosition();
-        if (position === undefined) return;
-        this.setScrollPosition(-position, animate);
-        this.seekAppliedPosition = this.scrollPosition.value;
-        nextTick(() => {
-          afterCallback?.();
-        });
-      });
-    };
-
-    setScroll();
-
-    // Converge onto the target: the first jump lands on an ESTIMATED
-    // position; the fresh window then measures in waves (mount → slot
-    // hydration → wrapper-observer correction), each shifting P(index).
-    // Re-apply on every change and disarm only after the position has been
-    // QUIET for a while — a fixed disarm timer loses the race against late
-    // waves and leaves the reader a paragraph or two off the target. A new
-    // seek supersedes this loop (a stale one would fire on the next
-    // unrelated size change and yank the reader back), and the reader
-    // taking over the scroll abandons it immediately.
-    this.stopScrollToIndexReapply?.();
-    const stop = () => {
-      if (this.scrollToIndexQuietTimer !== null) clearTimeout(this.scrollToIndexQuietTimer);
-      stopWatch();
-      if (this.stopScrollToIndexReapply === stop) {
-        this.stopScrollToIndexReapply = null;
-        this.reapplyScrollToIndex = null;
-        this.seekAppliedPosition = null;
-      }
-    };
-    this.reapplyScrollToIndex = setScroll;
-    this.stopScrollToIndexReapply = stop;
-    const stopWatch = watch(
-      () => this.getIndexPosition(index),
-      () => this.onIndexPositionShift()
-    );
-    this.scrollToIndexQuietTimer = setTimeout(stop, 600);
+    this.landing.toIndex(index, afterCallback, animate, topOffsetPx, innerFraction);
   }
 
-  /** End a seek's converge loop now. The owner calls it when the reader
-   *  acts on the content instead of scrolling — opening a card, for one —
-   *  so the next size shift is the reader's own and never re-pins the
-   *  landing under them. A no-op when no loop is armed. */
+  /** End a seek's converge loop now — the owner calls it when the reader
+   *  acts on the content instead of scrolling. A no-op when none is armed. */
   cancelSeek() {
-    this.stopScrollToIndexReapply?.();
-  }
-
-  /** One wave of the converge loop: the reader taking over ends it; any
-   *  other shift re-applies the target and re-arms the quiet timer. */
-  protected onIndexPositionShift() {
-    const stop = this.stopScrollToIndexReapply;
-    if (!stop) return;
-    // The reader has taken over — a wheel glide, or the reading creep
-    // moving on from the landing: the loop ends. A creep that kept
-    // mounting rows shifted the target's position at every mount, and
-    // every shift re-pinned the landing under it — a 6 px snap-back every
-    // few frames, for as long as the creep ran.
-    if (this.lenis?.isScrolling || this.creepFrame !== null) {
-      stop();
-      return;
-    }
-    // The reader scrolled between two waves (a glide that ended before this
-    // shift, a scrollbar drag): the position is no longer the landing's.
-    // Re-pinning now would yank the reader back to a target they left.
-    const applied = this.seekAppliedPosition;
-    if (applied !== null && Math.abs(this.scrollPosition.value - applied) > 1) {
-      stop();
-      return;
-    }
-    this.reapplyScrollToIndex?.();
-    if (this.scrollToIndexQuietTimer !== null) clearTimeout(this.scrollToIndexQuietTimer);
-    this.scrollToIndexQuietTimer = setTimeout(stop, 600);
+    this.landing.cancel();
   }
 
   onVirtualScroll({ deltaX, deltaY }: { deltaX: number; deltaY: number }) {
@@ -1740,13 +1697,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // Lenis's clock aged while its raf loop was parked (the creep runs
       // without it) — reset it or the first frame advances the whole gap
       // and the flick lands as an instant jump instead of the lerp.
-      this.lenisRequired.time = 0;
-      this.frame = requestAnimationFrame(this.loop);
+      this.restartLoop();
     }
     if (this.isAutoPlaying.value) {
       // input settles → the creep resumes; never re-arms when not playing
-      clearTimeout(this.autoscrollTimeout);
-      this.autoscrollTimeout = setTimeout(this.play, 3);
+      this.autoplay.armResume();
     }
 
     this.virtualScrollTimeout = setTimeout(() => {
@@ -1757,30 +1712,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // step mode: once the input rests AND the lenis lerp settles, the
       // strip snaps to the nearest item boundary through the same
       // scrollToIndex pipeline a seek uses.
-      clearTimeout(this.snapTimeout);
-      this.snapTimeout = setTimeout(this.snapToNearest, 160);
+      this.landing.armSnap();
     }
   }
 
+  /** Step mode's landing: the nearest item boundary (see the landing). */
   snapToNearest() {
-    if (this.virtualScrolling || this.lenis?.isScrolling) {
-      clearTimeout(this.snapTimeout);
-      this.snapTimeout = setTimeout(this.snapToNearest, 90);
-      return;
-    }
-    const offset = this.scrollPosition.value;
-    // 'start': the item nearest the container's leading edge. 'center':
-    // the item under the container's center — that item then lands
-    // centered (scrollToIndex's default alignment).
-    const centered = this.props.snapAlign === 'center';
-    // The probe point lives in POSITION space: the container's visual
-    // center minus the leading padding that the rendered flow adds.
-    const at = this.getIndexAtPosition(
-      centered ? offset + this.containerSpan / 2 - this.mainAxisPaddingStart() : offset
-    );
-    if (!at) return;
-    const target = centered ? at.index : at.fraction > 0.5 ? at.index + 1 : at.index;
-    this.scrollToIndex(Math.min(target, this.items.value.length - 1), undefined, true);
+    this.landing.snapToNearest();
   }
 
   // invariant: The transform lerps to the target over many frames (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -1802,158 +1740,40 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.frame = requestAnimationFrame(this.loop);
   }
 
+  /** Arm the reading creep after a pause (see VirtualScrollerAutoplay). */
   startAutoPlay(delay = 500, callback = () => {}) {
-    this.isAutoPlaying.value = true;
-    // A prior up-scroll leaves direction 'up', which gates the creep off —
-    // pressing play IS the intent to read downward again.
-    this.scrollDirection.value = 'down';
+    this.autoplay.start(delay, callback);
+  }
+
+  /** Stop the reading creep and park both rAF loops. */
+  stopAutoPlay(callback = () => {}) {
+    this.autoplay.stop(callback);
+  }
+
+  /** Cancel both rAF loops (the frame loop and the creep) if armed. */
+  cancelFrames() {
+    this.parkLoopFrame();
+    this.autoplay.cancelFrame();
+  }
+
+  /** Cancel the frame loop's rAF and forget its handle. */
+  parkLoopFrame() {
+    if (this.frame !== null) cancelAnimationFrame(this.frame);
+    // 0 (not null): falsy for onVirtualScroll's re-arm check without widening
+    // the field type, so the creep's handoff does not look like a live loop.
+    this.frame = 0;
+  }
+
+  /** Start the frame loop from a stopped clock — pressing play wakes Lenis,
+   *  whose clock aged while its raf loop was parked. */
+  restartLoop() {
     if (this.lenis) this.lenis.time = 0;
     this.frame = requestAnimationFrame(this.loop);
-    this.autoscrollTimeout = setTimeout(() => {
-      this.play();
-      callback();
-    }, delay);
   }
 
-  stopAutoPlay(callback = () => {}) {
-    this.isAutoPlaying.value = false;
-    this.cancelFrames();
-    this.lastCreepTs = null;
-    clearTimeout(this.autoscrollTimeout);
-    callback();
-  }
-
-  /** Cancel both raf loops (the lenis frame and the creep) if armed. */
-  cancelFrames() {
-    if (this.frame !== null) cancelAnimationFrame(this.frame);
-    this.frame = null;
-    if (this.creepFrame !== null) cancelAnimationFrame(this.creepFrame);
-    this.creepFrame = null;
-  }
-
+  /** Resume the creep once the reader's input settles. */
   play() {
-    if (this.virtualScrolling || this.lenis?.isScrolling) {
-      clearTimeout(this.autoscrollTimeout);
-      // Forward inertia decaying through cruise speed hands off to the
-      // creep RIGHT THERE — the glide never dips below cruise.
-      if (this.adoptDecayedInertia()) return;
-
-      return (this.autoscrollTimeout = setTimeout(this.play, 3));
-    }
-
-    clearTimeout(this.autoscrollTimeout);
-    // The reader is at rest — lenis has nothing to animate, so its raf loop
-    // can stop (the old timer creep cancelled it one tick later).
-    this.cancelFrames();
-    this.lastCreepTs = null;
-    this.creepFrame = requestAnimationFrame(this.creepStep);
-  }
-
-  /**
-   * The wheel-to-creep handoff: while a FORWARD flick's inertia decays,
-   * the moment its speed falls to the creep's cruise speed the creep
-   * adopts the scroll right there — a scrub may accelerate the glide
-   * above cruise, but it never drags it below. Without this, play()
-   * waits for the lenis lerp to decay all the way to zero before
-   * resuming: decelerate, stall, accelerate — felt as a stutter after
-   * every shift+wheel scrub. A backward scrub is the reader taking over
-   * (stopAutoPlay already handled it), so no handoff there. Snap-mode
-   * consumers never arm autoplay, so this path never runs for them.
-   */
-  protected adoptDecayedInertia(): boolean {
-    const lenis = this.lenis;
-    // While input is still arriving, the reader owns the scroll — only a
-    // free-decaying smooth lerp is a candidate.
-    if (!lenis || this.virtualScrolling) return false;
-    if (lenis.isScrolling !== 'smooth') return false;
-    if (this.scrollDirection.value !== 'down') return false;
-    // lenis.velocity is px per rAF frame; at ~60fps that is px per 16.7ms.
-    const pxPerMs = lenis.velocity / 16.7;
-    if (pxPerMs <= 0 || pxPerMs > 1 / this.creepMsPerPx) return false;
-    // Adopt the CURRENT animated position (not the farther wheel target):
-    // the lerp dies where it is and the creep continues from that exact
-    // pixel at cruise speed — velocity is continuous through the handoff.
-    lenis.adoptExternalScroll(lenis.animatedScroll);
-    if (this.frame !== null) cancelAnimationFrame(this.frame);
-    // 0 (not null): falsy for onVirtualScroll's re-arm check without
-    // widening the field type.
-    this.frame = 0;
-    if (this.creepFrame !== null) cancelAnimationFrame(this.creepFrame);
-    this.lastCreepTs = null;
-    this.creepFrame = requestAnimationFrame(this.creepStep);
-    return true;
-  }
-
-  /**
-   * The reading creep, integrated per FRAME (speed × Δt, transform written
-   * directly, no CSS transition, UNSNAPPED — see the write below). The
-   * original delivery — a 150ms setTimeout writing +1px targets smoothed
-   * by a re-targeted 0.45s ease transition — produced a permanent ~6.7Hz
-   * velocity sawtooth plus timer jitter: irregularly-timed device-pixel
-   * crossings, felt as judder on low-DPI screens. A snapped integrator was
-   * tried next: metronome-regular but WHOLE-pixel ticks at 6.7Hz, still
-   * read as chop on dpr-1. Constant-velocity fractional motion is the
-   * remaining delivery: the compositor filters ~0.11px/frame into an
-   * apparent glide (cost: slight text softness while creeping).
-   */
-  creepStep(ts: number) {
-    this.creepFrame = null;
-    if (this.virtualScrolling || this.lenis?.isScrolling) {
-      // Reader took over — hand back to play()'s defer loop, which resumes
-      // the creep when the input settles.
-      this.lastCreepTs = null;
-      this.play();
-      return;
-    }
-    if (this.scrollDirection.value !== 'down') {
-      this.lastCreepTs = null;
-      return;
-    }
-
-    // Δt integrates TRUTHFULLY on slow frames: a loaded machine's 60→20fps
-    // jitter stays time-correct, so every displayed position is where the
-    // clock says it should be. (Clamping Δt at 50ms made the advance
-    // constant per FRAME — at marquee speeds that turns frame jitter into
-    // visible speed wobble: 6px landing every 50–250ms reads as chop.)
-    // Only a genuine rAF suspension (background tab) resumes as a fresh
-    // frame instead of a content jump.
-    const elapsed = this.lastCreepTs === null ? 16.7 : ts - this.lastCreepTs;
-    const dt = elapsed > 250 ? 16.7 : elapsed;
-    this.lastCreepTs = ts;
-    const lenis = this.lenisRequired;
-    lenis.targetScroll += dt / this.creepMsPerPx;
-
-    const container = this.containerSpan;
-    const atEnd = lenis.actualScroll + container >= this.scrollExtent.value - 10;
-
-    if (this.props.autoRepeat && atEnd) {
-      // End reached: stop creeping and let the auto-repeat chain own the
-      // resumption (reset to top after a pause, then play again).
-      clearTimeout(this.autoRepeatTimeout);
-      this.autoRepeatTimeout = setTimeout(() => {
-        this.setScrollPosition(0, true, true);
-        this.autoscrollTimeout = setTimeout(() => {
-          if (this.scrollDirection.value === 'down') {
-            this.play();
-          }
-        }, this.props.autoPlayDelay);
-      }, 10000);
-      return;
-    }
-
-    clearTimeout(this.autoRepeatTimeout);
-    // Unsnapped on purpose: constant-velocity FRACTIONAL motion — the
-    // compositor's filtering renders ~0.11px/frame as an apparent glide.
-    // Snapped, the same speed ticks a whole device pixel every 150ms on
-    // dpr-1 screens, which reads as chop.
-    this.setScrollPosition(-lenis.targetScroll, false, true, false);
-    if (atEnd) {
-      // Nothing left to creep into (setScrollPosition clamps at the end);
-      // the next wheel re-arms play via onVirtualScroll.
-      this.lastCreepTs = null;
-      return;
-    }
-    this.creepFrame = requestAnimationFrame(this.creepStep);
+    this.autoplay.play();
   }
 
   /* Text selection — the Owner side; the behavior lives on VirtualScrollerSelection */
@@ -1967,7 +1787,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    */
   // invariant: The copied text is the string the row renders (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   rowText(index: number): string {
-    const row = this.$selection.mountedRowElement(index);
+    const row = this.selection.mountedRowElement(index);
     if (row) return VirtualScrollerSelection.Class.rowText(row);
     const item = this.items.value[index];
     if (!item) return '';
