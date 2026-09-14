@@ -33,6 +33,7 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If the vertical seams are read, then they name the y axis: translateY and deltaY, and the frame gives the browser no gesture at all: touch-action none.
 // domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
 // domain-invariant: $VirtualScroller — If nudgePaint runs on WebKit, then the inner layer's will-change is cycled through auto with a layout read between; elsewhere it does nothing.
+// domain-invariant: $VirtualScroller — If the scroll rests part-way into a tall row, then the window still reaches a container below the SCROLL POSITION, not below that row's top, so the row at the bottom edge is mounted.
 // domain-invariant: $VirtualScroller — If the scroller writes the transform itself on WebKit, then the layer is re-promoted first, because Lenis's own re-promote only covers the writes Lenis makes.
 // domain-invariant: $VirtualScroller — If the frame scrolls natively, then the offset becomes a virtual scroll and the frame is zeroed; Lenis never adopts a native scroll on either axis.
 // domain-invariant: $VirtualScroller — If the frame loop finds nothing to paint — no input arriving, no lerp remaining, no creep — then it parks itself, and the next input wakes it; a scroller nobody touches requests no frames
@@ -763,6 +764,24 @@ test('the vertical seams read the y axis: translateY and deltaY', () => {
   expect(instance.probeTransform(-42)).toBe('translateY(-42px)');
   expect(instance.probeAxisDelta({ deltaX: 5, deltaY: 9 })).toBe(9);
   expect(instance.frameTouchAction).toBe('none');
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the scroll rests part-way into a tall row, then the window still reaches a container below the SCROLL POSITION, not below that row's top, so the row at the bottom edge is mounted.
+test('a tall row at the top of the viewport does not starve the window: the row at the bottom edge is still mounted', () => {
+  // The shape that exposed this in the ai-chat sample: one row taller than
+  // the frame, short rows after it, and the reader resting part-way in.
+  const { instance, unmount } = scroller(rows(60), { assumedSize: 15 });
+  instance.syncItemSize(10, 120);
+  const top = instance.getIndexPosition(10)!;
+  // 90 px into the tall row; the frame is 100 px, so the viewport ends 70 px
+  // past that row's end and the short rows after it have to cover the rest
+  instance.setScrollPosition(-(top + 90));
+  void instance.visibleItems.value; // the walk writes visibleIndex when it runs
+  const covered = instance.getIndexPosition(instance.visibleIndex.value.end) ?? 0;
+  // measured from the row's TOP the walk stopped at 330 — ten px short of the
+  // viewport, and the row at the bottom edge was never mounted
+  expect(covered).toBeGreaterThanOrEqual(top + 90 + instance.containerSpan);
   unmount();
 });
 

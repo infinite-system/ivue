@@ -1146,7 +1146,18 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const behindPx = pad.gapEndPx;
     let end = start;
     let endOffset = startOffset;
-    const bottom = startOffset + this.containerSpan + behindPx;
+    // The viewport ends a container below the SCROLL POSITION, not below the
+    // top of the row that contains it. Measuring from `startOffset` under-
+    // covered by exactly how far the scroll had travelled into that first
+    // row, which is invisible while the rows are all of a size and brutal
+    // when the row at the top is tall: an 839 px message scrolled 511 px in
+    // left the walk covering 121 px of a 632 px frame, and the row pad on
+    // top of it — counted in ROWS — added four short neighbours worth 285 px
+    // and still fell short. The row at the bottom edge was never mounted.
+    // It hid because motion papers over it: the lerp gap extends the walk
+    // while the content moves and the pad is held, so the row appears while
+    // scrolling and vanishes the moment everything settles.
+    const bottom = scrollTop + this.containerSpan + behindPx;
     while (end < itemCount && endOffset < bottom) {
       endOffset += measured[end] ?? assumed;
       end++;
