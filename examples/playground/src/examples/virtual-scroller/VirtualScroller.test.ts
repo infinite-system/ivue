@@ -17,6 +17,7 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 [The pad covers the lerp gap exactly](virtual-scroller.invariants.md#the-pad-covers-the-lerp-gap-exactly)
 [WebKit re-rasterizes the layer on every autoscroll write](virtual-scroller.invariants.md#webkit-re-rasterizes-the-layer-on-every-autoscroll-write)
 [The feel is one nested prop complete at every depth](virtual-scroller.invariants.md#the-feel-is-one-nested-prop-complete-at-every-depth)
+// domain-invariant: $VirtualScroller — If the touch knobs are read, then the lerp handed to Lenis is `launch / carry`, so a flick leaves the finger at `launch` times its speed and carries `carry` frames of it; the lerp is never a knob of its own.
 // domain-invariant: $VirtualScroller — If a nested knob prop is read, then it is complete at every depth: a leaf the author supplied wins and every leaf left out is the tuned default, and Lenis is tuned from the same leaves.
 // domain-invariant: $VirtualScroller — If the scroll position changes with the window unchanged, then the scroller's own template does not re-render: the thumb, the one per-frame reader, is its own component.
 // domain-invariant: $VirtualScroller — If the reading creep moves on from a seek's landing, then the seek's converge loop ends with the next position shift instead of re-pinning the landing under the creep.
@@ -488,8 +489,8 @@ test('a nested knob left out reads as its tuned default at every depth, a suppli
     selection: { autoscroll: { touch: { rampMs: 1500 } } }
   });
   expect(set.instance.props.scroll.wheel).toEqual({ gain: 2, follow: 0.1, maxPxPerMs: 0 });
-  expect(set.instance.props.scroll.touch.inertia).toBe(
-    VirtualScroller.Class.SCROLL_KNOBS.touch.inertia
+  expect(set.instance.props.scroll.touch.carry).toBe(
+    VirtualScroller.Class.SCROLL_KNOBS.touch.carry
   );
   expect(set.instance.autoscrollProfiles.touch.rampMs).toBe(1500);
   expect(set.instance.autoscrollProfiles.touch.zonePx).toBe(96);
@@ -499,12 +500,34 @@ test('a nested knob left out reads as its tuned default at every depth, a suppli
     lerp: 0.1,
     wheelMaxPxPerMs: 0,
     touchMultiplier: VirtualScroller.Class.SCROLL_KNOBS.touch.gain,
-    syncTouchLerp: VirtualScroller.Class.SCROLL_KNOBS.touch.follow,
-    touchInertiaMultiplier: VirtualScroller.Class.SCROLL_KNOBS.touch.inertia,
+    // the lerp Lenis is given is derived from the two knobs, never set
+    syncTouchLerp:
+      VirtualScroller.Class.SCROLL_KNOBS.touch.launch /
+      VirtualScroller.Class.SCROLL_KNOBS.touch.carry,
+    touchInertiaMultiplier: VirtualScroller.Class.SCROLL_KNOBS.touch.carry,
     touchMaxPxPerMs: 0
   });
   tuned.unmount();
   set.unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the touch knobs are read, then the lerp handed to Lenis is `launch / carry`, so a flick leaves the finger at `launch` times its speed and carries `carry` frames of it; the lerp is never a knob of its own.
+test('the flick\u2019s lerp is derived from its throw and its launch, so the ratio cannot be set by accident', () => {
+  // a clean hand-over: leaves at the finger's speed, carries 35 frames of it
+  const handover = scroller(rows(3), { scroll: { touch: { carry: 35, launch: 1 } } });
+  expect(handover.instance.lenisMotion.syncTouchLerp).toBeCloseTo(1 / 35, 6);
+  expect(handover.instance.lenisMotion.touchInertiaMultiplier).toBe(35);
+
+  // the pair this replaced, said out loud: the same throw flung at 2.28x
+  const flung = scroller(rows(3), { scroll: { touch: { carry: 35, launch: 2.275 } } });
+  expect(flung.instance.lenisMotion.syncTouchLerp).toBeCloseTo(0.065, 4);
+
+  // halving the throw at a fixed launch doubles the decay: it lands sooner
+  const shortThrow = scroller(rows(3), { scroll: { touch: { carry: 17.5, launch: 1 } } });
+  expect(shortThrow.instance.lenisMotion.syncTouchLerp).toBeCloseTo(2 / 35, 6);
+  handover.unmount();
+  flung.unmount();
+  shortThrow.unmount();
 });
 
 // invariant: An unchanged window keeps its array identity (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)

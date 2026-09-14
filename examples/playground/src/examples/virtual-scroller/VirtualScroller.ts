@@ -213,19 +213,41 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     typeof navigator !== 'undefined' &&
     /^((?!chrome|chromium|android).)*safari/i.test(navigator.userAgent);
 
-  /** The tuned motion: how far a wheel notch or a finger's pixel moves the
-   *  content (gain), how fast the transform chases its target (follow —
-   *  the lerp, higher is snappier), how far a flick carries (inertia), and
-   *  the fastest the content may move (maxPxPerMs; 0 is uncapped). Touch
-   *  is a native list's: the content follows the finger one to one (a
-   *  gain above one read as twitchy under the finger), and a flick carries
-   *  thirty-five frames of the finger's speed under a 0.065 lerp — fifty
-   *  under 0.06 sent a small flick too far, too fast, most of all on
-   *  Android, whose few large moves read a higher velocity off the trail. */
+  /**
+   * The tuned motion: how far a wheel notch or a finger's pixel moves the
+   * content (gain), how fast the transform chases its target (follow — the
+   * lerp, higher is snappier), how far a flick carries (inertia), and the
+   * fastest the content may move (maxPxPerMs; 0 is uncapped). Touch is a
+   * native list's: the content follows the finger one to one, since a gain
+   * above one read as twitchy under the finger.
+   *
+   * The two touch knobs are not independent, and the relationship is the
+   * whole of the feel. A flick sets its target once, at `v x inertia` px
+   * ahead, and the transform then covers `follow` of what remains every
+   * frame. So the FIRST frame of the glide moves `v x inertia x follow`
+   * while the finger was moving `v` — their product IS the launch ratio:
+   *
+   *     distance    = v x inertia          (fixed at release)
+   *     launch      = inertia x follow     (x the finger's own speed)
+   *     decay/frame = 1 - follow
+   *
+   * So the touch knobs are stated in those terms rather than in the lerp's:
+   * `carry` is the throw in frames of the finger's own speed, `launch` is
+   * the multiple of that speed the glide leaves at, and the lerp Lenis
+   * wants is DERIVED as `launch / carry` (see lenisMotion). Set that way
+   * the ratio cannot be chosen by accident — the old pair, an inertia of 35
+   * under a 0.065 lerp, was a launch of 2.28x that nobody had named, and
+   * it is what "a small flick makes too fast a big movement" was.
+   *
+   * A launch of 1 hands the content over at exactly the speed it was
+   * released. The cost is the tail: the decay rate is the same number, so a
+   * gentler launch coasts proportionally longer (measured at carry 35,
+   * launch 1: a 40 px/frame flick throws 1,356 px and settles in 3.5 s).
+   */
   static get SCROLL_KNOBS(): VirtualScroller.ScrollKnobs {
     return {
       wheel: { gain: 1, follow: 0.1, maxPxPerMs: 0 },
-      touch: { gain: 1, follow: 0.065, inertia: 35, maxPxPerMs: 0 }
+      touch: { gain: 1, carry: 35, launch: 1, maxPxPerMs: 0 }
     };
   }
 
@@ -538,8 +560,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       lerp: wheel.follow,
       wheelMaxPxPerMs: wheel.maxPxPerMs,
       touchMultiplier: touch.gain,
-      syncTouchLerp: touch.follow,
-      touchInertiaMultiplier: touch.inertia,
+      // the lerp is DERIVED, never set: a flick that leaves at `launch` times
+      // the finger's speed and carries `carry` frames of it covers
+      // `launch / carry` of what remains each frame, by definition
+      syncTouchLerp: touch.launch / touch.carry,
+      touchInertiaMultiplier: touch.carry,
       touchMaxPxPerMs: touch.maxPxPerMs
     };
   }
@@ -1969,8 +1994,14 @@ export namespace VirtualScroller {
 
   /** The motion knobs, per input. */
   export interface ScrollKnobs {
+    /** The wheel has no flick, so it has no launch: a notch sets the target
+     *  and `follow` is simply how fast the transform chases it. */
     wheel: { gain: number; follow: number; maxPxPerMs: number };
-    touch: { gain: number; follow: number; inertia: number; maxPxPerMs: number };
+    /** A flick in its own terms. `carry` is the throw, in frames of the
+     *  finger's own speed (distance = v x carry); `launch` is the multiple
+     *  of that speed the glide leaves at, 1 being a clean hand-over. The
+     *  lerp follows from the two and is never set directly. */
+    touch: { gain: number; carry: number; launch: number; maxPxPerMs: number };
   }
 
   /** The selection knobs: a pointer's and a finger's autoscroll cadence. */

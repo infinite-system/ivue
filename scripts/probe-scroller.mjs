@@ -136,11 +136,17 @@ try {
     let { log } = await stopLog(page);
     const peak = Math.max(...log.map((f) => Math.abs(f[3])));
     const gliding = log.filter((f) => f[4] === 'smooth').length;
+    // The threshold moved with a deliberate retune, not with a regression:
+    // the flick's knobs are now a throw and a LAUNCH RATIO, and the launch
+    // went from 2.28x the finger's own speed to 1x — a hand-over rather than
+    // a fling. Peak px/frame falls by exactly that ratio by construction
+    // (80 -> 38 measured), so the old floor would fail every clean run. What
+    // still has to hold is that a flick carries at all.
     check(
       'chat first flick from the end: peak px per frame',
       Math.round(peak),
-      (v) => v >= 40,
-      '≥ 40, measured 80'
+      (v) => v >= 18,
+      '≥ 18, measured 38 at launch 1'
     );
     check(
       'chat first flick from the end: gliding frames',
