@@ -126,7 +126,7 @@ function owner(stage: Stage, join = '\n') {
     scrollElement: ref(stage.frame),
     itemsWrapperElement: ref(stage.wrapper),
     visibleItems: computed(() => window.value),
-    scrollPosition: ref<string | number>(0),
+    scrollPosition: ref(0),
     selectionAxis: 'y' as const,
     selectionJoin: join,
     multiClickSelects: true,

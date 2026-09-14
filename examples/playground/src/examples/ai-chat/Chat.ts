@@ -308,7 +308,7 @@ class $Chat extends KitContainer.$Class<Chat.Roles> {
   }
 
   get scrollOffset(): number {
-    return Number(this.scroller.value?.scrollPosition ?? 0);
+    return this.scroller.value?.scrollPosition ?? 0;
   }
 
   /** the offset that puts the thread's end at the frame's end */

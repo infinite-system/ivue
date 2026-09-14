@@ -1561,7 +1561,7 @@ export namespace VirtualScrollerSelection {
     /** The rendered window — the highlight is re-pinned when it changes. */
     readonly visibleItems: ComputedRef<unknown>;
     /** The scroll offset — a finger's boxes are re-laid when it changes. */
-    readonly scrollPosition: Ref<string | number>;
+    readonly scrollPosition: Ref<number>;
     readonly selectionAxis: Axis;
     /** What joins the rows of a copied selection. */
     readonly selectionJoin: string;

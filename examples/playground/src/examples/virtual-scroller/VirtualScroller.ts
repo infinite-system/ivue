@@ -100,8 +100,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       /** The selection knobs — a pointer's and a finger's drag autoscroll
        *  cadence. A partial object at any depth (see SELECTION_KNOBS). */
       selection: { type: Object as PropType<NestedPartial<VirtualScroller.SelectionKnobs>> },
-      /** Accepted for API compatibility; the docs build renders the plain branch. */
-      draggable: { type: Boolean as PropType<boolean> },
       /** The text an item contributes to a copied selection when its row is
        *  NOT mounted (mounted rows read their own text). Return the same
        *  string the row renders, or copy will differ across the window. */
@@ -111,10 +109,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       /** What joins the rows of a copied selection — a line break for
        *  stacked rows; a horizontal strip of text chunks passes a space. */
       selectionJoin: { type: String as PropType<string> },
-      dragHandleSelector: { type: String as PropType<string> },
-      dragClass: { type: String as PropType<string> },
-      dragGhostClass: { type: String as PropType<string> },
-      dragChosenClass: { type: String as PropType<string> },
       /** the kit entry this scroller was rendered through, when a parent's kit names it */
       kit: { type: Object as PropType<Kit.Entry<typeof VirtualScroller>> }
     });
@@ -142,11 +136,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // mounted rows read their own text; the data fallback is body, then id
       selectionText: undefined,
       selectionJoin: '\n',
-      draggable: false,
-      dragHandleSelector: '.sortable-drag-handle',
-      dragClass: 'sortable-drag',
-      dragGhostClass: 'sortable-ghost',
-      dragChosenClass: 'sortable-chosen',
       kit: undefined
     };
   }
@@ -160,9 +149,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   static get emits() {
     return {
-      itemsChanged: (args: VirtualScroller.ItemsChangeEmitArgs) => true,
-      drop: (startIndex: number, dropIndex: number) => true,
-      move: (event: any) => true
+      itemsChanged: (args: VirtualScroller.ItemsChangeEmitArgs) => true
     };
   }
 
@@ -251,7 +238,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     public emit: VirtualScroller.Emits
   ) {
     this.props = nestedProps(props, this.self.propsDefaults as VirtualScroller.KnobDefaults);
-    this.elementSize = useElementSize(this.scrollElement);
     this.outerElementSize = useElementSize(this.scrollElement, undefined, {
       box: 'border-box'
     });
@@ -496,19 +482,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   /* Container size */
 
-  protected elementSize: ReturnType<typeof useElementSize>;
-
   protected outerElementSize: ReturnType<typeof useElementSize>;
 
-  get containerSize() {
-    return this.elementSize.height;
-  }
-
   /**
-   * Border-box container size — the same box setScrollPosition's bottom
-   * clamp measures (offsetHeight). Seek math must use THIS, not the
-   * content-box containerSize: the padding difference is invisible on a
-   * huge post but parks the knob 10-15% short of the end on a small one.
+   * Border-box container size — the same box the bottom clamp measures.
+   * One observer, one box: a second content-box observer per scroller
+   * fed only the window walk, and the padding it left out only made the
+   * walk cover less than the frame it has to fill.
    */
   get containerOuterSize() {
     return this.outerElementSize.height;
@@ -528,7 +508,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   /** Absolute (unsigned) scroll offset within the content. */
   get scrollPosition() {
-    return ref<string | number>(0);
+    return ref(0);
   }
 
   get scrollDirection() {
@@ -780,10 +760,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   /* Scrolling */
 
-  get preventScrollEvent() {
-    return ref(false);
-  }
-
   /** Scrollbar geometry over the VIRTUAL position (native scrollTop stays
    *  0 by design, so a native scrollbar can never exist here). Fraction of
    *  the track the thumb occupies — floored so a million-item list still
@@ -801,8 +777,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const total = this.scrollExtent.value;
     const scrollable = total - this.containerOuterSize.value;
     if (scrollable <= 0) return 0;
-    const position = parseFloat(String(this.scrollPosition.value)) || 0;
-    return Math.min(Math.max(position / scrollable, 0), 1);
+    return Math.min(Math.max(this.scrollPosition.value / scrollable, 0), 1);
   }
 
   /* Scrollbar drag (the built-in track) */
@@ -902,10 +877,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   protected creepFrame: number | null = null;
 
   protected lastCreepTs: number | null = null;
-
-  /* Drag and Drop */
-
-  protected startIndex = 0;
 
   onTouchStartCapture(event: TouchEvent) {
     const touch = event.touches[0];
@@ -1057,9 +1028,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const itemCount = items.length;
     const measured = toRaw(this.measuredSizes.value);
     const assumed = this.estimatedItemSize;
-    const scrollPosition = this.scrollPosition.value;
-    const scrollTop =
-      typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition);
+    const scrollTop = this.scrollPosition.value;
 
     // Walk the cursor to the last item whose top is at/above scrollTop —
     // same semantics the binary search over the dense array had.
@@ -1101,7 +1070,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const behindPx = pad.gapEndPx;
     let end = start;
     let endOffset = startOffset;
-    const bottom = startOffset + this.containerSize.value + behindPx;
+    const bottom = startOffset + this.containerSpan + behindPx;
     while (end < itemCount && endOffset < bottom) {
       endOffset += measured[end] ?? assumed;
       end++;
@@ -1300,7 +1269,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   clampScrollPosition() {
     const container = this.containerSpan;
     const max = Math.max(0, this.scrollExtent.value - container);
-    if (Number(this.scrollPosition.value) <= max) return;
+    if (this.scrollPosition.value <= max) return;
     this.setScrollPosition(-max, false, true, false);
   }
 
@@ -1322,7 +1291,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // under the reader would move — a backward jerk in every glide it hit
     const lenis = this.lenis;
     const gliding = Boolean(lenis && lenis.isScrolling);
-    const scroll = gliding ? lenis!.animatedScroll : Number(this.scrollPosition.value);
+    const scroll = gliding ? lenis!.animatedScroll : this.scrollPosition.value;
     // the bottom edge is the anchor only while the reader is actually moving
     // up: at rest, a row that grows (a card opened by a click) must grow
     // DOWNWARD from where the reader left it, whatever the last direction was
@@ -1365,7 +1334,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       this.scrollPosition.value = Math.max(0, lenis.targetScroll);
       return;
     }
-    const next = Math.max(0, Number(this.scrollPosition.value) + delta);
+    const next = Math.max(0, this.scrollPosition.value + delta);
     if (lenis) lenis.targetScroll = next;
     this.setScrollPosition(-next, false, true, false);
   }
@@ -1592,14 +1561,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * zeroed: what the browser wanted to show is shown, and the rows stay
    * inside the clip.
    */
-  onScroll(event: Event) {
-    if (this.preventScrollEvent.value) event.preventDefault();
+  onScroll(_event: Event) {
     const element = this.scrollElement.value;
     if (!element) return;
     const native = this.nativeScrollOffset(element);
     if (native === 0) return;
     this.resetNativeScroll(element);
-    if (!this.preventScrollEvent.value) this.scrollBy(native);
+    this.scrollBy(native);
   }
 
   /** The frame's native offset along the main axis. */
@@ -1609,14 +1577,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   protected resetNativeScroll(element: HTMLElement) {
     element.scrollTop = 0;
-  }
-
-  disableScrollEvent() {
-    this.preventScrollEvent.value = true;
-  }
-
-  enableScrollEvent() {
-    this.preventScrollEvent.value = false;
   }
 
   setScrollPosition(
@@ -1881,7 +1841,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
         const position = targetPosition();
         if (position === undefined) return;
         this.setScrollPosition(-position, animate);
-        this.seekAppliedPosition = Number(this.scrollPosition.value);
+        this.seekAppliedPosition = this.scrollPosition.value;
         nextTick(() => {
           afterCallback?.();
         });
@@ -1944,7 +1904,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // shift, a scrollbar drag): the position is no longer the landing's.
     // Re-pinning now would yank the reader back to a target they left.
     const applied = this.seekAppliedPosition;
-    if (applied !== null && Math.abs(Number(this.scrollPosition.value) - applied) > 1) {
+    if (applied !== null && Math.abs(this.scrollPosition.value - applied) > 1) {
       stop();
       return;
     }
@@ -2009,9 +1969,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       this.snapTimeout = setTimeout(this.snapToNearest, 90);
       return;
     }
-    const scrollPosition = this.scrollPosition.value;
-    const offset =
-      typeof scrollPosition === 'number' ? scrollPosition : parseFloat(scrollPosition) || 0;
+    const offset = this.scrollPosition.value;
     // 'start': the item nearest the container's leading edge. 'center':
     // the item under the container's center — that item then lands
     // centered (scrollToIndex's default alignment).
@@ -2259,20 +2217,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     inner.style.willChange = 'transform';
   }
 
-  onStart(event: any) {
-    this.startIndex = event.item.__draggable_context.element.index;
-  }
-
-  onDrop(event: any) {
-    const dropIndex =
-      event.target.closest('.virtual-scroller__item').getAttribute('aria-rowindex') - 1;
-    this.emit('drop', this.startIndex, dropIndex);
-  }
-
-  onMove(event: any, originalEvent: any) {
-    this.emit('move', event);
-    return true; // — keep default insertion point based on the direction
-  }
 }
 
 /**

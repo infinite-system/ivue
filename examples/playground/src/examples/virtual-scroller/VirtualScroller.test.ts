@@ -90,10 +90,6 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
     return ref(100);
   }
 
-  override get containerSize() {
-    return this.frameSize;
-  }
-
   override get containerOuterSize() {
     return this.frameSize;
   }
@@ -208,7 +204,7 @@ test('the props object fuses every default into the types, leaves the required l
   }
   expect(props.modelValue).toMatchObject({ required: true });
   expect(props.modelValue).not.toHaveProperty('default');
-  expect(Object.keys(VirtualScroller.Class.emits)).toEqual(['itemsChanged', 'drop', 'move']);
+  expect(Object.keys(VirtualScroller.Class.emits)).toEqual(['itemsChanged']);
 
   const tuned = scroller(rows(3));
   expect(tuned.instance.probeCreepMsPerPx()).toBe(150);

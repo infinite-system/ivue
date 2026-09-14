@@ -47,7 +47,7 @@ class $Probe extends (HorizontalVirtualScroller.$Class as typeof HorizontalVirtu
   }
 
   probeContainerIsWidth() {
-    return this.containerSize === this.elementSize.width;
+    return this.containerOuterSize === this.outerElementSize.width;
   }
 
   probeNativeOffset(element: HTMLElement) {

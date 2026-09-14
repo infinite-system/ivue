@@ -60,10 +60,6 @@ class $HorizontalVirtualScroller<
     return 'pan-y';
   }
 
-  override get containerSize() {
-    return this.elementSize.width;
-  }
-
   override get containerOuterSize() {
     return this.outerElementSize.width;
   }
