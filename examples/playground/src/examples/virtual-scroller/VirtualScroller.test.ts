@@ -33,6 +33,7 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If the vertical seams are read, then they name the y axis: translateY and deltaY, and the frame gives the browser no gesture at all: touch-action none.
 // domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
 // domain-invariant: $VirtualScroller — If nudgePaint runs on WebKit, then the inner layer's will-change is cycled through auto with a layout read between; elsewhere it does nothing.
+// domain-invariant: $VirtualScroller — If the scroller writes the transform itself on WebKit, then the layer is re-promoted first, because Lenis's own re-promote only covers the writes Lenis makes.
 // domain-invariant: $VirtualScroller — If the frame scrolls natively, then the offset becomes a virtual scroll and the frame is zeroed; Lenis never adopts a native scroll on either axis.
 // domain-invariant: $VirtualScroller — If the frame loop finds nothing to paint — no input arriving, no lerp remaining, no creep — then it parks itself, and the next input wakes it; a scroller nobody touches requests no frames
 [The frame loop runs only while there is motion](virtual-scroller.invariants.md#the-frame-loop-runs-only-while-there-is-motion)
@@ -762,6 +763,22 @@ test('the vertical seams read the y axis: translateY and deltaY', () => {
   expect(instance.probeTransform(-42)).toBe('translateY(-42px)');
   expect(instance.probeAxisDelta({ deltaX: 5, deltaY: 9 })).toBe(9);
   expect(instance.frameTouchAction).toBe('none');
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the scroller writes the transform itself on WebKit, then the layer is re-promoted first, because Lenis's own re-promote only covers the writes Lenis makes.
+test('a transform the scroller writes itself asks for the re-promote; a Lenis-owned write does not', () => {
+  const { instance, unmount } = scroller(rows(20));
+  instance.scrollElementInner.value = document.createElement('div');
+  instance.scrollElement.value = document.createElement('div');
+  const nudges = vi.spyOn(instance, 'nudgePaint');
+  // the scroller's own write — a clamp, a size wave's anchor shift, a landing
+  instance.setScrollPosition(-100, true, false);
+  expect(nudges).toHaveBeenCalledTimes(1);
+  // the frame loop's write: Lenis owns the transform there and re-promotes itself
+  instance.setScrollPosition(-120, false);
+  expect(nudges).toHaveBeenCalledTimes(1);
+  nudges.mockRestore();
   unmount();
 });
 

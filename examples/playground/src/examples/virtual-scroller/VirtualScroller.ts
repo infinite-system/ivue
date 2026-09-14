@@ -1533,6 +1533,17 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.scrollPosition.value = absolutePosition;
 
     if (inner && translateY) {
+      // WebKit does not rasterize what a write like this one mounts: it
+      // moves the composited layer and leaves the fresh rows blank until
+      // something re-promotes it. Lenis does exactly this before every
+      // transform IT writes (see the fork's IS_SAFARI branch in setScroll);
+      // the writes the scroller makes ITSELF — a size wave's anchor shift, a
+      // clamp, a landing, the creep — bypass that branch, so they ask for
+      // the same nudge here. Seen on an iPhone as the bottom of the list
+      // going blank after folding a tool call and coming back on the next
+      // scroll, which is Lenis writing again.
+      // invariant: WebKit re-rasterizes the layer on every autoscroll write (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+      this.nudgePaint();
       // Rebased + snapped for GPU precision (see renderBias/snapForRender);
       // scrollPosition and lenis keep full precision for the scroll math.
       const rendered = position + this.renderBias.value;
