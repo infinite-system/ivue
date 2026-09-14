@@ -350,6 +350,14 @@ class $Lenis {
   readonly dimensions: Dimensions.Model; // public: the Snap class reads it
   protected readonly virtualScroll: VirtualScroll.Model;
 
+  /** The scroll value the content's transform currently carries, in absolute
+   *  scroll space: remembered when we write it and when a consumer tells us
+   *  what it wrote. Null only before the first write, when reading it back
+   *  is the sole source — and reading it back means
+   *  `getComputedStyle(...).transform`, which forces a style recalc for a
+   *  number we already have. */
+  protected appliedTranslate: number | null = null;
+
   /**
    * Subtracted from the applied translate (and added back on read-back) so
    * a virtualized consumer can keep the RENDERED offset near zero while the
@@ -600,6 +608,11 @@ class $Lenis {
    * first re-pin).
    */
   adoptExternalScroll(scroll: number) {
+    // The consumer wrote the transform itself and is telling us where it put
+    // the content, so this is what a read-back would say — record it rather
+    // than dropping the cache, which left it cold on every frame that
+    // mounted a row (measured: 0 hits, 34 adopts over thirty notches).
+    this.appliedTranslate = scroll;
     this.animate.stop();
     this.isScrolling = false;
     this.lastVelocity = this.velocity = 0;
@@ -674,6 +687,11 @@ class $Lenis {
       }
       (this.options.content as HTMLElement).style.transform = `translateY(${-rendered}px)`;
     }
+    // What the read-back would say, remembered at the moment of writing.
+    // Reading it back instead means `getComputedStyle(...).transform`, which
+    // forces a style recalc — 157 of them over a thirty-notch scroll in a
+    // trace, about 85 ms, for a number this method already has in hand.
+    this.appliedTranslate = this.isHorizontal ? null : rendered + this.renderOffset;
   }
 
   protected onClick(event: PointerEvent | MouseEvent) {
@@ -1415,6 +1433,10 @@ class $Lenis {
   }
 
   getTranslateY(element: HTMLElement) {
+    // the content's own translate is whatever the last write applied; only a
+    // foreign element, or a content we have not written yet, needs the read
+    if (element === this.options.content && this.appliedTranslate !== null)
+      return this.appliedTranslate;
     const style = window.getComputedStyle(element);
     const transform = style.transform;
 
