@@ -720,33 +720,56 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return this.props.snapAlign;
   }
 
-  /** The reader is moving the content themselves — a glide still lerping, or
-   *  the reading creep moving on from a landing. A converge loop ends on it:
-   *  a creep that kept mounting rows shifted the target at every mount, and
-   *  every shift re-pinned the landing under it, a 6 px snap-back every few
-   *  frames for as long as the creep ran. */
-  get readerIsMoving(): boolean {
-    return Boolean(this.lenis?.isScrolling) || this.autoplay.isCreeping;
-  }
+  /* The motion predicates. Two primitives, and the three different
+     questions the scroller asks of them — kept apart on purpose: a creep is
+     not an input, and an anchor cares about one where a landing cares about
+     the other. Written out by hand at each site, the difference is
+     invisible and the drift is silent. */
 
-  /** Input is still arriving: a snap waits rather than fighting it. */
+  /** Input is still arriving — a wheel notch, a finger on the glass. */
   get inputLive(): boolean {
     return this.virtualScrolling;
   }
 
-  /** A lerp is still travelling: a snap waits for it to land. */
+  /** A lerp is still travelling toward its target. */
   get lerpRunning(): boolean {
     return Boolean(this.lenis?.isScrolling);
   }
 
-  /** nothing left for the frame loop to paint: no input arriving, no lerp remaining, no creep */
+  /** The lerp has arrived — within the settle band of its target. */
+  get lerpLanded(): boolean {
+    return Math.abs(this.scrollGap) < 0.5;
+  }
+
+  /** The content is travelling under the reader right now. What the anchor
+   *  edge turns on: at rest a row that grows must grow DOWNWARD from where
+   *  the reader left it, whatever the last direction was. */
+  get contentIsMoving(): boolean {
+    return this.lerpRunning || this.inputLive;
+  }
+
+  /** This scroller plays itself as the reader reads: autoplay is asked for
+   *  and step mode is not. A plain list — a chat, an index — never creeps,
+   *  and so never reaches the auto-repeat reset that would send it back to
+   *  the top. Both the wheel and a thumb release ask this before arming. */
+  get playsWhileReading(): boolean {
+    return this.props.autoPlay && !this.props.snapToItems;
+  }
+
+  /** The reader is moving the content themselves — a glide, or the reading
+   *  creep moving on from a landing. What a converge loop ends on: a creep
+   *  that kept mounting rows shifted the target at every mount, and every
+   *  shift re-pinned the landing under it, a 6 px snap-back every few frames
+   *  for as long as the creep ran. */
+  get readerIsMoving(): boolean {
+    return this.lerpRunning || this.autoplay.isCreeping;
+  }
+
+  /** Nothing left for the frame loop to paint: no creep armed, no input
+   *  arriving, no lerp remaining. */
   get isAtRest(): boolean {
-    const lenis = this.lenisRequired;
     return (
-      !this.isAutoPlaying.value &&
-      !this.virtualScrolling &&
-      lenis.isScrolling === false &&
-      Math.abs(lenis.targetScroll - lenis.animatedScroll) < 0.5
+      !this.isAutoPlaying.value && !this.inputLive && !this.lerpRunning && this.lerpLanded
     );
   }
 
@@ -1279,15 +1302,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // target: a row growing between the two would otherwise be read as
     // below the anchor (no shift) while it is on screen, and the content
     // under the reader would move — a backward jerk in every glide it hit
-    const lenis = this.lenis;
-    const gliding = Boolean(lenis && lenis.isScrolling);
-    const scroll = gliding ? lenis!.animatedScroll : this.scrollPosition.value;
+    const scroll = this.lerpRunning ? this.lenis!.animatedScroll : this.scrollPosition.value;
     // the bottom edge is the anchor only while the reader is actually moving
     // up: at rest, a row that grows (a card opened by a click) must grow
     // DOWNWARD from where the reader left it, whatever the last direction was
-    const moving = gliding || this.virtualScrolling;
     const edge =
-      moving && this.scrollDirection.value === 'up'
+      this.contentIsMoving && this.scrollDirection.value === 'up'
         ? scroll + Math.max(0, this.containerOuterSize.value - 1)
         : scroll;
     const at = this.getIndexAtPosition(edge);
@@ -1314,7 +1334,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.shiftMark.total += delta;
     this.landing.shiftLanding(delta);
     const lenis = this.lenis;
-    if (lenis && lenis.isScrolling) {
+    if (lenis && this.lerpRunning) {
       // the glide moves with the content: its lerp keeps its remaining
       // distance and the compensation paints in this frame. The position
       // cell follows the shifted target — the clamp that runs after a
@@ -1579,7 +1599,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.scrollbarDragging.value = false;
     this.virtualScrolling = false;
     const forward = this.thumbDrag.to > this.thumbDrag.from;
-    if (forward && this.props.autoPlay && !this.props.snapToItems) this.isAutoPlaying.value = true;
+    if (forward && this.playsWhileReading) this.isAutoPlaying.value = true;
     if (this.isAutoPlaying.value) {
       this.scrollDirection.value = 'down';
       this.autoplay.armResume();
@@ -1700,15 +1720,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // the settle chain below resumes the creep once the input rests.
     if (this.isAutoPlaying.value && delta < 0) {
       this.stopAutoPlay();
-    } else if (
-      !this.isAutoPlaying.value &&
-      delta > 0 &&
-      this.props.autoPlay &&
-      !this.props.snapToItems
-    ) {
-      // reading intent re-arms the creep — on a scroller that plays at all;
-      // a plain list (a chat) never creeps, and so never reaches the
-      // auto-repeat reset that would send it back to the top
+    } else if (!this.isAutoPlaying.value && delta > 0 && this.playsWhileReading) {
+      // reading intent re-arms the creep
       this.isAutoPlaying.value = true;
     }
     this.virtualScrolling = true;
