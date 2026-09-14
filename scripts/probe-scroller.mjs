@@ -180,7 +180,16 @@ try {
     const { ctx, page } = await open(browser);
     await page.fill('.ac-composer textarea', 'probe');
     await page.evaluate(() => document.querySelector('.ac-send').click());
-    await page.waitForTimeout(4000);
+    // Wait for the reply to finish streaming, not for a stopwatch. A fixed
+    // 4 s measured the gap mid-stream whenever the VM was loaded and read as
+    // a broken pin — the same flakiness the reversal check had. The composer
+    // shows a stop button for exactly as long as the reply is streaming, so
+    // that is the signal; the settle after it is for the last rows to
+    // measure and the pin to apply.
+    await page
+      .waitForSelector('.ac-stop', { state: 'detached', timeout: 15000 })
+      .catch(() => undefined);
+    await page.waitForTimeout(900);
     const gap = await page.evaluate(() => {
       const m = document.querySelector('.ac-thread .virtual-scroller').__vueParentComponent
         .setupState.virtualScroller;
