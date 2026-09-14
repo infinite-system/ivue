@@ -34,7 +34,6 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
 // domain-invariant: $VirtualScroller — If nudgePaint runs on WebKit, then the inner layer's will-change is cycled through auto with a layout read between; elsewhere it does nothing.
 // domain-invariant: $VirtualScroller — If the scroll rests part-way into a tall row, then the window still reaches a container below the SCROLL POSITION, not below that row's top, so the row at the bottom edge is mounted.
-// domain-invariant: $VirtualScroller — If the scroller writes the transform itself on WebKit, then the layer is re-promoted first, because Lenis's own re-promote only covers the writes Lenis makes.
 // domain-invariant: $VirtualScroller — If the frame scrolls natively, then the offset becomes a virtual scroll and the frame is zeroed; Lenis never adopts a native scroll on either axis.
 // domain-invariant: $VirtualScroller — If the frame loop finds nothing to paint — no input arriving, no lerp remaining, no creep — then it parks itself, and the next input wakes it; a scroller nobody touches requests no frames
 [The frame loop runs only while there is motion](virtual-scroller.invariants.md#the-frame-loop-runs-only-while-there-is-motion)
@@ -782,22 +781,6 @@ test('a tall row at the top of the viewport does not starve the window: the row 
   // measured from the row's TOP the walk stopped at 330 — ten px short of the
   // viewport, and the row at the bottom edge was never mounted
   expect(covered).toBeGreaterThanOrEqual(top + 90 + instance.containerSpan);
-  unmount();
-});
-
-// domain-invariant: $VirtualScroller — If the scroller writes the transform itself on WebKit, then the layer is re-promoted first, because Lenis's own re-promote only covers the writes Lenis makes.
-test('a transform the scroller writes itself asks for the re-promote; a Lenis-owned write does not', () => {
-  const { instance, unmount } = scroller(rows(20));
-  instance.scrollElementInner.value = document.createElement('div');
-  instance.scrollElement.value = document.createElement('div');
-  const nudges = vi.spyOn(instance, 'nudgePaint');
-  // the scroller's own write — a clamp, a size wave's anchor shift, a landing
-  instance.setScrollPosition(-100, true, false);
-  expect(nudges).toHaveBeenCalledTimes(1);
-  // the frame loop's write: Lenis owns the transform there and re-promotes itself
-  instance.setScrollPosition(-120, false);
-  expect(nudges).toHaveBeenCalledTimes(1);
-  nudges.mockRestore();
   unmount();
 });
 

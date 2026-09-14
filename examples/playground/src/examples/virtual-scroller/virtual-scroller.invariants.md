@@ -217,17 +217,17 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If the selection's autoscroll writes the transform on WebKit (every iOS browser included), then the composited layer is demoted and re-promoted (`will-change: auto`, a layout read, `will-change: transform`) in the same step, so the rows that write mounted are rasterized while the finger still holds; on other engines the nudge is a no-op.
 
-**Scope:** `VirtualScroller.ts` `nudgePaint`, `IS_WEBKIT`, and `setScrollPosition`'s own transform write; `VirtualScrollerSelection.ts` `autoscrollStep`, the `nudgePaint` member of its `Owner`.
+**Scope:** `VirtualScroller.ts` `nudgePaint`, `IS_WEBKIT`; `VirtualScrollerSelection.ts` `autoscrollStep`, the `nudgePaint` member of its `Owner`.
 
-**Renegotiable at:** WebKit's compositing — it moves a promoted layer but leaves content mounted during the move unpainted until something re-promotes it (seen on an iPhone as blank rows past the fold, a vanished scrollbar thumb, and the bottom of the list going blank after a tool call is folded, returning on the next scroll). The Lenis fork re-promotes before every transform IT writes (`IS_SAFARI` in `setScroll`), which covers the frame loop; every transform the SCROLLER writes itself — a size wave's anchor shift, a clamp, a landing, the creep, the selection's autoscroll — bypasses that branch and asks for the nudge on its own.
+**Renegotiable at:** WebKit's compositing under an active touch — it moves a promoted layer but leaves content mounted during the move unpainted until the touch ends (seen on an iPhone as blank rows past the fold and a vanished scrollbar thumb). The Lenis fork's wheel path carries the same workaround (`IS_SAFARI` in `setScroll`); the autoscroll writes through the scroller, so it needs its own.
 
 **Mechanism:** The will-change cycle forces the layer to be re-created and re-rasterized; the layout read between the two writes is what makes the demotion take effect before the promotion. Chrome and Firefox keep the permanent `will-change: transform` from the CSS and take the plain write — on Chrome the re-raster snaps text per frame and reads as shimmer, so the nudge is gated to WebKit.
 
 **Evidence:** `VirtualScroller.ts` `nudgePaint`; `src/lenis/lenis.ts` `setScroll` (the Safari branch and its comment). Tests: "the paint nudge cycles will-change on WebKit and is a no-op elsewhere", "holding the pointer inside the edge zone scrolls forward at a crawl, past the frame faster, above it backward, and returning to the interior stops it" (one nudge per write).
 
-**Impossible if true:** A row mounted by the autoscroll on iOS that stays blank until the finger lifts. A will-change write on Chrome from the autoscroll. A transform the scroller writes itself on WebKit reaching the layer without a re-promote first.
+**Impossible if true:** A row mounted by the autoscroll on iOS that stays blank until the finger lifts. A will-change write on Chrome from the autoscroll.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller -t "paint nudge|edge zone scrolls forward|asks for the re-promote"`
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller -t "paint nudge|edge zone scrolls forward"`
 
 **Status:** provisional
 
