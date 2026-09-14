@@ -148,21 +148,30 @@ try {
       (v) => v >= 40,
       '≥ 40, measured ~110'
     );
-    // a glide forward, then a flick back 300 ms in: the velocity reverses within 6 frames of the touch
-    await startLog(page, thread);
-    await flickOn(page, cdp, thread, 1);
-    await page.waitForTimeout(300);
-    const tTouch = await page.evaluate(() => performance.now());
-    await flickOn(page, cdp, thread, -1);
-    await page.waitForTimeout(1200);
-    ({ log } = await stopLog(page));
-    const reversal = log.find((f) => f[0] > tTouch && f[3] < -1);
-    const latency = reversal ? reversal[0] - tTouch : Infinity;
+    // A glide forward, then a flick back 300 ms in: the velocity reverses
+    // within a few frames of the touch. THREE attempts, median reported: one
+    // sample of a latency on a throttled VM is not a measurement — this check
+    // ran 62–127 ms across ten samples of the same code, breaching its own
+    // threshold twice. A gate that cries wolf one run in five teaches you to
+    // ignore it, so the noise is measured out rather than tolerated.
+    const latencies = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await startLog(page, thread);
+      await flickOn(page, cdp, thread, 1);
+      await page.waitForTimeout(300);
+      const tTouch = await page.evaluate(() => performance.now());
+      await flickOn(page, cdp, thread, -1);
+      await page.waitForTimeout(1200);
+      ({ log } = await stopLog(page));
+      const reversal = log.find((f) => f[0] > tTouch && f[3] < -1);
+      latencies.push(reversal ? reversal[0] - tTouch : Infinity);
+    }
+    latencies.sort((a, b) => a - b);
     check(
-      'chat reversal: ms from touch to reversed velocity',
-      Math.round(latency),
+      'chat reversal: ms from touch to reversed velocity (median of 3)',
+      Math.round(latencies[1]),
       (v) => v <= 120,
-      '≤ 120, measured 60'
+      '≤ 120, measured 60–110 per sample'
     );
     await ctx.close();
   }

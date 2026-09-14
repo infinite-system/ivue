@@ -1492,8 +1492,15 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // nothing ever recovers). Refuse it.
     // invariant: The scroll position lands inside the scrollable range (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     if (!Number.isFinite(position)) return;
+    // Every read this method needs, taken once: it runs on every frame there
+    // is motion, and the layer, the extent and the integrator were each
+    // re-read three or four times down the body.
+    const inner = this.scrollElementInner.value;
+    const lenis = this.lenis;
     const containerSize = this.containerSpan;
-    if (position > 0 || this.scrollExtent.value < containerSize) position = 0;
+    const extent = this.scrollExtent.value;
+
+    if (position > 0 || extent < containerSize) position = 0;
 
     // Prevent scrolling down beyond the last row. The frame's native
     // scrollTop is not read here: the frame is never natively panned along
@@ -1501,12 +1508,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // scrollTop read on this per-frame path forced a layout after every
     // patch (measured: 163 ms over two flicks on a phone profile).
     // invariant: The frame is never natively panned along its own axis (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-    if (
-      Math.abs(position) + containerSize > this.scrollExtent.value &&
-      this.scrollExtent.value > containerSize
-    ) {
+    if (Math.abs(position) + containerSize > extent && extent > containerSize) {
       // Must be negative
-      position = -(this.scrollExtent.value - containerSize);
+      position = -(extent - containerSize);
     }
 
     const absolutePosition = Math.abs(position);
@@ -1520,19 +1524,16 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (translateY) this.updateRenderBias(absolutePosition);
 
     this.scrollPosition.value = absolutePosition;
-    if (this.scrollElementInner.value) {
-      if (!animate) {
-        this.scrollElementInner.value.style.transitionDuration = '0s';
-      } else {
-        this.scrollElementInner.value.style.transitionDuration = '0.45s';
-      }
+
+    if (inner) {
+      inner.style.transitionDuration = animate ? '0.45s' : '0s';
     }
 
-    if (translateY && this.scrollElementInner.value) {
+    if (inner && translateY) {
       // Rebased + snapped for GPU precision (see renderBias/snapForRender);
       // scrollPosition and lenis keep full precision for the scroll math.
       const rendered = position + this.renderBias.value;
-      this.scrollElementInner.value!.style.transform = this.transformFor(
+      inner.style.transform = this.transformFor(
         snapRender ? this.self.snapForRender(rendered) : rendered
       );
       // Programmatic jumps write the transform directly — lenis must ADOPT
@@ -1544,10 +1545,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // animated, possibly millions of px away: a few frames of catch-up
       // sweep). The wheel path (translateY false — lenis owns the transform
       // there) keeps its lerp untouched.
-      this.lenis?.adoptExternalScroll(absolutePosition);
+      lenis?.adoptExternalScroll(absolutePosition);
     }
 
-    if (this.lenis) this.lenis.targetScroll = absolutePosition;
+    if (lenis) lenis.targetScroll = absolutePosition;
   }
 
   resetScrollTop() {
