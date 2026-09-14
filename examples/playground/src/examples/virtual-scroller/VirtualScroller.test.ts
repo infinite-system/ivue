@@ -29,8 +29,6 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If a measurement wave leaves at least five rows measured, then the estimate becomes their average once and stays there; a wave with fewer changes nothing, and a later wave changes nothing
 // domain-invariant: $VirtualScroller — If the container grows while the position rests at the end, then the position moves to the new end, so the last row keeps the bottom edge instead of floating above a blank strip.
 // domain-invariant: $VirtualScroller — If a patch mounts or unmounts a wave of rows, then their captures apply together: one geometry bump, one anchor taken before the first and restored after the last, one clamp — never a transform write between two rows' reads.
-// domain-invariant: $VirtualScroller — If item i's position is asked, then it is the sum of the sizes before it, measured where known and the estimate elsewhere, whichever way the cursor walks there.
-// domain-invariant: $VirtualScroller — If a pixel offset is asked for its item, then anchoring that item at the returned fraction gives the same pixel back.
 // domain-invariant: $VirtualScroller — If the window changes, then itemsChanged fires once with the padded bounds; a scroll that keeps the window fires nothing.
 // domain-invariant: $VirtualScroller — If the vertical seams are read, then they name the y axis: translateY and deltaY, and the frame gives the browser no gesture at all: touch-action none.
 // domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
@@ -49,7 +47,6 @@ Impossible if true: A rendered scroll position beyond the extent.
 Impossible if true: A viewport bottom left uncovered mid-lerp because the rows behind the target measure shorter than the estimate.
 Impossible if true: A spacer and a transform a chunk apart within one frame.
 Impossible if true: A viewport resting past the last row after it shrank.
-Impossible if true: An item outside the list with a position.
 Impossible if true: A window whose spacers plus rows sum to anything but the extent.
 Impossible if true: an estimate that first calibrates under the reader's first gesture on a phone, or one that drifts after it calibrated
 Impossible if true: A container that grew leaving the last row above its bottom edge.
@@ -119,7 +116,7 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
   }
 
   probeGeometryVersion() {
-    return this.geometryVersion.value;
+    return this.geometry.version.value;
   }
 
   probeCalibrate() {
@@ -503,67 +500,6 @@ test('a nested knob left out reads as its tuned default at every depth, a suppli
   });
   tuned.unmount();
   set.unmount();
-});
-
-// domain-invariant: $VirtualScroller — If item i's position is asked, then it is the sum of the sizes before it, measured where known and the estimate elsewhere, whichever way the cursor walks there.
-// invariant: Rendered sizes are known only after a row mounts (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-test('an item’s position is the sum of the sizes before it, measured or assumed, and the same from either direction of the walk', () => {
-  const { instance, unmount } = scroller(rows(10), { assumedSize: 30 });
-  expect(instance.scrollExtent.value).toBe(300);
-  expect(instance.getIndexPosition(4)).toBe(120);
-
-  // Item 2 turns out to be 100 px tall: everything after it shifts by 70.
-  instance.syncItemSize(2, 100);
-  expect(instance.getIndexPosition(2)).toBe(60);
-  expect(instance.getIndexPosition(3)).toBe(160);
-  expect(instance.getIndexPosition(9)).toBe(340);
-  expect(instance.scrollExtent.value).toBe(370);
-
-  // Walking back from the far end lands on the same numbers as walking up.
-  expect(instance.getIndexPosition(0)).toBe(0);
-  expect(instance.getIndexPosition(3)).toBe(160);
-
-  // Un-measuring restores the estimate.
-  instance.syncItemSize(2, null as unknown as number);
-  expect(instance.getIndexPosition(3)).toBe(90);
-  unmount();
-});
-
-// impossible-if-true: $VirtualScroller — An item outside the list with a position.
-test('no item outside the list has a position', () => {
-  const { instance, unmount } = scroller(rows(5));
-  expect(instance.getIndexPosition(-1)).toBeUndefined();
-  expect(instance.getIndexPosition(5)).toBeUndefined();
-  expect(instance.getAnchoredPosition(5)).toBeUndefined();
-  unmount();
-});
-
-// domain-invariant: $VirtualScroller — If a pixel offset is asked for its item, then anchoring that item at the returned fraction gives the same pixel back.
-test('the item under a pixel offset, anchored at its fraction, returns that pixel', () => {
-  const { instance, unmount } = scroller(rows(10), { assumedSize: 30 });
-  instance.syncItemSize(2, 100);
-  for (const offset of [0, 29, 30, 75, 159, 160, 345]) {
-    const at = instance.getIndexAtPosition(offset)!;
-    expect(instance.getAnchoredPosition(at.index, at.fraction)).toBeCloseTo(offset, 6);
-  }
-  expect(instance.getIndexAtPosition(75)).toEqual({ index: 2, fraction: 0.15 });
-  // Past the end: the last item, fully scrolled.
-  expect(instance.getIndexAtPosition(10_000)).toEqual({ index: 9, fraction: 1 });
-  unmount();
-});
-
-// invariant: A seek names an item not a pixel (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-test('a ratio names an item plus a fraction inside it, and the end gap keeps the next item’s top clear of the viewport top', () => {
-  const { instance, unmount } = scroller(rows(11), { assumedSize: 30 });
-  expect(instance.getRatioPosition(0)).toBe(0);
-  expect(instance.getRatioPosition(1)).toBe(300);
-  // 0.5 × 10 = item 5 exactly.
-  expect(instance.getRatioPosition(0.5)).toBe(150);
-  // 0.55 × 10 = item 5 at half: 165 px. With a 20 px end gap the landing
-  // may not pass 180 − 20 = 160.
-  expect(instance.getRatioPosition(0.55)).toBe(165);
-  expect(instance.getRatioPosition(0.55, 20)).toBe(160);
-  unmount();
 });
 
 // invariant: An unchanged window keeps its array identity (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)

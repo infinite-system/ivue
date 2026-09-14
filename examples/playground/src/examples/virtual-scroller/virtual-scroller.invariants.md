@@ -81,21 +81,21 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If a row has not been rendered, then its size is the estimate, and the position of every row is the sum over the rows before it of the measured size where one exists and the estimate elsewhere.
 
-**Scope:** `VirtualScroller.ts`: `syncItemSize`, `getIndexPosition`, `getIndexAtPosition`, `getAnchoredPosition`, `computeScrollExtent`, the `cursor` holder and the `measuredSizes` map. Applies to every row of every list the scroller renders.
+**Scope:** `VirtualScrollerGeometry.ts` whole — `positionOf`, `indexAt`, `anchoredPosition`, `contentSize`, `applySize`, the `cursor` holder and the `measuredSizes` map; `VirtualScroller.ts` `syncItemSize`, which measures and anchors around it. Applies to every row of every list the scroller renders.
 
 **Renegotiable at:** Layout — a browser lays out only what is in the DOM; a list that knew every size up front would not need the estimate.
 
-**Mechanism:** `measuredSizes` is sparse; `estimatedItemSize` fills the holes. `syncItemSize` keeps `measuredSum`, `measuredCount` and the cursor's `offset === P(cursor.index)` exact in O(1); `getIndexPosition` walks the cursor to the asked index, so the answer is the same whichever way it walks. `maybeCalibrateEstimate` swaps the assumption once, after twenty rows have measured; the anchor around that wave (see [A row under the reader stays put while sizes settle](#a-row-under-the-reader-stays-put-while-sizes-settle)) absorbs the shift wherever the reader is.
+**Mechanism:** `measuredSizes` is sparse; `estimatedItemSize` fills the holes. `applySize` keeps `measuredSum`, `measuredCount` and the cursor's `offset === P(cursor.index)` exact in O(1); `positionOf` walks the cursor to the asked index, so the answer is the same whichever way it walks. `calibrate` swaps the assumption once, on the first wave with `CALIBRATION_ROWS` rows measured; the anchor around that wave (see [A row under the reader stays put while sizes settle](#a-row-under-the-reader-stays-put-while-sizes-settle)) absorbs the shift wherever the reader is. The model is asked, never told: it reads the items and the assumed size through its owner and nothing else, which is why it is proven without a scroller.
 
-**Generates:** The `assumedSize` prop and the marquee's exact width seeding; the converge loop in `scrollToIndex`, which re-applies a landing as sizes refine.
+**Generates:** The `assumedSize` prop and the marquee's exact width seeding; the converge loop in `scrollToIndex`, which re-applies a landing as sizes refine; the geometry as its own class, since the model needs no DOM to be true.
 
 **Rejected alternatives:** A dense positions array — O(n) on every size change, which is a burst per scroll at 100k items.
 
-**Evidence:** `VirtualScroller.ts` `syncItemSize`, `getIndexPosition`. Tests: "an item’s position is the sum of the sizes before it, measured or assumed, and the same from either direction of the walk", "the item under a pixel offset, anchored at its fraction, returns that pixel".
+**Evidence:** `VirtualScrollerGeometry.ts` `applySize`, `positionOf`. Tests: "an item’s position is the sum of the sizes before it, measured or assumed, and the same from either direction of the walk", "the item under a pixel offset, anchored at its fraction, returns that pixel", "however far the cursor has walked, its offset is still the sum of the sizes before its index".
 
 **Impossible if true:** Two walks to the same index returning different positions. A measured row contributing the estimate to the extent.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "sum of the sizes before it|anchored at its fraction"`
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerGeometry.test.ts`
 
 **Status:** provisional
 
@@ -349,15 +349,15 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If a seek bar asks for a 0..1 fraction, then the fraction names an item plus a fraction inside it (index space), the landing rides `scrollToIndex`, and the converge loop re-applies that same anchor as sizes refine so the CONTENT stays still.
 
-**Scope:** `VirtualScroller.ts` `seekToFraction`, `seekToProgress`, `getRatioPosition`, `getAnchoredPosition`, `scrollToIndex`, `snapAlignOffset`.
+**Scope:** `VirtualScroller.ts` `seekToFraction`, `seekToProgress`, `scrollToIndex`, `snapAlignOffset`; `VirtualScrollerGeometry.ts` `ratioPosition` and `anchoredPosition`, which turn a ratio into the item it names.
 
-**Mechanism:** `getRatioPosition` scales the fraction over `itemCount − 1` and anchors at the floor item plus the remainder; `scrollToIndex` computes the target from `getIndexPosition` on every wave and stops only after the position has been quiet for 600 ms or the reader takes over — a wheel glide, the reading creep moving on from the landing, a scroll position that no longer matches the last landing (a glide that ended between two waves), or the owner calling `cancelSeek()` because the reader acted on the content instead of scrolling (a creep that kept mounting rows shifted the target at every mount, and every shift snapped the content back under it, for as long as the creep ran). `seekToProgress` is the built-in track's inverse of `scrollbarProgress`: position space resolved to an item plus a fraction, so a marquee chunk wider than the container still reaches its tail.
+**Mechanism:** `ratioPosition` scales the fraction over `itemCount − 1` and anchors at the floor item plus the remainder; `scrollToIndex` computes the target from `getIndexPosition` on every wave and stops only after the position has been quiet for 600 ms or the reader takes over — a wheel glide, the reading creep moving on from the landing, a scroll position that no longer matches the last landing (a glide that ended between two waves), or the owner calling `cancelSeek()` because the reader acted on the content instead of scrolling (a creep that kept mounting rows shifted the target at every mount, and every shift snapped the content back under it, for as long as the creep ran). `seekToProgress` is the built-in track's inverse of `scrollbarProgress`: position space resolved to an item plus a fraction, so a marquee chunk wider than the container still reaches its tail.
 
 **Generates:** The `endGapPx` dead-zone that keeps the promised item clear of the top edge; the `snapAlign` center placement.
 
 **Rejected alternatives:** A raw `lenis.scrollTo` — translates the content without rebasing the window.
 
-**Evidence:** `VirtualScroller.ts` `getRatioPosition`, `scrollToIndex`. Tests: "a ratio names an item plus a fraction inside it, and the end gap keeps the next item’s top clear of the viewport top", "seeking to a fraction lands on the item that fraction names, flush to the start by default and centered when asked".
+**Evidence:** `VirtualScrollerGeometry.ts` `ratioPosition`; `VirtualScroller.ts` `scrollToIndex`. Tests: "a ratio names an item plus a fraction inside it, and the end gap keeps the next item’s top clear of the viewport top", "seeking to a fraction lands on the item that fraction names, flush to the start by default and centered when asked".
 
 **Impossible if true:** A seek landing that moves to different content when a late size wave arrives.
 
@@ -453,15 +453,15 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If the list's length changes, then the aggregates and the cursor are re-derived over the items that remain, measurements contiguous from the new end are dropped, and farther stale keys stay uncounted until the list regrows over them.
 
-**Scope:** `VirtualScroller.ts` `updatePositionsImmediately`, the items-length watch in the constructor, and `syncItemSize` for out-of-range writes.
+**Scope:** `VirtualScrollerGeometry.ts` `rederive` and `applySize`'s out-of-range branch; `VirtualScroller.ts` `updatePositionsImmediately` and the items-length watch in the constructor that calls it.
 
-**Mechanism:** The repair runs imperatively after a splice: it prunes the contiguous run at `length`, re-sums the map over `index < length`, and re-derives the cursor offset, then bumps `geometryVersion`. Out-of-range keys are kept for neighbor reads and resurrect if the list regrows.
+**Mechanism:** The repair runs imperatively after a splice: it prunes the contiguous run at `length`, re-sums the map over `index < length`, and re-derives the cursor offset, then bumps the geometry's one version cell. Out-of-range keys are kept for neighbor reads and resurrect if the list regrows.
 
-**Evidence:** `VirtualScroller.ts` `updatePositionsImmediately`. Test: "shrinking the list re-derives the extent over what remains, prunes the measurements at the new end, and parks the farther ones".
+**Evidence:** `VirtualScrollerGeometry.ts` `rederive`. Tests: "shrinking the list re-derives the size over what remains, prunes the measurements at the new end, and parks the farther ones" (the model), "shrinking the list re-derives the extent over what remains, prunes the measurements at the new end, and parks the farther ones" (through the scroller's items watch).
 
 **Impossible if true:** An extent that counts a row past the list's end.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "shrinking the list"`
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller -t "shrinking the list"`
 
 **Status:** provisional
 
