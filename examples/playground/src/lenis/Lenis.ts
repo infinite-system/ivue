@@ -66,7 +66,7 @@ class $Lenis {
    * its last stretch, not its wait. Fewer than two samples, or a span too
    * short to read, fall back to the frame's own velocity.
    */
-  // invariant: A flick's velocity is read off the finger's last stretch (examples/playground/src/lenis/lenis.invariants.md)
+  // invariant: A flick reads its velocity off the last stretch (examples/playground/src/lenis/lenis.invariants.md)
   static trailVelocity(
     trail: Array<{ at: number; position: number }>,
     fallback: number,

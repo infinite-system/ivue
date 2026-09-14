@@ -1,7 +1,7 @@
 /*
 === GENERATOR ===
 Goal: Know the wrapper's size and the content's scroll size, and their difference as the limit, re-measured on resize.
-[A finger's swipe becomes the glide it meant, on every phone](lenis.invariants.md#a-fingers-swipe-becomes-the-glide-it-meant-on-every-phone)
+[A swipe becomes the glide it meant on every phone](lenis.invariants.md#a-swipe-becomes-the-glide-it-meant-on-every-phone)
 // domain-invariant: $Dimensions — If the wrapper is an element, then width and height are its client size and the scroll sizes are its scroll sizes, the limit is scroll size minus size on each axis, and a resize re-reads them.
 Impossible if true: A limit that does not move when the content grows.
 
@@ -31,7 +31,7 @@ function sized(
 }
 
 // domain-invariant: $Dimensions — If the wrapper is an element, then width and height are its client size and the scroll sizes are its scroll sizes, the limit is scroll size minus size on each axis, and a resize re-reads them.
-// invariant: A finger's swipe becomes the glide it meant, on every phone (examples/playground/src/lenis/lenis.invariants.md)
+// invariant: A swipe becomes the glide it meant on every phone (examples/playground/src/lenis/lenis.invariants.md)
 test('an element wrapper measures its client and scroll sizes, the limit is their difference, and resize re-reads', () => {
   const wrapper = document.createElement('div');
   const content = document.createElement('div');

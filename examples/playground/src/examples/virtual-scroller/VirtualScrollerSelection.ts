@@ -1099,7 +1099,8 @@ class $VirtualScrollerSelection {
    * highlight is only paint; it wakes nothing.
    */
   // invariant: The selection is a range over the data (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  // invariant: A finger's drag paints without selecting (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: A touch drag paints without selecting (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: A native selection changed under a held finger cancels the touch (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   /** Re-place the touch class's handles after a scroll — nothing when the
    *  range is not a finger's, since a native highlight needs no help to
    *  follow a scroll. */

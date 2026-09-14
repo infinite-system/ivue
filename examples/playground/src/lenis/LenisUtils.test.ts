@@ -1,7 +1,7 @@
 /*
 === GENERATOR ===
 Goal: The pure maths the fork's lerp, clamp and infinite mode run on, and the debounce its resize observers ride — statics with no state.
-[A finger's swipe becomes the glide it meant, on every phone](lenis.invariants.md#a-fingers-swipe-becomes-the-glide-it-meant-on-every-phone)
+[A swipe becomes the glide it meant on every phone](lenis.invariants.md#a-swipe-becomes-the-glide-it-meant-on-every-phone)
 // domain-invariant: $LenisUtils — If damp is advanced, then the value closes 1 − e^(−λ·dt) of the gap, so two half steps equal one whole step; clamp holds the bounds; modulo keeps the divisor's sign; debounce runs once, after the last call, with that call's arguments.
 Impossible if true: A damp that depends on the frame rate. A modulo of a negative dividend that comes out negative.
 
@@ -17,7 +17,7 @@ import { LenisUtils } from './LenisUtils';
 const { clamp, truncate, lerp, damp, modulo, debounce } = LenisUtils.Class;
 
 // domain-invariant: $LenisUtils — If damp is advanced, then the value closes 1 − e^(−λ·dt) of the gap, so two half steps equal one whole step; clamp holds the bounds; modulo keeps the divisor's sign; debounce runs once, after the last call, with that call's arguments.
-// invariant: A finger's swipe becomes the glide it meant, on every phone (examples/playground/src/lenis/lenis.invariants.md)
+// invariant: A swipe becomes the glide it meant on every phone (examples/playground/src/lenis/lenis.invariants.md)
 test('damp is frame-rate independent: two half steps land where one whole step lands', () => {
   const whole = damp(0, 1000, 6, 0.032);
   const half = damp(damp(0, 1000, 6, 0.016), 1000, 6, 0.016);

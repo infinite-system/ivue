@@ -38,7 +38,7 @@ class $VirtualScrollerItem {
     // current while the row was mounted, and an unmount capture read its
     // rect between the patch's removals, a forced layout per row (measured:
     // 711 ms of captures over two flicks on a phone profile).
-    // invariant: An item captures its size once, on mount (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+    // invariant: An item captures its size once on mount (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
     onMounted(() => this.capture());
   }
 

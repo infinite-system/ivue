@@ -1,7 +1,7 @@
 /*
 === GENERATOR ===
 Goal: Report one rendered row's real size to the scroller twice — on the way into the window and on the way out — in layout pixels whatever the ancestor scale.
-[An item captures its size once, on mount](virtual-scroller.invariants.md#an-item-captures-its-size-once-on-mount)
+[An item captures its size once on mount](virtual-scroller.invariants.md#an-item-captures-its-size-once-on-mount)
 // domain-invariant: $VirtualScrollerItem — If the row sits under an ancestor transform scale, then the item still reports its screen rect; the scroller takes the scale out once per wave.
 // domain-invariant: $VirtualScrollerItem — If the axis prop is x, then the capture reads the rect's width; otherwise its height; the row index is the 1-based aria-rowindex.
 Impossible if true: A size report while no element is attached.
@@ -45,7 +45,7 @@ function item(axis: 'x' | 'y', element: HTMLElement | null) {
   return { ...host, emit };
 }
 
-// invariant: An item captures its size once, on mount (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+// invariant: An item captures its size once on mount (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('the size is reported once, on mount, as the rect — never on unmount, never in between', () => {
   const { emit, unmount } = item(
     'y',

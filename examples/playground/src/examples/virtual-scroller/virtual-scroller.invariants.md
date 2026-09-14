@@ -26,7 +26,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Components:** One per gear, each delete-testable:
 - [Rendered sizes are known only after a row mounts](#rendered-sizes-are-known-only-after-a-row-mounts) — why positions are prefix sums over an estimate that refines.
-- [The reader's row stays put while sizes settle](#the-readers-row-stays-put-while-sizes-settle) — why a row measuring above the reader never moves the content under them.
+- [A row under the reader stays put while sizes settle](#a-row-under-the-reader-stays-put-while-sizes-settle) — why a row measuring above the reader never moves the content under them.
 - [A native selection dies with the node that anchors it](#a-native-selection-dies-with-the-node-that-anchors-it) — why the selection cannot be the browser's.
 - [Touch events keep firing on the node the finger landed on](#touch-events-keep-firing-on-the-node-the-finger-landed-on) — why the gesture's listeners ride the origin node.
 - [The transform lerps to the target over many frames](#the-transform-lerps-to-the-target-over-many-frames) — why a target-anchored window leaves a gap to cover.
@@ -39,7 +39,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [The thumb never shrinks below a grabbable fraction](#the-thumb-never-shrinks-below-a-grabbable-fraction) — why a million rows still have a scrollbar.
 - [A cross-axis touch belongs to the page](#a-cross-axis-touch-belongs-to-the-page) — why a horizontal strip does not trap a vertical swipe.
 - [Every axis dependency goes through a seam getter](#every-axis-dependency-goes-through-a-seam-getter) — why the horizontal scroller is a hundred lines.
-- [An item captures its size once, on mount](#an-item-captures-its-size-once-on-mount) — why sizes are truthful without a per-row observer, and why an unmount reads nothing.
+- [An item captures its size once on mount](#an-item-captures-its-size-once-on-mount) — why sizes are truthful without a per-row observer, and why an unmount reads nothing.
 - [Shrinking the list prunes the measurements at its new end](#shrinking-the-list-prunes-the-measurements-at-its-new-end) — why a splice cannot leave the extent stale.
 - [The selection is a range over the data](#the-selection-is-a-range-over-the-data) — why the highlight survives recycling and copy reaches unmounted rows.
 - [Text offsets are measured against the trimmed row text](#text-offsets-are-measured-against-the-trimmed-row-text) — why a copied row does not start three characters off.
@@ -55,7 +55,8 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [A drag scrolls from inside the edge zone](#a-drag-scrolls-from-inside-the-edge-zone) — why a selection scrolls even when the frame is the page.
 - [The frame is never natively panned along its own axis](#the-frame-is-never-natively-panned-along-its-own-axis) — why a selecting finger cannot pan the rows out of the clip.
 - [A native selection inside the frame is adopted as the logical range](#a-native-selection-inside-the-frame-is-adopted-as-the-logical-range) — why iOS's handles and a keyboard extend the same range the chip copies.
-- [A finger's drag paints without selecting](#a-fingers-drag-paints-without-selecting) — why iOS does not take the touch away mid-drag.
+- [A native selection changed under a held finger cancels the touch](#a-native-selection-changed-under-a-held-finger-cancels-the-touch) — why a touch selection is painted and never written until the finger lifts.
+- [A touch drag paints without selecting](#a-touch-drag-paints-without-selecting) — why iOS does not take the touch away mid-drag.
 - [WebKit re-rasterizes the layer on every autoscroll write](#webkit-re-rasterizes-the-layer-on-every-autoscroll-write) — why rows that mount under a held finger are not blank on iOS.
 - [On a touch device the selection is drawn by the class](#on-a-touch-device-the-selection-is-drawn-by-the-class) — why a phone never enters the system's selection mode at all.
 - [The feel is one nested prop complete at every depth](#the-feel-is-one-nested-prop-complete-at-every-depth) — why a page tunes one leaf and the rest stays tuned.
@@ -84,7 +85,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Renegotiable at:** Layout — a browser lays out only what is in the DOM; a list that knew every size up front would not need the estimate.
 
-**Mechanism:** `measuredSizes` is sparse; `estimatedItemSize` fills the holes. `syncItemSize` keeps `measuredSum`, `measuredCount` and the cursor's `offset === P(cursor.index)` exact in O(1); `getIndexPosition` walks the cursor to the asked index, so the answer is the same whichever way it walks. `maybeCalibrateEstimate` swaps the assumption once, after twenty rows have measured; the anchor around that wave (see _The reader's row stays put while sizes settle_) absorbs the shift wherever the reader is.
+**Mechanism:** `measuredSizes` is sparse; `estimatedItemSize` fills the holes. `syncItemSize` keeps `measuredSum`, `measuredCount` and the cursor's `offset === P(cursor.index)` exact in O(1); `getIndexPosition` walks the cursor to the asked index, so the answer is the same whichever way it walks. `maybeCalibrateEstimate` swaps the assumption once, after twenty rows have measured; the anchor around that wave (see [A row under the reader stays put while sizes settle](#a-row-under-the-reader-stays-put-while-sizes-settle)) absorbs the shift wherever the reader is.
 
 **Generates:** The `assumedSize` prop and the marquee's exact width seeding; the converge loop in `scrollToIndex`, which re-applies a landing as sizes refine.
 
@@ -145,6 +146,28 @@ tier each record is proven at, and how the colocated tests bind to it.
 **Status:** provisional
 
 **Last refined:** 2026-09-06
+
+### A native selection changed under a held finger cancels the touch
+
+**Invariant:** If a page writes the native selection while a finger is down on iOS Safari, then the system takes the touch for its own selection UI and the page receives a touchcancel: the gesture ends where the write landed.
+
+**Scope:** iOS Safari (WebKit on a touch device); any page that calls `setBaseAndExtent` or `Selection.extend` between touchstart and touchend. Not observed on Android Chrome, which keeps delivering the touch.
+
+**Renegotiable at:** WebKit's touch and selection handling — a browser whose selection UI did not claim the touch would not force it.
+
+**Mechanism:** WebKit treats a selection change under a live touch as the start of its own selection interaction — handles and loupe — and a system interaction takes the touch away from the page. A highlight registered through `CSS.highlights` is paint only: it changes no selection, so it wakes none of that.
+
+**Generates:** The touch drag's paint-only path; the class-drawn selection that never calls the native API under a finger.
+
+**Evidence:** Measured on an iPhone: extending the native selection during a drag ended the autoscroll and froze the range at the cancel ("the selection disappears and new rows are not selected"). WebKit 26.5: the Highlight API paints on selectable text with no cancel (3474 tinted px on the control).
+
+**Impossible if true:** A touchmove arriving after a page-driven `setBaseAndExtent` on iOS Safari within the same gesture.
+
+**Verification:** The sweep's touch probe on an iPhone — a drag that writes the native selection ends in a touchcancel; the painted path does not.
+
+**Status:** provisional
+
+**Last refined:** 2026-09-13
 
 ### The transform lerps to the target over many frames
 
@@ -210,7 +233,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Last refined:** 2026-09-06
 
-### The reader's row stays put while sizes settle
+### A row under the reader stays put while sizes settle
 
 **Invariant:** If rows above the row under the edge the reader reads from change size — a row measuring as it mounts, a placeholder becoming its content, a batch re-measure, the estimate calibrating — then the scroll moves by exactly what the content above moved, and that row stays where the reader had it. Scrolling down the edge is the top; while actually moving up it is the bottom, so a row growing inside the view expands upward, away from what was just read; at rest the edge is the top whatever the last direction was, so a row a click opened grows downward from where the reader left it. Rows below the anchor move nothing.
 
@@ -406,7 +429,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Last refined:** 2026-09-06
 
-### An item captures its size once, on mount
+### An item captures its size once on mount
 
 **Invariant:** If a row mounts, then it reports its main-axis rect once, in screen pixels, and never again — not on unmount, not in between; the scroller's capture wave divides the reports by the wrapper's rect-to-layout scale once, so the size map is layout pixels under any ancestor transform.
 
@@ -564,7 +587,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If code runs on every frame or every scroll read — the frame loop's position write, the clamp, Lenis's limit, the walk — then it reads the container's size from the resize observer's cell (`containerOuterSize`, through `containerSpan`) and never the element's `offsetHeight`, `scrollTop`, `scrollHeight` or a rect; before the observer's first report `containerSpan` falls back to the element once. A row's own capture reads one rect, on mount only; the wrapper observer reads the rendered rows' rects once per wave.
 
-**Scope:** `VirtualScroller.ts` `containerSpan`, `setScrollPosition`, `clampScrollPosition`, the `virtualLimit` callback, `scrollToIndex`'s centring, `snapToNearest`; `VirtualScrollerItem.ts` `capture` (mount only); `VirtualScrollerSelection.ts` `applyHighlight` (returns before `getSelection` when nothing is shown).
+**Scope:** `VirtualScroller.ts` `containerSpan`, `setScrollPosition`, `clampScrollPosition`, the `virtualLimit` callback, `scrollToIndex`'s centring, `snapToNearest`; `VirtualScrollerItem.ts` `capture` (mount only); `VirtualScrollerSelection.ts` `applyHighlight` (returns before `getSelection` when nothing is shown). Three layout reads survive on purpose and are not hot paths: `wrapperScale` reads the wrapper twice per remeasure wave (once, not per row); `onScroll` reads `scrollTop` only when the browser itself nudged the frame (a find-in-page match, a selection scroll), never on a scroll of ours; and `nudgePaint` forces one read per autoscroll frame on WebKit alone, which is the point of it — [WebKit re-rasterizes the layer on every autoscroll write](#webkit-re-rasterizes-the-layer-on-every-autoscroll-write).
 
 **Mechanism:** A layout read after a patch forces the layout the browser was going to do at paint, and forces it again for every read that a later write invalidates. A CPU profile of two flicks on a phone profile put 191 ms in live `offsetHeight` reads, 163 ms in a `scrollTop` read on the position write, 711 ms in the rows' unmount captures and 191 ms in the highlight pass reading the document selection on every window change — none of them on the walk or the render. The observer's cell is already the size; reading it costs nothing and forces nothing.
 
@@ -698,15 +721,13 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Last refined:** 2026-09-06
 
-### A finger's drag paints without selecting
+### A touch drag paints without selecting
 
 **Invariant:** If a touch drag is live and the browser has the CSS Custom Highlight API, then the range is painted through `CSS.highlights` and the native selection is not touched until the finger lifts, when the finished range becomes the native selection; a mouse drag pins the native selection throughout, and a browser without the API falls back to it for touch too.
 
 **Scope:** `VirtualScrollerSelection.ts`: `applyHighlight`, `clearCssHighlight`, the `input` holder, `beginAt`'s input parameter, `endDrag`; `TOUCH_HIGHLIGHT_NAME`, `supportsCssHighlight`; the `::highlight(virtual-scroller-selection)` rule in `VirtualScroller.vue`.
 
-**Renegotiable at:** iOS Safari's touch handling — a native selection changing under a held finger hands the touch to the system's selection UI and cancels the page's touch; the autoscroll dies and the range freezes where the cancel hit (seen on an iPhone as "the selection disappears and new rows are not selected"). A highlight is paint only and wakes nothing.
-
-**Mechanism:** `beginAt(x, y, 'touch')` marks the drag; every `applyHighlight` while it lives builds a `Range` over the mounted carets and registers it as a `Highlight`; `endDrag` re-runs `applyHighlight` with the mark cleared, which pins the native selection (the copy chip and iOS's handles need one) and drops the paint. Ctrl+C is a mouse affordance and keeps the native selection from the first move.
+**Mechanism:** A native selection written under a held finger costs the page the gesture — [A native selection changed under a held finger cancels the touch](#a-native-selection-changed-under-a-held-finger-cancels-the-touch) — so the drag paints instead and writes the selection once, after the finger is gone. `beginAt(x, y, 'touch')` marks the drag; every `applyHighlight` while it lives builds a `Range` over the mounted carets and registers it as a `Highlight`; `endDrag` re-runs `applyHighlight` with the mark cleared, which pins the native selection (the copy chip and iOS's handles need one) and drops the paint. Ctrl+C is a mouse affordance and keeps the native selection from the first move.
 
 **Evidence:** `VirtualScrollerSelection.ts` `applyHighlight`. Test: "a finger’s drag paints the range through the CSS Highlight API and leaves the native selection alone until release, when the range becomes the native selection". WebKit 26.5: the Highlight API is present and paints on selectable text (measured, 3474 tinted px on the control).
 
@@ -724,9 +745,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Scope:** `VirtualScrollerSelectionTouch.ts` whole; `VirtualScrollerSelection.ts` `$touch`, `applyHighlight` (the `paintsSelection` branch), `visibleDomRange`, `beginFromEnd`, `itemsWrapperElement`; the overlay rules in `VirtualScroller.vue`. The earlier implementation, which rode the system's selection, is gone; the tag `touch-selection-native-rollback` marks the last build that used it.
 
-**Renegotiable at:** The system's touch selection — its long press, its handles and its loupe contend with the list's own touch scroll for one finger under rules that are the system's and undocumented, and it is anchored to DOM nodes that a virtual list recycles. Owning the whole of it removes the contest.
-
-**Mechanism:** `attach` lays the overlay inside the wrapper, so the boxes move with the transform for free; every touchstart locks the frame's selectability and every release unlocks it, so the system's long press finds nothing while a mouse between touches finds everything; `applyHighlight` hands the mounted DOM range to `paint` on every move and window change while the range is a finger's (`input.touch`), `followTouch` re-places the two handles on every scroll from the last paint's spots and one rect read (the boxes move with the rows; a handle shows only while its spot is on screen), and the highlight is native otherwise; a touch on a handle calls `beginFromEnd` with the opposite end and rides `extendTo`, so the edge zone scrolls the list with the loop the mouse uses; the copy chip copies from the logical range, keeps the selection (a reader may widen it and copy again, as the system's own copy does), reads "Copied ✓" for `COPIED_MS`, shrinks under the finger, and falls back to a textarea copy where the clipboard API is absent (plain http).
+**Mechanism:** The system's own touch selection contends with the list's touch scroll for one finger under rules that are the system's and undocumented, and it anchors to DOM nodes a virtual list recycles; writing it under a finger costs the gesture outright — [A native selection changed under a held finger cancels the touch](#a-native-selection-changed-under-a-held-finger-cancels-the-touch). Owning the whole of it removes the contest. `attach` lays the overlay inside the wrapper, so the boxes move with the transform for free; every touchstart locks the frame's selectability and every release unlocks it, so the system's long press finds nothing while a mouse between touches finds everything; `applyHighlight` hands the mounted DOM range to `paint` on every move and window change while the range is a finger's (`input.touch`), `followTouch` re-places the two handles on every scroll from the last paint's spots and one rect read (the boxes move with the rows; a handle shows only while its spot is on screen), and the highlight is native otherwise; a touch on a handle calls `beginFromEnd` with the opposite end and rides `extendTo`, so the edge zone scrolls the list with the loop the mouse uses; the copy chip copies from the logical range, keeps the selection (a reader may widen it and copy again, as the system's own copy does), reads "Copied ✓" for `COPIED_MS`, shrinks under the finger, and falls back to a textarea copy where the clipboard API is absent (plain http).
 
 **Generates:** The overlay and handle CSS; the `beginFromEnd` and `visibleDomRange` primitives; the sweep's touch probe driving a handle to the edge.
 
@@ -798,6 +817,6 @@ tier each record is proven at, and how the colocated tests bind to it.
 - A capability that imports the scroller — [A hosted capability reaches its owner through an interface](#a-hosted-capability-reaches-its-owner-through-an-interface).
 - A selection drag near the edge that does not scroll — [A drag scrolls from inside the edge zone](#a-drag-scrolls-from-inside-the-edge-zone).
 - The frame's scrollTop moving under a touch selection — [The frame is never natively panned along its own axis](#the-frame-is-never-natively-panned-along-its-own-axis).
-- A native selection changing under a held finger — [A finger's drag paints without selecting](#a-fingers-drag-paints-without-selecting).
+- A native selection changing under a held finger — [A touch drag paints without selecting](#a-touch-drag-paints-without-selecting).
 - A native selection created by a touch — [On a touch device the selection is drawn by the class](#on-a-touch-device-the-selection-is-drawn-by-the-class).
 - A partial knob object that drops the defaults beside it — [The feel is one nested prop complete at every depth](#the-feel-is-one-nested-prop-complete-at-every-depth).

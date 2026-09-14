@@ -3,7 +3,7 @@
 Goal: Render a window of a few dozen rows over a list of any length, at the exact pixel the scroll names, with sizes learned as rows pass through.
 [Hot paths read no layout](virtual-scroller.invariants.md#hot-paths-read-no-layout)
 [Rendered sizes are known only after a row mounts](virtual-scroller.invariants.md#rendered-sizes-are-known-only-after-a-row-mounts)
-[The reader's row stays put while sizes settle](virtual-scroller.invariants.md#the-readers-row-stays-put-while-sizes-settle)
+[A row under the reader stays put while sizes settle](virtual-scroller.invariants.md#a-row-under-the-reader-stays-put-while-sizes-settle)
 [The scroll position lands inside the scrollable range](virtual-scroller.invariants.md#the-scroll-position-lands-inside-the-scrollable-range)
 [An unchanged window keeps its array identity](virtual-scroller.invariants.md#an-unchanged-window-keeps-its-array-identity)
 [The two spacers and the rendered rows sum to the extent](virtual-scroller.invariants.md#the-two-spacers-and-the-rendered-rows-sum-to-the-extent)
@@ -241,7 +241,7 @@ test('a seek keeps converging while sizes refine at rest, and lets go the moment
 
 // domain-invariant: $VirtualScroller — If rows above the row under the viewport's leading edge change size, then the scroll moves by exactly that change and the reader's row stays where it was; rows below it move nothing.
 // domain-invariant: $VirtualScroller — If the reader is at rest, then the anchor is the row under the top edge whatever the last direction was, so a row that grows from a click grows downward; only while moving up is the bottom edge the anchor.
-// invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+// invariant: A row under the reader stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('measuring rows above the anchored row moves the scroll by the same amount; rows below move nothing', async () => {
   const { instance, unmount } = scroller(rows(1000));
   instance.scrollElement.value = document.createElement('div');
@@ -1072,7 +1072,7 @@ test('a wave of row captures coalesces into one anchored application', async () 
 
 // domain-invariant: $VirtualScroller — If rows above the reader shift the scroll while a glide runs, then the glide keeps its remaining distance, the position cell follows the shifted target, the clamp adopts nothing, and contentShift has grown by the shift
 // impossible-if-true: $VirtualScroller — A glide killed by a clamp that read a position the shift had already moved.
-// invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+// invariant: A row under the reader stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('a shift under a running glide moves the glide and the position cell together, adopts nothing, and sums into contentShift', () => {
   const { instance, unmount } = scroller(rows(200), { assumedSize: 30 });
   instance.setScrollPosition(-3000, false);

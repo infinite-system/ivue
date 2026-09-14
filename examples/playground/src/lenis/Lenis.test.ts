@@ -1,7 +1,7 @@
 /*
 === GENERATOR ===
 Goal: Read a flick's velocity off the finger's last stretch of moves, so a touchend that lands after an idle frame still flicks at the finger's speed.
-[A flick's velocity is read off the finger's last stretch](lenis.invariants.md#a-flicks-velocity-is-read-off-the-fingers-last-stretch)
+[A flick reads its velocity off the last stretch](lenis.invariants.md#a-flick-reads-its-velocity-off-the-last-stretch)
 [Android holds the first move back and may coalesce a swipe into one](lenis.invariants.md#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one)
 [A flick carries the glide it interrupted](lenis.invariants.md#a-flick-carries-the-glide-it-interrupted)
 [A cross-axis wheel belongs to what is under it](lenis.invariants.md#a-cross-axis-wheel-belongs-to-what-is-under-it)
@@ -33,7 +33,7 @@ const trailVelocity = Lenis.Class.trailVelocity;
 const trimTrail = Lenis.Class.trimTrail;
 
 // domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
-// invariant: A flick's velocity is read off the finger's last stretch (examples/playground/src/lenis/lenis.invariants.md)
+// invariant: A flick reads its velocity off the last stretch (examples/playground/src/lenis/lenis.invariants.md)
 test('the flick velocity is read off the trail, and falls back to the frame velocity with too little trail', () => {
   const trail = [
     { at: 1000, position: 0 },

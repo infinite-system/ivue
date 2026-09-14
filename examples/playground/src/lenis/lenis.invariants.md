@@ -11,7 +11,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 ## Generator
 
-### A finger's swipe becomes the glide it meant, on every phone
+### A swipe becomes the glide it meant on every phone
 
 **Invariant:** If a finger swipes the content and lifts, then the content glides at the velocity of the finger's last stretch, whatever shape the platform delivered the touch events in; and if a finger lands on a glide, then the content neither freezes nor jumps — it runs on until the finger moves, and the finger takes over from where the content is.
 
@@ -19,7 +19,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Components:** One per gear, each delete-testable:
 - [Android holds the first move back and may coalesce a swipe into one](#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one) — why nothing about a flick may depend on the last frame or on a second move.
-- [A flick's velocity is read off the finger's last stretch](#a-flicks-velocity-is-read-off-the-fingers-last-stretch) — why a coalesced swipe still glides at the finger's speed.
+- [A flick reads its velocity off the last stretch](#a-flick-reads-its-velocity-off-the-last-stretch) — why a coalesced swipe still glides at the finger's speed.
 - [A touch on a glide keeps it running until the first move](#a-touch-on-a-glide-keeps-it-running-until-the-first-move) — why a re-flick has no stall.
 - [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend) — why a browser claiming the gesture does not freeze the content.
 - [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted) — why flick after flick gains speed instead of restarting.
@@ -91,7 +91,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Last refined:** 2026-09-10
 
-### A flick's velocity is read off the finger's last stretch
+### A flick reads its velocity off the last stretch
 
 **Invariant:** If a touch ends or is cancelled, then the flick's velocity is the position change over the finger's trail — samples inside `FLICK_WINDOW_MS` (100 ms) plus one anchor kept before the window — scaled to a frame, with the span capped at the window; the trail is seeded at the touchstart at the ANIMATED position, before any early return, and re-seeded there when the finger takes over a glide; fewer than two samples, or a span under 8 ms, fall back to the frame's velocity; a pause mid-touch reads as no flick since its anchor and its move share a position; a shift of the content under the finger (rows above the reader measuring, `shiftBy`) moves every trail position by the same delta, so the velocity stays the finger's.
 
@@ -227,7 +227,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 - A re-flick that stalls — [A touch on a glide keeps it running until the first move](#a-touch-on-a-glide-keeps-it-running-until-the-first-move).
 - A settled glide that never completes — [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target).
-- A coalesced swipe reading a velocity of zero — [A flick's velocity is read off the finger's last stretch](#a-flicks-velocity-is-read-off-the-fingers-last-stretch).
+- A coalesced swipe reading a velocity of zero — [A flick reads its velocity off the last stretch](#a-flick-reads-its-velocity-off-the-last-stretch).
 - A flick logic proven on iOS alone — [Android holds the first move back and may coalesce a swipe into one](#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one).
 - A wheel up at the top of the thread that moves nothing — [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page).
 - A sideways trackpad swipe over a code block that moves the list — [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it).

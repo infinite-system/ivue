@@ -1,7 +1,7 @@
 /*
 === GENERATOR ===
 Goal: A minimal event bus the fork's parts talk through: subscribe, emit in order, unsubscribe, destroy.
-[A finger's swipe becomes the glide it meant, on every phone](lenis.invariants.md#a-fingers-swipe-becomes-the-glide-it-meant-on-every-phone)
+[A swipe becomes the glide it meant on every phone](lenis.invariants.md#a-swipe-becomes-the-glide-it-meant-on-every-phone)
 // domain-invariant: $Emitter — If callbacks are subscribed to an event, then an emit calls each in subscription order with the emit's arguments, an unsubscribe removes only its own callback, and destroy removes them all.
 Impossible if true: A callback called after it unsubscribed. A callback of one event called by another event's emit.
 
@@ -14,7 +14,7 @@ import { expect, test, vi } from 'vitest';
 import { Emitter } from './Emitter';
 
 // domain-invariant: $Emitter — If callbacks are subscribed to an event, then an emit calls each in subscription order with the emit's arguments, an unsubscribe removes only its own callback, and destroy removes them all.
-// invariant: A finger's swipe becomes the glide it meant, on every phone (examples/playground/src/lenis/lenis.invariants.md)
+// invariant: A swipe becomes the glide it meant on every phone (examples/playground/src/lenis/lenis.invariants.md)
 test('emit calls the subscribers in order with the arguments; off and the returned unsubscribe remove one; destroy removes all', () => {
   const emitter = new Emitter.Class();
   const calls: string[] = [];

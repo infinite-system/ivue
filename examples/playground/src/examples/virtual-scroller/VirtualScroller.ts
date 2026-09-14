@@ -1314,7 +1314,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * Scrolling up, it is the bottom: a row growing inside the view then
    * expands UPWARD — the rows the reader just read stay where they are.
    */
-  // invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: A row under the reader stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   captureAnchor(): VirtualScroller.Anchor | undefined {
     // mid-glide the reader sees the animated position, not the lerp's
     // target: a row growing between the two would otherwise be read as
@@ -1385,8 +1385,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * row, each capture wrote the transform between the next row's reads —
    * a forced layout per row, dozens on a flick's mount frame on a phone.
    */
-  // invariant: The reader's row stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  // invariant: An item captures its size once, on mount (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: A row under the reader stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+  // invariant: An item captures its size once on mount (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   captureItemSize(index: number, size: number) {
     // `size` is the row's rect in screen px; the flush divides the wave by the wrapper's scale
     if (this.pendingSizes.length === 0) {
