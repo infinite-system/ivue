@@ -239,7 +239,7 @@ test('measuring rows above the anchored row moves the scroll by the same amount;
   const { instance, unmount } = scroller(rows(1000));
   instance.scrollElement.value = document.createElement('div');
   const assumed = instance.estimatedItemSize;
-  instance.setScrollPosition(-(assumed * 100 + 10), false);
+  instance.setScrollPosition(-(assumed * 100 + 10));
   await nextTick();
   const before = Number(instance.scrollPosition.value);
   expect(instance.captureAnchor()).toEqual({ index: 100, top: assumed * 100 });
@@ -517,7 +517,7 @@ test('the window covers the container from the item under the scroll top, padded
   // Nothing moved: the same array comes back.
   expect(instance.visibleItems.value).toBe(first);
 
-  instance.setScrollPosition(-300, false);
+  instance.setScrollPosition(-300);
   const scrolled = instance.visibleItems.value;
   expect(scrolled[0].index).toBe(7);
   expect(scrolled.at(-1)!.index).toBe(17);
@@ -533,12 +533,12 @@ test('itemsChanged fires once per window change with the padded bounds, and not 
   expect(emit).toHaveBeenLastCalledWith('itemsChanged', { start: 0, end: 8 });
   const calls = emit.mock.calls.length;
 
-  instance.setScrollPosition(-10, false);
+  instance.setScrollPosition(-10);
   instance.visibleItems.value;
   await nextTick();
   expect(emit.mock.calls.length).toBe(calls);
 
-  instance.setScrollPosition(-300, false);
+  instance.setScrollPosition(-300);
   instance.visibleItems.value;
   await nextTick();
   expect(emit).toHaveBeenLastCalledWith('itemsChanged', { start: 7, end: 18 });
@@ -549,7 +549,7 @@ test('itemsChanged fires once per window change with the padded bounds, and not 
 // impossible-if-true: $VirtualScroller — A window whose spacers plus rows sum to anything but the extent.
 test('the two spacers and the rendered rows add up to the extent, and the trailing spacer renders capped', () => {
   const { instance, unmount } = scroller(rows(100), { assumedSize: 30 });
-  instance.setScrollPosition(-300, false);
+  instance.setScrollPosition(-300);
   const window = instance.visibleItems.value;
   const leading = parseFloat(instance.leadingSpacerPx);
   expect(leading).toBe(7 * 30);
@@ -565,7 +565,7 @@ test('the two spacers and the rendered rows add up to the extent, and the traili
 test('a fractional row above the window keeps the leading spacer fractional — a snapped spacer would hop the content at every window move', () => {
   const { instance, unmount } = scroller(rows(100), { assumedSize: 30 });
   instance.syncItemSize(1, 30.375);
-  instance.setScrollPosition(-300, false);
+  instance.setScrollPosition(-300);
   instance.visibleItems.value;
   // Row 1 is 0.375 px taller, so row 10 starts past 300 and the window starts a row earlier.
   expect(instance.leadingSpacerPx).toBe(`${5 * 30 + 30.375}px`);
@@ -577,16 +577,16 @@ test('a fractional row above the window keeps the leading spacer fractional — 
 test('a scroll position is clamped into the scrollable range, and a non-finite one is refused', () => {
   const { instance, unmount } = scroller(rows(10), { assumedSize: 30 });
   // 300 px of content, 100 px container: the range is 0..200.
-  instance.setScrollPosition(-150, false);
+  instance.setScrollPosition(-150);
   expect(instance.scrollPosition.value).toBe(150);
-  instance.setScrollPosition(-5000, false);
+  instance.setScrollPosition(-5000);
   expect(instance.scrollPosition.value).toBe(200);
-  instance.setScrollPosition(50, false);
+  instance.setScrollPosition(50);
   expect(instance.scrollPosition.value).toBe(0);
-  instance.setScrollPosition(-150, false);
-  instance.setScrollPosition(Number.NaN, false);
+  instance.setScrollPosition(-150);
+  instance.setScrollPosition(Number.NaN);
   expect(instance.scrollPosition.value).toBe(150);
-  instance.setScrollPosition(-Infinity, false);
+  instance.setScrollPosition(-Infinity);
   expect(instance.scrollPosition.value).toBe(150);
   unmount();
 });
@@ -596,7 +596,7 @@ test('deep in the list the render bias rebases the leading spacer by whole chunk
   const { instance, unmount } = scroller(rows(100_000), { assumedSize: 30 });
   const chunk = instance.probeRenderBiasChunk();
   expect(instance.probeRenderBias()).toBe(0);
-  instance.setScrollPosition(-(chunk * 3 + 10), false);
+  instance.setScrollPosition(-(chunk * 3 + 10));
   // The bias is one chunk BELOW the current chunk, so the rendered
   // numbers stay small without ever going negative.
   expect(instance.probeRenderBias()).toBe(chunk * 2);
@@ -615,7 +615,7 @@ test('the thumb is the container’s share of the content with a floor, progress
 
   const long = scroller(rows(10), { assumedSize: 30, scrollbar: true });
   expect(long.instance.scrollbarThumbFraction).toBeCloseTo(100 / 300, 6);
-  long.instance.setScrollPosition(-100, false);
+  long.instance.setScrollPosition(-100);
   expect(long.instance.scrollbarProgress).toBe(0.5);
   expect(long.instance.scrollbarThumbStyle).toEqual({
     height: `${(100 / 300) * 100}%`,
@@ -863,14 +863,14 @@ test('the frame loop parks itself at rest and the next wheel wakes it', () => {
 test('a last row that shrinks pulls the position back inside the range; a row that shrinks above the reader moves nothing extra', () => {
   const { instance, unmount } = scroller(rows(10), { assumedSize: 30 });
   // 300 px of content, 100 px container: at the very end
-  instance.setScrollPosition(-200, false);
+  instance.setScrollPosition(-200);
   expect(instance.scrollPosition.value).toBe(200);
   // the last row re-renders 20 px shorter: the range ends at 180 now, and so does the position
   instance.syncItemSize(9, 10);
   expect(instance.scrollExtent.value).toBe(280);
   expect(instance.scrollPosition.value).toBe(180);
   // a row above the reader shrinking is the anchor's business: the position follows the content, still in range
-  instance.setScrollPosition(-100, false);
+  instance.setScrollPosition(-100);
   instance.syncItemSize(0, 10);
   expect(instance.scrollPosition.value).toBeLessThanOrEqual(instance.scrollExtent.value - 100);
   expect(instance.scrollPosition.value).toBe(80);
@@ -897,7 +897,7 @@ test('mid-lerp the window covers the animated position in pixels, over rows far 
   };
   // the rows behind the target are short: 20 px each from row 11 on
   for (let index = 11; index < 40; index++) instance.syncItemSize(index, 20, false);
-  instance.setScrollPosition(-1000, false, false);
+  instance.setScrollPosition(-1000, false);
   void instance.visibleItems.value; // the walk runs on read
   const window = instance.visibleIndex.value;
   const coveredTo = instance.getIndexPosition(window.end) ?? Number.POSITIVE_INFINITY;
@@ -910,7 +910,7 @@ test('mid-lerp the window covers the animated position in pixels, over rows far 
   (
     instance as unknown as { lenis: { targetScroll: number; animatedScroll: number } }
   ).lenis.animatedScroll = 1300;
-  instance.setScrollPosition(-1600, false, false);
+  instance.setScrollPosition(-1600, false);
   void instance.visibleItems.value;
   expect(
     instance.getIndexPosition(instance.visibleIndex.value.start) ?? Number.POSITIVE_INFINITY
@@ -926,13 +926,13 @@ test('a position write without a transform write leaves the render bias alone', 
   const { instance, unmount } = scroller(rows(100_000), { assumedSize: 30 });
   const chunk = instance.probeRenderBiasChunk();
   // the frame's transform write put the bias on the third chunk
-  instance.setScrollPosition(-(chunk * 3 + 10), false, true);
+  instance.setScrollPosition(-(chunk * 3 + 10), true);
   expect(instance.probeRenderBias()).toBe(chunk * 2);
   // the target, one chunk further, written without the transform: the bias holds
-  instance.setScrollPosition(-(chunk * 4 + 10), false, false);
+  instance.setScrollPosition(-(chunk * 4 + 10), false);
   expect(instance.probeRenderBias()).toBe(chunk * 2);
   // a transform write moves it
-  instance.setScrollPosition(-(chunk * 4 + 10), false, true);
+  instance.setScrollPosition(-(chunk * 4 + 10), true);
   expect(instance.probeRenderBias()).toBe(chunk * 3);
   unmount();
 });
@@ -960,7 +960,7 @@ test('the estimate calibrates on the first wave with five measured rows, once �
 test('a container that grows pulls a position resting at the end back to the new end', async () => {
   const { instance, unmount } = scroller(rows(100), { assumedSize: 30 });
   // 3000 px of content in a 100 px frame: the end is 2900
-  instance.setScrollPosition(-2900, false);
+  instance.setScrollPosition(-2900);
   expect(Number(instance.scrollPosition.value)).toBe(2900);
   // the address bar folds away: the frame is 400 px, the end is 2600
   instance.frameSize.value = 400;
@@ -977,7 +977,7 @@ test('a container that grows pulls a position resting at the end back to the new
 // impossible-if-true: $VirtualScroller — A row capture that moves the content before the wave's last row has been read.
 test('a wave of row captures coalesces into one anchored application', async () => {
   const { instance, unmount } = scroller(rows(100), { assumedSize: 30 });
-  instance.setScrollPosition(-600, false);
+  instance.setScrollPosition(-600);
   const version = instance.probeGeometryVersion();
   const captureAnchor = vi.spyOn(instance, 'captureAnchor');
   const restoreAnchor = vi.spyOn(instance, 'restoreAnchor');
@@ -1011,7 +1011,7 @@ test('a wave of row captures coalesces into one anchored application', async () 
 // invariant: A row under the reader stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('a shift under a running glide moves the glide and the position cell together, adopts nothing, and sums into contentShift', () => {
   const { instance, unmount } = scroller(rows(200), { assumedSize: 30 });
-  instance.setScrollPosition(-3000, false);
+  instance.setScrollPosition(-3000);
   const lenis = {
     time: 0,
     isScrolling: 'smooth' as const,
@@ -1093,10 +1093,10 @@ test('the per-frame position write, the clamp and the limit read the observed si
     instance as unknown as { outerElementSize: { height: { value: number } } }
   ).outerElementSize.height.value = 400;
   const before = { ...reads };
-  instance.setScrollPosition(-100, false);
-  instance.setScrollPosition(-2600, false);
+  instance.setScrollPosition(-100);
+  instance.setScrollPosition(-2600);
   instance.clampScrollPosition();
-  instance.setScrollPosition(-3000, false);
+  instance.setScrollPosition(-3000);
   expect(reads).toEqual(before);
   // the observed size drives the clamp: 3000 px of rows in a 400 px frame end at 2600
   expect(Number(instance.scrollPosition.value)).toBe(2600);

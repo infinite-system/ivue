@@ -242,7 +242,7 @@ class $VirtualScrollerAutoplay {
     // compositor's filtering renders ~0.11px/frame as an apparent glide.
     // Snapped, the same speed ticks a whole device pixel every 150ms on
     // dpr-1 screens, which reads as chop.
-    owner.setScrollPosition(-lenis.targetScroll, false, true, false);
+    owner.setScrollPosition(-lenis.targetScroll, true, false);
     if (atEnd) {
       // Nothing left to creep into (the position write clamps at the end);
       // the next wheel re-arms play through the scroller.
@@ -254,7 +254,9 @@ class $VirtualScrollerAutoplay {
 
   /** The auto-repeat chain: back to the top, pause, then read again. */
   protected repeatFromTop() {
-    this.owner.setScrollPosition(0, true, true);
+    // the reset is a full-post jump: it arrives. Eased, it was 450 ms of
+    // blank layer before the top appeared anyway.
+    this.owner.setScrollPosition(0);
     this.timers.resume = setTimeout(() => {
       if (this.owner.scrollDirection.value === 'down') this.play();
     }, this.owner.autoPlayDelay);
@@ -310,12 +312,7 @@ export namespace VirtualScrollerAutoplay {
     readonly autoRepeat: boolean;
     /** How long the pause before reading resumes. */
     readonly autoPlayDelay: number;
-    setScrollPosition(
-      position: number,
-      animate?: boolean,
-      translateY?: boolean,
-      snapRender?: boolean
-    ): void;
+    setScrollPosition(position: number, translateY?: boolean, snapRender?: boolean): void;
     /** Start the scroller's own frame loop — pressing play wakes Lenis. */
     restartLoop(): void;
     /** Cancel both rAF loops: the scroller's frame loop and the creep's. */

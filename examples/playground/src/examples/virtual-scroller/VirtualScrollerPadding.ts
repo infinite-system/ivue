@@ -211,13 +211,21 @@ class $VirtualScrollerPadding {
   }
   /** The held gap in px on the START side: scrolling forward the animated
    *  position is before the target, and the walk reaches back to it. */
+  /** The furthest a lerp gap can be covered: the row cap in pixels of the
+   *  estimate. Past it a glide would have to mount more rows than the cap
+   *  allows, so the walk stops extending and a landing stops pretending —
+   *  there is no honest animation across content nobody mounts. */
+  get coverableGapPx(): number {
+    return this.self.MAX_ROWS_GAP * this.owner.estimatedItemSize;
+  }
+
   get gapStartPx() {
-    return this.held.direction > 0 ? this.held.gapPx : 0;
+    return this.held.direction > 0 ? Math.min(this.held.gapPx, this.coverableGapPx) : 0;
   }
   /** The held gap in px on the END side: scrolling back the animated
    *  position is past the target, and the walk reaches on to it. */
   get gapEndPx() {
-    return this.held.direction < 0 ? this.held.gapPx : 0;
+    return this.held.direction < 0 ? Math.min(this.held.gapPx, this.coverableGapPx) : 0;
   }
 
   get before() {

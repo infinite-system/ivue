@@ -141,13 +141,20 @@ class $VirtualScrollerLanding {
     if (position === undefined || !owner.hasFrame) return;
 
     owner.resetScrollTop();
-    owner.setScrollPosition(-position, animate);
+    // A glide and a converge loop are mutually exclusive, and the reason is
+    // the same one that makes a far glide dishonest: convergence exists
+    // because a LONG landing is computed from an estimate and the fresh
+    // window then measures under it. A glide only happens when the travel is
+    // short enough that the rows between are already mounted and measured —
+    // so there is nothing left to converge onto, and a re-apply would only
+    // teleport over the glide it was meant to protect.
+    if (this.land(position, animate, afterCallback)) return;
 
     const setScroll = () => {
       nextTick(() => {
         const position = targetPosition();
         if (position === undefined) return;
-        owner.setScrollPosition(-position, animate);
+        owner.setScrollPosition(-position);
         this.converge.appliedPosition = owner.scrollPosition.value;
         nextTick(() => {
           afterCallback?.();
@@ -179,6 +186,27 @@ class $VirtualScrollerLanding {
       () => this.onPositionShift()
     );
     this.converge.quietTimer = setTimeout(stop, this.self.QUIET_MS);
+  }
+
+  /**
+   * Put the content at `position`. A glide is asked for AND worth it only
+   * when the travel is short enough that the rows between are mounted the
+   * whole way — the pad's own coverage limit. Past that there is nothing to
+   * animate across, and sliding the layer over unmounted space is a blank
+   * frame wearing an animation's clothes (measured: 0% of the viewport
+   * covered for the whole 450 ms of the CSS transition this replaced). So a
+   * far landing arrives, which is what the reader wanted anyway.
+   */
+  protected land(position: number, animate: boolean, onArrive?: () => void): boolean {
+    const travel = Math.abs(position - this.owner.scrollPosition.value);
+    if (animate && travel <= this.owner.coverableGlidePx) {
+      // the callback fires when the glide LANDS, not when it starts: a caller
+      // that cycles (the drip showcase) asks for the next item on arrival
+      this.owner.glideTo(position, onArrive);
+      return true;
+    }
+    this.owner.setScrollPosition(-position);
+    return false;
   }
 
   /**
@@ -324,7 +352,12 @@ export namespace VirtualScrollerLanding {
     /** The frame's leading main-axis padding — the offset between position
      *  space and the rendered flow. A DOM read, so it stays the scroller's. */
     mainAxisPaddingStart(): number;
-    setScrollPosition(position: number, animate?: boolean): void;
+    /** The furthest a glide shows content the whole way (see `land`). */
+    readonly coverableGlidePx: number;
+    setScrollPosition(position: number): void;
+    /** Glide to an absolute position through the tuned lerp, calling back
+     *  when it lands. */
+    glideTo(position: number, onArrive?: () => void): void;
     resetScrollTop(): void;
   }
 }

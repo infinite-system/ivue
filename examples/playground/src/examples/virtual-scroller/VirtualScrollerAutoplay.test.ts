@@ -90,7 +90,7 @@ test('the creep advances by elapsed time over the cadence, so a slow frame trave
   // the first frame has no previous timestamp: one frame's worth
   step(1000);
   expect(lenis.targetScroll).toBeCloseTo(Logic.FRAME_MS / Logic.CREEP_MS_PER_PX, 6);
-  expect(owner.setScrollPosition).toHaveBeenCalledWith(-lenis.targetScroll, false, true, false);
+  expect(owner.setScrollPosition).toHaveBeenCalledWith(-lenis.targetScroll, true, false);
 
   // a 16 ms frame and then a 48 ms frame: the slow one advances three times as far
   const afterFirst = lenis.targetScroll;
@@ -173,7 +173,7 @@ test('the end stops the creep, and with autoRepeat the chain returns to the top 
   expect(frames.length).toBe(0);
 
   vi.advanceTimersByTime(Logic.REPEAT_HOLD_MS);
-  expect(owner.setScrollPosition).toHaveBeenCalledWith(0, true, true);
+  expect(owner.setScrollPosition).toHaveBeenCalledWith(0);
   vi.advanceTimersByTime(owner.autoPlayDelay);
   // reading resumes from the top
   expect(model.isCreeping).toBe(true);

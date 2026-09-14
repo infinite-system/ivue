@@ -624,6 +624,14 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return this.shiftMark.total;
   }
 
+  /** The furthest a glide can travel and still show content the whole way:
+   *  the pad's own coverage limit. Past it there is nothing to animate
+   *  ACROSS — the rows between were never mounted — so a landing arrives
+   *  instead of sliding over blank. */
+  get coverableGlidePx(): number {
+    return this.padding.coverableGapPx;
+  }
+
   /** The lerp gap: how far the transform still has to travel to the
    *  target, in px, signed like the velocity. The window walk is anchored
    *  at the target; this is what the trailing pad must cover. */
@@ -1283,7 +1291,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const container = this.containerSpan;
     const max = Math.max(0, this.scrollExtent.value - container);
     if (this.scrollPosition.value <= max) return;
-    this.setScrollPosition(-max, false, true, false);
+    this.setScrollPosition(-max, true, false);
   }
 
   /**
@@ -1346,7 +1354,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     }
     const next = Math.max(0, this.scrollPosition.value + delta);
     if (lenis) lenis.targetScroll = next;
-    this.setScrollPosition(-next, false, true, false);
+    this.setScrollPosition(-next, true, false);
   }
 
   // invariant: Rendered sizes are known only after a row mounts (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -1478,7 +1486,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   setScrollPosition(
     position: number,
-    animate = true,
     translateY = true,
     /** The creep passes false: at sub-device-pixel speeds a snapped
      *  transform ticks whole pixels at a visible rate; fractional motion
@@ -1524,10 +1531,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (translateY) this.updateRenderBias(absolutePosition);
 
     this.scrollPosition.value = absolutePosition;
-
-    if (inner) {
-      inner.style.transitionDuration = animate ? '0.45s' : '0s';
-    }
 
     if (inner && translateY) {
       // Rebased + snapped for GPU precision (see renderBias/snapForRender);
@@ -1727,8 +1730,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     }
     this.virtualScrolling = true;
     clearTimeout(this.virtualScrollTimeout);
-    const inner = this.scrollElementInner.value;
-    if (inner) inner.style.transitionDuration = '0s';
     this.scrollDirection.value = delta < 0 ? 'up' : 'down';
     if (!this.frame) {
       // Lenis's clock aged while its raf loop was parked (the creep runs
@@ -1761,7 +1762,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // the spacer (rendered by this frame's flush) must shift together.
     this.updateRenderBias(Math.abs(lenis.scroll ?? 0));
     lenis.raf(now); // keep Lenis in sync
-    this.setScrollPosition(-lenis.targetScroll, false, false);
+    this.setScrollPosition(-lenis.targetScroll, false);
     // The loop runs only while there is motion to paint: a glide still
     // lerping, input still arriving, or the creep. At rest it parks, and the
     // next input wakes it — a scroller nobody touches costs no frames.
@@ -1838,6 +1839,16 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.lenis?.hold();
   }
 
+  /** Glide to an absolute position through Lenis: the tuned lerp, whose gap
+   *  the window walk extends over and the pad covers. Wakes the frame loop,
+   *  since a programmatic scroll emits no virtual-scroll event of its own. */
+  glideTo(position: number, onArrive?: () => void) {
+    const lenis = this.lenis;
+    if (!lenis) return;
+    lenis.scrollTo(position, { onComplete: () => onArrive?.() });
+    if (!this.frame) this.restartLoop();
+  }
+
   /** Scroll by a signed delta along the axis, immediately — the edge
    *  autoscroll's step. It writes lenis's target directly, so an upward
    *  drag is a scroll up, never mistaken for the reader taking over. */
@@ -1845,7 +1856,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (!this.lenis) return;
     const lenis = this.lenisRequired;
     lenis.targetScroll = Math.max(0, lenis.targetScroll + delta);
-    this.setScrollPosition(-lenis.targetScroll, false, true, false);
+    this.setScrollPosition(-lenis.targetScroll, true, false);
   }
 
   // invariant: WebKit re-rasterizes the layer on every autoscroll write (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)

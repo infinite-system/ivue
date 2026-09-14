@@ -628,7 +628,7 @@ class $Chat extends KitContainer.$Class<Chat.Roles> {
     const scroller = this.scroller.value;
     if (!scroller) return;
     const end = this.endOffset;
-    scroller.setScrollPosition(-end, false, true, false);
+    scroller.setScrollPosition(-end, true, false);
     this.scrollMark.own = end - Number(scroller.contentShift ?? 0);
   }
 

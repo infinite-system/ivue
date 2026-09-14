@@ -347,7 +347,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 ### A seek names an item not a pixel
 
-**Invariant:** If a seek bar asks for a 0..1 fraction, then the fraction names an item plus a fraction inside it (index space), the landing rides `scrollToIndex`, and the converge loop re-applies that same anchor as sizes refine so the CONTENT stays still.
+**Invariant:** If a seek bar asks for a 0..1 fraction, then the fraction names an item plus a fraction inside it (index space), the landing rides `scrollToIndex`, and the converge loop re-applies that same anchor as sizes refine so the CONTENT stays still. A landing asked to animate glides through the tuned lerp only while the travel is within the pad's coverage; a farther one arrives, because there is no honest animation across rows nobody mounted.
 
 **Scope:** `VirtualScrollerLanding.ts` whole — `toFraction`, `toProgress`, `toIndex`, `alignOffset`, `snapToNearest` and the converge holder; `VirtualScrollerGeometry.ts` `ratioPosition` and `anchoredPosition`, which turn a ratio into the item it names. The scroller forwards `seekToFraction`, `seekToProgress`, `scrollToIndex` and `cancelSeek` to it.
 
@@ -359,7 +359,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Evidence:** `VirtualScrollerGeometry.ts` `ratioPosition`; `VirtualScrollerLanding.ts` `toIndex`. Tests: "a ratio names an item plus a fraction inside it, and the end gap keeps the next item’s top clear of the viewport top", "a landing re-applies its target on every size wave and lets go once the position has been quiet", "the reader moving the content ends the loop on the next wave, and nothing is re-pinned", "seeking to a fraction lands on the item that fraction names, flush to the start by default and centered when asked".
 
-**Impossible if true:** A seek landing that moves to different content when a late size wave arrives.
+**Impossible if true:** A seek landing that moves to different content when a late size wave arrives. An animated landing that slides the layer over content the walk never mounted.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerLanding.test.ts`
 

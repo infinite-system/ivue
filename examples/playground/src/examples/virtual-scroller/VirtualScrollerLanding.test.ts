@@ -52,6 +52,13 @@ function landing(itemCount = 100, assumedSize = 30) {
     inputLive: false,
     lerpRunning: false,
     mainAxisPaddingStart: () => 0,
+    // a glide is coherent only inside the pad's coverage; the specs below
+    // drive both sides of that line
+    coverableGlidePx: 4800,
+    glideTo: vi.fn((position: number, onArrive?: () => void) => {
+      scrollPosition.value = position;
+      onArrive?.();
+    }),
     // the scroller's write, spied: it stores the position the way the real one does
     setScrollPosition: vi.fn((position: number) => {
       scrollPosition.value = Math.abs(position);

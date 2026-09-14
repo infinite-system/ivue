@@ -489,7 +489,7 @@ describe('Chat', () => {
     expect(scroller.setScrollPosition).not.toHaveBeenCalled();
     // the reply's own pin, guarded by the held state, is what follows the end
     chat.pinToBottom();
-    expect(scroller.setScrollPosition).toHaveBeenLastCalledWith(-800, false, true, false);
+    expect(scroller.setScrollPosition).toHaveBeenLastCalledWith(-800, true, false);
     scroller.scrollPosition = 800;
     // rows measuring above the reader shift the offset down: not a scroll up, the pin holds
     (scroller as { contentShift?: number }).contentShift = -150;
