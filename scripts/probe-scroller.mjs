@@ -146,7 +146,7 @@ try {
       'chat first flick from the end: peak px per frame',
       Math.round(peak),
       (v) => v >= 18,
-      '≥ 18, measured 38 at launch 1'
+      '≥ 18, measured 29 at carry 15, launch 1'
     );
     check(
       'chat first flick from the end: gliding frames',

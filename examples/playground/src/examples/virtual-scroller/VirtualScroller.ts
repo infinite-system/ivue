@@ -240,14 +240,23 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * it is what "a small flick makes too fast a big movement" was.
    *
    * A launch of 1 hands the content over at exactly the speed it was
-   * released. The cost is the tail: the decay rate is the same number, so a
-   * gentler launch coasts proportionally longer (measured at carry 35,
-   * launch 1: a 40 px/frame flick throws 1,356 px and settles in 3.5 s).
+   * released. The two are locked, though: the decay per frame IS
+   * `launch / carry`, so at a fixed launch the only way to shorten the tail
+   * is to shorten the throw. Carry 35 threw 1,356 px of a 40 px/frame flick
+   * and took 3.5 s to settle, which read as gliding for too long; carry 15
+   * restores the decay the original pair had (1/15 against 0.065) and lands
+   * in about a third of that, at a throw of 15 frames rather than 35.
+   *
+   * A throw that stays long while the tail gets short is not reachable by
+   * tuning this pair — it wants a different integrator (friction
+   * decelerates to a definite stop instead of approaching a target
+   * forever), which `Animate.advance` has the shape for but does not yet
+   * offer as a knob.
    */
   static get SCROLL_KNOBS(): VirtualScroller.ScrollKnobs {
     return {
       wheel: { gain: 1, follow: 0.1, maxPxPerMs: 0 },
-      touch: { gain: 1, carry: 35, launch: 1, maxPxPerMs: 0 }
+      touch: { gain: 1, carry: 15, launch: 1, maxPxPerMs: 0 }
     };
   }
 
