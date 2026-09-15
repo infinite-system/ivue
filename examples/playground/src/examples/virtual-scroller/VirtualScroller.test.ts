@@ -15,7 +15,6 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 [The copied text is the string the row renders](virtual-scroller.invariants.md#the-copied-text-is-the-string-the-row-renders)
 [The frame is never natively panned along its own axis](virtual-scroller.invariants.md#the-frame-is-never-natively-panned-along-its-own-axis)
 [The pad covers the lerp gap exactly](virtual-scroller.invariants.md#the-pad-covers-the-lerp-gap-exactly)
-[The device-pixel grid is met at the write and nowhere else](../../lenis/lenis.invariants.md#the-device-pixel-grid-is-met-at-the-write-and-nowhere-else)
 [WebKit re-rasterizes the layer on every autoscroll write](virtual-scroller.invariants.md#webkit-re-rasterizes-the-layer-on-every-autoscroll-write)
 [The feel is one nested prop complete at every depth](virtual-scroller.invariants.md#the-feel-is-one-nested-prop-complete-at-every-depth)
 // domain-invariant: $VirtualScroller — If the touch knobs are read, then the lerp handed to Lenis is `launch / carry`, so a flick leaves the finger at `launch` times its speed and carries `carry` frames of it; the lerp is never a knob of its own.
@@ -45,7 +44,6 @@ Impossible if true: A scroller at rest requesting a frame every tick.
 // domain-invariant: $VirtualScroller — If a write moves the position without writing the transform, then the render bias stays where the frame's transform write put it
 // domain-invariant: $VirtualScroller — If a touch begins inside an element that scrolls across the own axis with room to go, then the browser's pan is the default from the first move and only a clearly own-axis move is the scroller's; a block with nowhere to go changes nothing.
 // domain-invariant: $VirtualScroller — If rows above the reader shift the scroll while a FINGER drags, then the shift goes through the integrator the same way it does under a glide, so the target, the animated position and the finger's flick trail all move with the content.
-// domain-invariant: $VirtualScroller — If the render window changed within the last frame or two, then every write of the layer lands on the device-pixel grid whatever the caller or the snap knob asked, because that is when the browser rasters fresh tiles; between rasters the knob decides as before.
 // domain-invariant: $VirtualScroller — If the reader's own input arrives while a seek is converging, then the loop ends on that input, not at the next wave — so a finger dragging during a landing keeps what it moved.
 // domain-invariant: $VirtualScroller — If rows above the reader shift the scroll while a glide runs, then the glide keeps its remaining distance, the position cell follows the shifted target, the clamp adopts nothing, and contentShift has grown by the shift
 // domain-invariant: $VirtualScroller — If a frame's position write, the clamp or the limit runs, then it reads the observed container size and never the element's offsetHeight, scrollTop or a rect — no layout is forced on a frame
@@ -60,7 +58,6 @@ Impossible if true: A row capture that moves the content before the wave's last 
 Impossible if true: A finger scrolling a code block sideways that scrolls the list by its drift.
 Impossible if true: A glide killed by a clamp that read a position the shift had already moved.
 Impossible if true: A drag whose flick reads the content's own shift as the finger's motion.
-Impossible if true: A tile rasterised at one sub-pixel phase sitting beside a tile rasterised at another, so a line box rounds one way on one side of the seam and the other way across it.
 Impossible if true: A flick on arrival pulled back to where the landing wanted it, because the landing only asked whose the position was when the geometry next changed.
 Impossible if true: A layout read on the per-frame position write.
 
@@ -122,10 +119,6 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
 
   probeConverging() {
     return this.landing.isConverging;
-  }
-
-  probeRetireRaster() {
-    this.retireRasterClaim();
   }
 
   probeGeometryVersion() {
@@ -1158,43 +1151,6 @@ test('a shift under a dragging finger goes through the integrator too — a drag
   expect(lenis.animatedScroll).toBe(3200);
   expect(Number(instance.scrollPosition.value)).toBe(3200);
   expect(instance.contentShift).toBe(200);
-  unmount();
-});
-
-// domain-invariant: $VirtualScroller — If the render window changed within the last frame or two, then every write of the layer lands on the device-pixel grid whatever the caller or the snap knob asked, because that is when the browser rasters fresh tiles; between rasters the knob decides as before.
-// impossible-if-true: $VirtualScroller — A tile rasterised at one sub-pixel phase sitting beside a tile rasterised at another, so a line box rounds one way on one side of the seam and the other way across it.
-// invariant: The device-pixel grid is met at the write and nowhere else (examples/playground/src/lenis/lenis.invariants.md)
-test('a window change puts the next writes on the grid, and the frames after it hand the knob back', () => {
-  const { instance, unmount } = scroller(rows(400), { assumedSize: 30 });
-  const inner = document.createElement('div');
-  instance.scrollElementInner.value = inner;
-  const written = () => Number(/translateY\((-?[\d.]+)px\)/.exec(inner.style.transform)?.[1] ?? 0);
-
-  // the mount's own first window counts as a change; spend it
-  instance.probeRetireRaster();
-  instance.probeRetireRaster();
-
-  // a write with no raster pending keeps the caller's fraction — this is the
-  // reading creep's case, and the whole reason `snapRender: false` exists
-  instance.setScrollPosition(-120.4, true, false);
-  instance.visibleItems.value;
-  instance.probeRetireRaster();
-  instance.probeRetireRaster();
-  expect(instance.rasterIsComing).toBe(false);
-  expect(written() % 1).toBeCloseTo(-0.4, 5);
-
-  // a scroll far enough to move the window claims the next frames
-  instance.setScrollPosition(-900.4, true, false);
-  instance.visibleItems.value;
-  expect(instance.rasterIsComing).toBe(true);
-  // and now the same fractional write lands on the grid instead
-  instance.setScrollPosition(-1000.4, true, false);
-  expect(Math.abs(written() % 1)).toBe(0);
-
-  // two frames later the claim is spent and the fraction comes back
-  instance.probeRetireRaster();
-  instance.probeRetireRaster();
-  expect(instance.rasterIsComing).toBe(false);
   unmount();
 });
 

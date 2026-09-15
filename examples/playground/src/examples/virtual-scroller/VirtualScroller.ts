@@ -812,15 +812,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return Boolean(this.lenis?.isScrolling);
   }
 
-  /** The browser is about to raster new content — the window changed within
-   *  the last frame or two. Every writer of the layer puts it on the device
-   *  grid while this holds, so each tile is made at the same sub-pixel phase
-   *  and no two disagree about which way a line box rounds. Between rasters
-   *  the snap knob decides as before, so the motion keeps its chosen feel. */
-  get rasterIsComing(): boolean {
-    return this.rasterSnap.frames > 0;
-  }
-
   /** The lerp has arrived — within the settle band of its target. */
   get lerpLanded(): boolean {
     return Math.abs(this.scrollGap) < 0.5;
@@ -905,9 +896,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** A thumb drag's track fractions at its start and its latest move —
    *  their order on release is the drag's direction. */
   protected readonly thumbDrag = { from: 0, to: 0 };
-  /** Frames still owed a grid-aligned write after the window changed. Plain —
-   *  nothing renders it, and it is read inside the write path. */
-  protected readonly rasterSnap = { frames: 0 };
   /** Every px the content ever shifted under the reader (rows measuring above the anchor),
    *  summed: a reader of the position subtracts it to see the reader's own motion alone. */
   protected readonly shiftMark = { total: 0 };
@@ -1049,9 +1037,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // until it reaches its own edge; only then does the gesture move the list
       allowNestedScroll: true,
       autoRaf: false, // we drive it ourselves
-      // the integrator writes the same layer this class does, so it asks the
-      // same question before deciding where the write meets the grid
-      snapWhen: () => this.rasterIsComing,
       ...this.lenisMotion
     });
   }
@@ -1250,12 +1235,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (this.visibleIndex.value.start !== paddedStart || this.visibleIndex.value.end !== end) {
       this.visibleIndex.value.start = paddedStart;
       this.visibleIndex.value.end = end;
-      // New rows are about to mount, which is the browser's cue to raster
-      // fresh tiles. Claim the next two frames for the grid: the write that
-      // paints them may come from the integrator (the frame loop) or from
-      // this class (an anchor restore after the wave measures), and which
-      // one runs last depends on whether the anchor moved at all.
-      this.rasterSnap.frames = 2;
       nextTick(() => this.onItemsChanged({ start: paddedStart, end }));
     }
 
@@ -1615,13 +1594,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * false, which is exactly the difference a reader reports between the
    * creep and a flick.
    */
-  protected snapForRender(value: number, snapRender = true): number {
-    // A raster frame outranks the caller. `snapRender: false` says "this
-    // write is slow motion, keep it fractional" — true between rasters, and
-    // wrong on the frame a tile is made, where an off-phase raster is what
-    // leaves one line sitting a pixel off its neighbours.
-    if (this.rasterIsComing) return this.self.snapForRender(value);
-    if (!snapRender) return value;
+  protected snapForRender(value: number): number {
     return this.lenis ? this.lenis.snapRendered(value) : this.self.snapForRender(value);
   }
 
@@ -1681,7 +1654,9 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // Rebased + snapped for GPU precision (see renderBias/snapForRender);
       // scrollPosition and lenis keep full precision for the scroll math.
       const rendered = position + this.renderBias.value;
-      inner.style.transform = this.transformFor(this.snapForRender(rendered, snapRender));
+      inner.style.transform = this.transformFor(
+        snapRender ? this.snapForRender(rendered) : rendered
+      );
       // Programmatic jumps write the transform directly — lenis must ADOPT
       // the jump, not just be told about it. Adopting kills any in-flight
       // wheel animation (a running lerp holds its own captured target;
@@ -1915,19 +1890,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // The loop runs only while there is motion to paint: a glide still
     // lerping, input still arriving, or the creep. At rest it parks, and the
     // next input wakes it — a scroller nobody touches costs no frames.
-    this.retireRasterClaim();
     if (this.isAtRest) {
       this.frame = null;
       return;
     }
     this.frame = requestAnimationFrame(this.loop);
-  }
-
-  /** One frame of the grid claim spent. The claim covers the frame the window
-   *  changed on and the one after, because the write that paints the new rows
-   *  may come from either writer of the layer. */
-  protected retireRasterClaim() {
-    if (this.rasterSnap.frames > 0) this.rasterSnap.frames--;
   }
 
   /** Arm the reading creep after a pause (see VirtualScrollerAutoplay). */
