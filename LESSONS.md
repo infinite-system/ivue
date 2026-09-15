@@ -1631,3 +1631,22 @@ The bisect protocol itself worked and is worth keeping: check out the
 known-good runtime files onto the working tree, restart the server,
 confirm the fingerprint on the device, then add changes back one at a
 time. Restore with `git checkout HEAD -- <files>` when done.
+
+### The 3/64 px was ours, not Blink's
+
+The residual in the two entries above was diagnosed as Blink's LayoutUnit
+rounding of N row boxes versus one spacer box. It was not. `wrapperScale`
+divided every recorded row height by `rect / offsetHeight`, and
+`offsetHeight` is a whole number while the rect is not: a 1149.625 px
+wrapper produced a scale of 0.999674 and every row recorded 3–6
+hundredths of a pixel taller than it was laid out. The geometry disagreed
+with layout by that much per row, and releasing rows into the spacer
+moved everything below by the sum. Fix: under a pixel of difference the
+scale is 1. Measured after: the same release, zero surviving rows moved.
+
+The question that found it was the user's: "don't you already know the
+heights?" We did. We were recording them wrong. When a residual appears
+between a model and the DOM, check the model's INPUTS against the DOM
+before theorising about the engine — five rows and one
+`getBoundingClientRect` would have shown the 0.03–0.06 px per-row error
+on the first day.

@@ -248,15 +248,15 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Rejected alternatives:** Keeping an absolute scroll position — every mount above the reader moved the content under them, by a screen or more when a placeholder became a long message.
 
-**Evidence:** `VirtualScroller.ts` `captureAnchor`, `restoreAnchor`, `shiftScroll`. Tests: "measuring rows above the anchored row moves the scroll by the same amount; rows below move nothing", "a shift under a dragging finger goes through the integrator too — a drag is not the exception".
+**Evidence:** `VirtualScroller.ts` `captureAnchor`, `restoreAnchor`, `shiftScroll`, `wrapperScale`. Tests: "measuring rows above the anchored row moves the scroll by the same amount; rows below move nothing", "a shift under a dragging finger goes through the integrator too — a drag is not the exception", "offsetHeight rounding is not a transform: under a pixel of difference the scale is 1 and heights record exactly". The recorded height must BE the laid-out height: `wrapperScale` divided every measurement by `rect / offsetHeight`, and since `offsetHeight` rounds to a whole pixel that ratio was 0.999674 on a 1149.625 px wrapper — every row recorded three to six hundredths of a pixel taller than layout held it. Releasing rows into the spacer then moved every row below by the summed error (measured: −0.0469 px on eleven surviving rows), and the raster re-snapped their text lines: a line hopping a pixel after every other scroll, on Android, in every snap setting. Under a pixel of rect-to-offset difference the scale is now exactly 1; measured after: the same release, 0 surviving rows moved.
 
-**Impossible if true:** A row above the reader's changing size and the reader's row moving on screen. A row below the reader's changing size and the scroll position changing. A flick whose velocity carries the content's own shift because the trail stayed behind.
+**Impossible if true:** A row above the reader's changing size and the reader's row moving on screen. A row below the reader's changing size and the scroll position changing. A flick whose velocity carries the content's own shift because the trail stayed behind. A recorded height that differs from the laid-out height by anything but an ancestor transform.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "anchored row"`; in the AI chat example with content pages throttled to 1.2 s, a far seek through the index and a 60,000 px fling both hold the row under the leading edge at the same pixel while pages land.
 
 **Status:** provisional
 
-**Last refined:** 2026-09-14
+**Last refined:** 2026-09-15
 
 ## Chosen invariants
 

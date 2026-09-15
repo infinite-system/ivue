@@ -167,6 +167,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  size via lenis.virtualLimit. */
   protected static readonly TRAILING_SPACER_RENDER_CAP = 2048;
 
+  /** Below this much difference between the wrapper's rect and its offset
+   *  size there is no transform, only rounding: `offsetHeight` is an
+   *  integer, the rect is a 1/64 px multiple, and they disagree by up to
+   *  half a pixel on every wrapper whose height is not whole. */
+  protected static readonly SCALE_ROUNDING_PX = 1;
+
   /** The rebase step. The rendered offset lives in [chunk, 2 x chunk), which
    *  is the float-precision margin this exists for and, incidentally, the
    *  size of the composited layer — the leading spacer is most of it.
@@ -1321,12 +1327,28 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * O(window), driven by the single wrapper ResizeObserver. Reads happen
    * in one layout pass (no interleaved writes); only changed sizes sync.
    */
-  /** The wrapper's rect-to-layout ratio: an ancestor transform scale, 1 when none. */
+  /**
+   * The wrapper's rect-to-layout ratio: an ancestor transform scale, 1 when
+   * none. Read as a RATIO of two different kinds of number, this was never
+   * exactly 1: `offsetHeight` rounds to a whole pixel and the rect does
+   * not, so a 1149.625 px wrapper read as scaled by 0.999674, and every row
+   * height in the wave was divided by it — a 120 px row recorded as
+   * 120.047 while layout held it at 120.000. The geometry then disagreed
+   * with layout by three to six hundredths of a pixel PER ROW, and any
+   * change of which rows are mounted and which are folded into a spacer
+   * moved the content below by the sum: a line of text hopping a pixel
+   * after every other scroll, once the raster re-snapped it. A transform
+   * scale moves the wrapper by many pixels; rounding moves it by at most
+   * half of one, so under a pixel of difference the answer is exactly 1.
+   */
   protected wrapperScale(): number {
     const wrapper = this.itemsWrapperElement.value;
     if (!wrapper) return 1;
     const wrapperSize = this.offsetSize(wrapper);
-    const scale = wrapperSize > 0 ? this.rectSize(wrapper) / wrapperSize : 1;
+    if (wrapperSize <= 0) return 1;
+    const rect = this.rectSize(wrapper);
+    if (Math.abs(rect - wrapperSize) < this.self.SCALE_ROUNDING_PX) return 1;
+    const scale = rect / wrapperSize;
     return scale > 0 ? scale : 1;
   }
 

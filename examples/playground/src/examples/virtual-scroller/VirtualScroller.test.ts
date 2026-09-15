@@ -43,6 +43,7 @@ Impossible if true: A scroller at rest requesting a frame every tick.
 // domain-invariant: $VirtualScroller — If the walk runs mid-lerp, then the window covers the animated position in pixels over the measured sizes, whatever the rows between it and the target measure
 // domain-invariant: $VirtualScroller — If a write moves the position without writing the transform, then the render bias stays where the frame's transform write put it
 // domain-invariant: $VirtualScroller — If a touch begins inside an element that scrolls across the own axis with room to go, then the browser's pan is the default from the first move and only a clearly own-axis move is the scroller's; a block with nowhere to go changes nothing.
+// domain-invariant: $VirtualScroller — If the wrapper's rect and its offset size differ by less than a pixel, then the scale is exactly 1 — that difference is offsetHeight rounding, not a transform — so a row's recorded height is the height layout gave it, to the 1/64 px.
 // domain-invariant: $VirtualScroller — If rows above the reader shift the scroll while a FINGER drags, then the shift goes through the integrator the same way it does under a glide, so the target, the animated position and the finger's flick trail all move with the content.
 // domain-invariant: $VirtualScroller — If the reader's own input arrives while a seek is converging, then the loop ends on that input, not at the next wave — so a finger dragging during a landing keeps what it moved.
 // domain-invariant: $VirtualScroller — If rows above the reader shift the scroll while a glide runs, then the glide keeps its remaining distance, the position cell follows the shifted target, the clamp adopts nothing, and contentShift has grown by the shift
@@ -58,6 +59,7 @@ Impossible if true: A row capture that moves the content before the wave's last 
 Impossible if true: A finger scrolling a code block sideways that scrolls the list by its drift.
 Impossible if true: A glide killed by a clamp that read a position the shift had already moved.
 Impossible if true: A drag whose flick reads the content's own shift as the finger's motion.
+Impossible if true: A row recorded a few hundredths of a pixel taller than it is laid out, because the wrapper happened to be a fractional height.
 Impossible if true: A flick on arrival pulled back to where the landing wanted it, because the landing only asked whose the position was when the geometry next changed.
 Impossible if true: A layout read on the per-frame position write.
 
@@ -123,6 +125,18 @@ class $Probe extends (VirtualScroller.$Class as typeof VirtualScroller.$Class)<R
 
   probeGeometryVersion() {
     return this.geometry.version.value;
+  }
+
+  /** The wrapper's rect, pinned by the spec — the offset stays the probe's frame size. */
+  protected readonly probeRect = { value: 0 };
+
+  protected override rectSize(element: Element): number {
+    return this.probeRect.value || super.rectSize(element);
+  }
+
+  probeWrapperScale(rect: number) {
+    this.probeRect.value = rect;
+    return this.wrapperScale();
   }
 
   probeCalibrate() {
@@ -1156,6 +1170,27 @@ test('a shift under a dragging finger goes through the integrator too — a drag
   expect(lenis.animatedScroll).toBe(3200);
   expect(Number(instance.scrollPosition.value)).toBe(3200);
   expect(instance.contentShift).toBe(200);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the wrapper's rect and its offset size differ by less than a pixel, then the scale is exactly 1 — that difference is offsetHeight rounding, not a transform — so a row's recorded height is the height layout gave it, to the 1/64 px.
+// impossible-if-true: $VirtualScroller — A row recorded a few hundredths of a pixel taller than it is laid out, because the wrapper happened to be a fractional height.
+// invariant: A row under the reader stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('offsetHeight rounding is not a transform: under a pixel of difference the scale is 1 and heights record exactly', async () => {
+  const { instance, unmount } = scroller(rows(200), { assumedSize: 30 });
+  instance.itemsWrapperElement.value = document.createElement('div');
+  // the probe's offset size is 100; a rect of 99.625 is the wrapper being
+  // 99.625 px tall and offsetHeight saying 100 — the everyday case
+  expect(instance.probeWrapperScale(99.625)).toBe(1);
+  expect(instance.probeWrapperScale(100.5)).toBe(1);
+  // a real ancestor transform moves the wrapper by whole pixels and is still read
+  expect(instance.probeWrapperScale(80)).toBeCloseTo(0.8, 10);
+  expect(instance.probeWrapperScale(120)).toBeCloseTo(1.2, 10);
+  // the payoff: a 120 px row under a 99.625 px wrapper records as 120, not 120.4516
+  instance.probeWrapperScale(99.625);
+  instance.captureItemSize(10, 120);
+  await Promise.resolve();
+  expect(Number(instance.measuredSizes.value[10])).toBe(120);
   unmount();
 });
 
