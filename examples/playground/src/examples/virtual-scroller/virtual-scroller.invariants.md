@@ -51,7 +51,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 - [The pad covers the lerp gap exactly](#the-pad-covers-the-lerp-gap-exactly) — why a flick never shows canvas.
 - [Lenis is read inside the walk never tracked](#lenis-is-read-inside-the-walk-never-tracked) — why the pad costs no extra walks.
 - [Hot paths read no layout](#hot-paths-read-no-layout) — why a frame's position write forces no layout.
-- [A pad never outlives its flick](#a-pad-never-outlives-its-flick) — why a resting list mounts its base rows only.
+- [A pad is released when the reader moves, never at rest](#a-pad-is-released-when-the-reader-moves-never-at-rest) — why nothing is ever unmounted while the reader is still.
 - [A hosted capability reaches its owner through an interface](#a-hosted-capability-reaches-its-owner-through-an-interface) — why selection, touch and padding are each testable without a scroller.
 - [A drag scrolls from inside the edge zone](#a-drag-scrolls-from-inside-the-edge-zone) — why a selection scrolls even when the frame is the page.
 - [The frame is never natively panned along its own axis](#the-frame-is-never-natively-panned-along-its-own-axis) — why a selecting finger cannot pan the rows out of the clip.
@@ -626,23 +626,27 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Last refined:** 2026-09-06
 
-### A pad never outlives its flick
+### A pad is released when the reader moves, never at rest
 
-**Invariant:** If a walk pads beyond the base, then a timer bumps `settledVersion` after the settle window so the walk runs once more and the pad shrinks back, even when the flick stopped the creep and nothing else would rerun the walk; a base-only walk arms nothing, and dispose cancels.
+**Invariant:** If the held pad is larger than the base once the reading has been still for the settle window, then it is released on the last frame the position CHANGED — the walk runs on a position change and nothing forces one afterwards, so no row is ever unmounted while the content is still.
 
-**Scope:** `VirtualScrollerPadding.ts` `armSettle`, `onSettled`, `settledVersion`, `dispose`; the scroller's `onBeforeUnmount`.
+**Scope:** `VirtualScrollerPadding.ts` `settle` and `pad`. The class holds no reactive cell and no timer: the walk's own cadence is the release's timing.
 
-**Mechanism:** An upward flick stops autoplay, and with no position writes the walk never reruns; the held pad would stay mounted (measured: 72 rows at rest instead of 17). The bump is read by `pad()` inside the walk, so it is exactly one more evaluation.
+**Mechanism:** Releasing rows is a layout change: their heights fold back into the leading spacer. Blink lays out in 1/64 px, so the sum of N row boxes does not round to the single spacer box that replaces them, and every row below the change moves by the residual — measured at 3/64 px (0.0469), on every surviving row, when three rows were released. That is far too small to see as motion, and it is not the problem. The problem is the raster it forces: each text line box is snapped to the device grid independently at raster time, from the layer's new sub-pixel phase, so lines whose baselines sat near a boundary flip and their neighbours do not. While anything else is moving this is invisible. At rest it is the ONLY thing that moves, and it reads as several lines of text hopping a pixel up or down at the exact moment scrolling stops — reported from an Android phone, in every `renderSnap` setting, because it is layout and not the transform.
 
-**Evidence:** `VirtualScrollerPadding.ts` `armSettle`. Test: "a walk that pads beyond the base arms one more walk after the settle window; a base walk arms nothing; dispose cancels". Probe: window rests at 17 rows after up and down flicks.
+**Rejected alternatives:** A timer that bumped a reactive cell so the walk ran once more after the content stopped (`settledVersion`, `armSettle`, `onSettled`, `dispose`). It released the pad ~236 ms into rest, which is the tidier number and the one moment the release can be seen. Also rejected: holding the pad until the reader moves again — it never comes back to the base, so every gesture starts from the last one's pad and the window grows.
 
-**Impossible if true:** A resting list mounting more than its base pad a second after the last input.
+**Generates:** A padding class with no reactive cell, no timer and no dispose — the walk's cadence is the whole schedule.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts -t "never outlives|arms one more walk"`
+**Evidence:** Measured over the chat before the change: 236 ms after a flick came to rest the window went 15 rows to 11, the leading spacer 104725 px to 106048 px, and all 11 surviving rows moved -0.0469 px with nothing else on screen in motion. After it, no frame following rest changes anything. Cost measured back-to-back against the old code on the same machine: no worse (the rig had drifted far enough by then that only a back-to-back comparison meant anything). Tests: "settle grows at once, holds through the decay, releases only while moving, and keeps its rows through a turn", "pad() holds the gap rows and the lookahead across a decaying tail and through rest, releasing only when the reader moves again".
+
+**Impossible if true:** A row unmounting while the content is still. A line of text hopping a pixel while the reader is not scrolling.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerPadding.test.ts -t "releases only while moving|through rest"`
 
 **Status:** provisional
 
-**Last refined:** 2026-09-06
+**Last refined:** 2026-09-15
 
 ### A list may refuse selection
 

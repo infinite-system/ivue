@@ -1079,7 +1079,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.autoplay.dispose();
     this.cancelFrames();
     this.selection.dispose();
-    this.padding.dispose();
     this.lenis?.stop();
     this.lenis?.destroy();
   }

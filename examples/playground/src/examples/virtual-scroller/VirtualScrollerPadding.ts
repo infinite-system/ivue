@@ -21,22 +21,19 @@
 //   - pure statics: gap → rows behind, velocity → rows ahead, the split
 //     of a pad across the two ends by direction, and the settle rule. No
 //     DOM, no state; the spec covers them.
-//   - the instance: a plain holder (nothing renders it), and one call the
-//     window walk makes per evaluation. Velocity is READ there, never
-//     tracked: the walk already reruns on every position change, and a
-//     reactive velocity would rerun it for no new information. The one
-//     cell is `settledVersion`, bumped by a timer once the flick is over,
-//     so the walk runs one last time and the pad shrinks back — without
-//     it, a flick that stops the creep would leave its pad mounted.
+//   - the instance: a plain holder and nothing else — no reactive cell, no
+//     timer. Velocity is READ inside the one call the window walk makes per
+//     evaluation, never tracked: the walk already reruns on every position
+//     change, and a reactive velocity would rerun it for no new information.
 //
 // The hysteresis is what keeps the window from thrashing. A pad grows the
-// frame the velocity or the gap does; it holds for as long as the content
-// moves and shrinks only at rest, once SETTLE_MS has passed since it last
-// grew, so the decay tail of a flick never unmounts a burst of rows
-// mid-glide (a visible hitch on a phone) and keeps what the next flick
-// needs. The gap rows are held the same way: exact per frame they would
-// be trimmed on every walk of the tail — a chunk of unmounts, each with
-// its own layout, every settle window while the content still crawls.
+// frame the velocity or the gap does, and it is released only on a frame
+// the content is MOVING, once SETTLE_MS has passed since it last grew. So
+// the decay tail of a flick never unmounts a burst of rows mid-glide (a
+// visible hitch on a phone), and a pad outlives the flick that grew it,
+// down to the reader's next move — releasing rows is a layout change, and
+// at rest it is the only thing that moves. The gap rows are held the same
+// way: exact per frame they would be trimmed on every walk of the tail.
 import { ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
@@ -77,7 +74,6 @@ class $VirtualScrollerPadding {
   static get STILL_GAP_PX() {
     return 0.5;
   }
-
 
   /* Pure decisions — the spec covers these */
 
@@ -132,8 +128,9 @@ class $VirtualScrollerPadding {
    * — rows ahead or rows behind — raises its level at once; a lower one
    * never shrinks either while the content still moves — the decay tail
    * of a flick is when a burst of unmounts would be seen as a hitch — and
-   * rest shrinks both once the settle window has passed since the last
-   * growth; a direction change turns the direction and keeps the levels —
+   * a still reading releases both once the settle window has passed since
+   * the last growth, on the last frame the position changed; a direction
+   * change turns the direction and keeps the levels —
    * the rows held the old way release at rest with the rest, never on the
    * reversal's own frame.
    */
@@ -159,6 +156,17 @@ class $VirtualScrollerPadding {
         since: now
       };
     }
+    // The release goes back to the base once the reading has been still for
+    // the settle window — and it lands on the last frame the position
+    // CHANGED, because the walk runs on a position change and nothing forces
+    // one at rest. That timing is the whole point. Releasing rows folds
+    // their heights back into the leading spacer, Blink lays out in 1/64 px,
+    // and the sum of N row boxes does not round to the one box replacing
+    // them: every row below moves by the residual (measured: 3/64 px). Too
+    // small to see as motion, but the raster it forces re-snaps each line
+    // box from a new sub-pixel phase, so some lines hop a pixel and their
+    // neighbours do not. On a moving frame nobody can see it. On a still
+    // one it is the only thing on screen that moves.
     const still = ahead === 0 && behind === 0;
     const padded = held.ahead > 0 || held.behind > 0 || held.gapPx > 0;
     if (still && padded && now - held.since >= this.SETTLE_MS) {
@@ -177,14 +185,6 @@ class $VirtualScrollerPadding {
     return this.constructor as typeof $VirtualScrollerPadding;
   }
 
-  // MUTABLE STATE — bumped once the flick has settled. The walk reads it
-  // through pad(), so the bump is what runs the walk one last time.
-  // invariant: A pad never outlives its flick (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  // invariant: Lenis is read inside the walk never tracked (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  get settledVersion() {
-    return ref(0);
-  }
-
   /** The held level — plain, not reactive: nothing renders it, and the
    *  window walk that reads it already reruns on every scroll position. */
   protected readonly held: VirtualScrollerPadding.Held = {
@@ -197,9 +197,6 @@ class $VirtualScrollerPadding {
 
   /** The pad the last walk used, for anyone who wants to show it. */
   protected readonly last: VirtualScrollerPadding.Pad = { before: 0, after: 0 };
-
-  /** The settle timer: armed by every walk that pads beyond the base. */
-  protected readonly settle = { timer: null as ReturnType<typeof setTimeout> | null };
 
   /** Rows the last walk mounted ahead of the motion, beyond the base. */
   get rowsAhead() {
@@ -249,7 +246,6 @@ class $VirtualScrollerPadding {
    */
   pad(now = performance.now()): VirtualScrollerPadding.Pad {
     const self = this.self;
-    this.settledVersion.value;
     const rowSize = this.owner.estimatedItemSize;
     const velocity = this.owner.scrollVelocity;
     const gap = this.owner.scrollGap;
@@ -266,26 +262,7 @@ class $VirtualScrollerPadding {
     );
     this.last.before = pad.before;
     this.last.after = pad.after;
-    const base = this.owner.halfPaddingQuantity;
-    if (pad.before > base || pad.after > base) this.armSettle();
     return pad;
-  }
-
-  /** One more walk after the settle window, so a pad never outlives its flick. */
-  // invariant: A pad never outlives its flick (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-  protected armSettle() {
-    if (this.settle.timer !== null) clearTimeout(this.settle.timer);
-    this.settle.timer = setTimeout(() => this.onSettled(), this.self.SETTLE_MS + 50);
-  }
-
-  onSettled() {
-    this.settle.timer = null;
-    this.settledVersion.value++;
-  }
-
-  dispose() {
-    if (this.settle.timer !== null) clearTimeout(this.settle.timer);
-    this.settle.timer = null;
   }
 }
 
