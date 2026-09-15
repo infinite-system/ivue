@@ -24,6 +24,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend) — why a browser claiming the gesture does not freeze the content.
 - [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted) — why flick after flick gains speed instead of restarting.
 - [A flick under friction stops where its throw runs out](#a-flick-under-friction-stops-where-its-throw-runs-out) — why a long throw can still have a short tail.
+- [Speed crosses every seam in px per millisecond](#speed-crosses-every-seam-in-px-per-millisecond) — why a 120 Hz phone feels what a 60 Hz one does.
 - [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target) — why a glide always ends, and the scroller can rest.
 - [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page) — why a reader at an end is never trapped inside the scroller.
 - [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it) — why a trackpad can scroll a code block sideways.
@@ -69,6 +70,28 @@ Chosen invariants stand on reality invariants, never the reverse.
 **Last refined:** 2026-09-07
 
 ## Chosen invariants
+
+### Speed crosses every seam in px per millisecond
+
+**Invariant:** If any decision is made from how fast the content is moving — the pad's lookahead, the brake's reach, a flick's fallback velocity, the creep's handoff — then the speed it reads is px per MILLISECOND, derived from the frame's real duration; the sole exception is the render snap, which asks how far the layer moves between two rendered frames and is per frame by nature.
+
+**Scope:** `Lenis.ts` `frameMs`, `velocityPerMs`, `raf`, `MAX_FRAME_MS`, `TOUCH_BRAKE_MS`, the touchstart carry and the touchend fallback; `VirtualScrollerPadding.ts` `rowsAhead`, `directionOf`, `STILL_PX_PER_MS`; `VirtualScrollerAutoplay.ts` `adoptDecayedInertia`; `VirtualScroller.ts` `scrollVelocity`.
+
+**Mechanism:** `velocity` is one frame's scroll delta, so its value depends on how often the display asks for a frame: the same motion reports two thirds at 90 Hz and half at 120. Every consumer that converted it with an assumed 16.7 ms was therefore wrong by the ratio of the refresh rates — the pad's lookahead came out half as long, the brake reached half as far, a coalesced swipe flicked at half speed. `raf` already computes the true delta and now keeps it, so the division is by the frame that actually happened. A first frame and a resumed tab are not frame times and fall back to the tuned 60 Hz value.
+
+**Generates:** A pad, a brake and a flick that feel the same on a 120 Hz Android as on a 60 Hz phone, without a second set of constants.
+
+**Rejected alternatives:** Tuning a second set of constants per refresh rate — the constants were never the problem, the unit was.
+
+**Evidence:** Test: "the same motion reports the same speed at 60 Hz and at 120". Reported from a Galaxy S22 Ultra (120 Hz) as residual chop where an iPhone at 60 Hz read as native.
+
+**Impossible if true:** The same swipe on two displays of different refresh rates sizing different pads. A brake that reaches a different distance because the display is faster.
+
+**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "same speed at 60"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-15
 
 ### A flick under friction stops where its throw runs out
 
@@ -139,7 +162,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 ### A touch on a glide keeps it running until the first move
 
-**Invariant:** If a finger lands while the content glides, then the glide runs on, braked — its target pulled to `TOUCH_BRAKE_FRAMES` frames of travel ahead under `TOUCH_BRAKE_LERP`, so the content eases to a stop under the finger within a few frames — the touch is pending, and the glide's momentum is remembered at that instant for a flick the same way; if that finger then moves, then the glide stops where the content is, the glide's target is dropped for the animated position, the trail is re-seeded there and the finger's sync takes over; if that finger lifts or is cancelled with no move, then the glide is reset — the tap that stops it; and if a class claims the touch for itself and flags its moves for Lenis to skip, then it calls `hold()` and the glide stops where the content is, since the pending touch would never see the move that takes over.
+**Invariant:** If a finger lands while the content glides, then the glide runs on, braked — its target pulled `TOUCH_BRAKE_MS` of travel ahead under `TOUCH_BRAKE_LERP`, so the content eases to a stop under the finger within a few frames — the touch is pending, and the glide's momentum is remembered at that instant for a flick the same way; if that finger then moves, then the glide stops where the content is, the glide's target is dropped for the animated position, the trail is re-seeded there and the finger's sync takes over; if that finger lifts or is cancelled with no move, then the glide is reset — the tap that stops it; and if a class claims the touch for itself and flags its moves for Lenis to skip, then it calls `hold()` and the glide stops where the content is, since the pending touch would never see the move that takes over.
 
 **Scope:** `Lenis.ts` `touchPending`, `hold`, and the touchstart / first-move / end branches of `onVirtualScroll`; the scroller's `holdScroll` seam down to the touch class.
 

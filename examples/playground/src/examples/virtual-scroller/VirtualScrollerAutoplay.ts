@@ -189,7 +189,8 @@ class $VirtualScrollerAutoplay {
     if (!lenis || this.owner.inputLive) return false;
     if (lenis.isScrolling !== 'smooth') return false;
     if (this.owner.scrollDirection.value !== 'down') return false;
-    // lenis.velocity is px per rAF frame; at ~60fps that is px per 16.7ms.
+    // px per millisecond, so the handoff happens at the same real speed
+    // whatever the display's refresh rate is.
     const pxPerMs = lenis.velocityPerMs;
     if (pxPerMs <= 0 || pxPerMs > 1 / this.msPerPx) return false;
     // Adopt the CURRENT animated position (not the farther wheel target): the

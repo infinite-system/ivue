@@ -7,6 +7,7 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 [A cross-axis wheel belongs to what is under it](lenis.invariants.md#a-cross-axis-wheel-belongs-to-what-is-under-it)
 [A touch on a glide keeps it running until the first move](lenis.invariants.md#a-touch-on-a-glide-keeps-it-running-until-the-first-move)
 [A flick under friction stops where its throw runs out](lenis.invariants.md#a-flick-under-friction-stops-where-its-throw-runs-out)
+[Speed crosses every seam in px per millisecond](lenis.invariants.md#speed-crosses-every-seam-in-px-per-millisecond)
 // domain-invariant: $Lenis — If the display runs at any refresh rate, then `velocityPerMs` reports the same speed for the same motion, because it divides the frame's scroll delta by the frame's REAL duration rather than an assumed 16.7 ms.
 // domain-invariant: $Lenis — If a flick glides under friction, then it decelerates at a constant rate and ARRIVES over `2 / lerp` frames, where the exponential model approaches its target and settles within half a pixel.
 // domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
@@ -121,6 +122,7 @@ test('an idle frame before the touchend does not zero the flick: the trail still
 });
 
 // invariant: A flick under friction stops where its throw runs out (examples/playground/src/lenis/lenis.invariants.md)
+// invariant: Speed crosses every seam in px per millisecond (examples/playground/src/lenis/lenis.invariants.md)
 // domain-invariant: $Lenis — If the display runs at any refresh rate, then `velocityPerMs` reports the same speed for the same motion, because it divides the frame's scroll delta by the frame's REAL duration rather than an assumed 16.7 ms.
 test('the same motion reports the same speed at 60 Hz and at 120', () => {
   const lenis = Object.create(Lenis.Class.prototype) as {
@@ -398,9 +400,10 @@ test('a finger on a glide brakes it to a few frames ahead and keeps its momentum
   // the finger lands: the target is pulled to a few frames ahead, the momentum is kept
   gesture('touchstart', 0);
   expect(inner.touchPending).toBe(true);
-  expect(inner.carriedVelocity).toBe(velocity);
+  // the frames here are 16.7 ms apart, so per-frame and per-60Hz-frame agree
+  expect(inner.carriedVelocity).toBeCloseTo(velocity, 5);
   expect(lenis.targetScroll).toBe(
-    Math.round(lenis.animatedScroll + velocity * Lenis.Class.TOUCH_BRAKE_FRAMES)
+    Math.round(lenis.animatedScroll + lenis.velocityPerMs * Lenis.Class.TOUCH_BRAKE_MS)
   );
   expect(lenis.targetScroll - lenis.animatedScroll).toBeLessThan(4000 - lenis.animatedScroll);
   // a few frames on, the content has all but settled under the finger: a
@@ -408,7 +411,9 @@ test('a finger on a glide brakes it to a few frames ahead and keeps its momentum
   const before = lenis.animatedScroll;
   for (let frame = 3; frame < 12; frame++) lenis.raf(frame * 16.7);
   expect(Math.abs(lenis.velocity)).toBeLessThan(velocity * 0.25);
-  expect(lenis.animatedScroll - before).toBeLessThan(velocity * Lenis.Class.TOUCH_BRAKE_FRAMES);
+  expect(lenis.animatedScroll - before).toBeLessThan(
+    (velocity / 16.7) * Lenis.Class.TOUCH_BRAKE_MS
+  );
   // the first move takes over where the content is, the momentum still carried
   const at = lenis.animatedScroll;
   gesture('touchmove', -40);

@@ -136,9 +136,12 @@ class $Lenis {
     return lerp > 0 ? 2 / lerp : 0;
   }
 
-  /** A touch on a glide pulls its target to this many frames of travel ahead: the brake's length. */
-  static get TOUCH_BRAKE_FRAMES() {
-    return 4;
+  /** A touch on a glide pulls its target this far ahead in TIME: the brake's
+   *  length. In ms, not frames — four frames is 67 ms on a 60 Hz display and
+   *  33 on a 120 Hz one, so a frame count made the brake twice as abrupt on
+   *  exactly the hardware most likely to be running at 120. */
+  static get TOUCH_BRAKE_MS() {
+    return 4 * 16.7;
   }
 
   /** The brake's lerp — steep, so the content settles under the finger within a few frames. */
@@ -740,6 +743,10 @@ class $Lenis {
     // resample, 'auto' takes the speed rule above.
     const dpr = window.devicePixelRatio || 1;
     const snap = this.options.renderSnap ?? 'auto';
+    // Per RENDERED frame on purpose, and the one speed here that should be:
+    // the question is how far the layer moves between two frames the display
+    // actually shows, and snapping a step already below a device pixel is
+    // what turns it into a stutter. Everything else reads px per ms.
     const onGrid =
       snap === 'grid' ||
       (snap === 'auto' && Math.abs(this.velocity) * dpr >= this.self.SNAP_ABOVE_DEVICE_PX);
@@ -885,9 +892,12 @@ class $Lenis {
         this.touchPending = true;
         this.touchTrail = [{ at: now, position: this.animatedScroll }];
         // invariant: A flick carries the glide it interrupted (examples/playground/src/lenis/lenis.invariants.md)
-        this.carriedVelocity = this.velocity;
+        // carried in the SAME unit the trail reports — px per 60 Hz frame —
+        // so a glide interrupted on a 120 Hz display contributes what it
+        // actually had, not half of it
+        this.carriedVelocity = this.velocityPerMs * this.self.FRAME_MS;
         if (this.animate.isRunning) {
-          this.scrollTo(this.animatedScroll + this.velocity * this.self.TOUCH_BRAKE_FRAMES, {
+          this.scrollTo(this.animatedScroll + this.velocityPerMs * this.self.TOUCH_BRAKE_MS, {
             programmatic: false,
             lerp: this.self.TOUCH_BRAKE_LERP
           });
@@ -1020,7 +1030,11 @@ class $Lenis {
     // invariant: A touchcancel flicks like a touchend (examples/playground/src/lenis/lenis.invariants.md)
     const isTouchEnd = isTouch && (event.type === 'touchend' || event.type === 'touchcancel');
 
-    let flickVelocity = this.velocity;
+    // in the trail's unit — px per 60 Hz frame — because that is what it
+    // falls back TO. Raw `velocity` is per rendered frame, which is half of
+    // that at 120 Hz, and this fallback is exactly the path a coalesced
+    // Android swipe takes.
+    let flickVelocity = this.velocityPerMs * this.self.FRAME_MS;
     let trailLength = 0;
     if (isTouch) {
       // The touchstart seeded the trail above.
@@ -1030,7 +1044,7 @@ class $Lenis {
       } else if (isTouchEnd) {
         trailLength = this.touchTrail.length;
         flickVelocity = this.self.carryVelocity(
-          this.self.trailVelocity(this.touchTrail, this.velocity),
+          this.self.trailVelocity(this.touchTrail, this.velocityPerMs * this.self.FRAME_MS),
           this.carriedVelocity
         );
         this.carriedVelocity = 0;
