@@ -265,7 +265,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   static get SCROLL_KNOBS(): VirtualScroller.ScrollKnobs {
     return {
       wheel: { gain: 1, follow: 0.1, maxPxPerMs: 0 },
-      touch: { gain: 1, carry: 35, launch: 1, glide: 'friction', maxPxPerMs: 0 }
+      touch: { gain: 1, carry: 35, launch: 1, glide: 'friction', maxPxPerMs: 0 },
+      snap: 'auto'
     };
   }
 
@@ -584,6 +585,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       syncTouchLerp: touch.launch / touch.carry,
       touchInertiaMultiplier: touch.carry,
       syncTouchGlide: touch.glide,
+      renderSnap: this.props.scroll.snap,
       touchMaxPxPerMs: touch.maxPxPerMs
     };
   }
@@ -2016,6 +2018,21 @@ export namespace VirtualScroller {
     /** The wheel has no flick, so it has no launch: a notch sets the target
      *  and `follow` is simply how fast the transform chases it. */
     wheel: { gain: number; follow: number; maxPxPerMs: number };
+    /**
+     * How the applied translate meets the device-pixel grid — the one place
+     * a virtual scroll differs from the browser's own, and a real trade
+     * rather than a bug:
+     *
+     *   'grid'        every glyph stays on the raster, and the motion is
+     *                 quantised to whole device pixels.
+     *   'fractional'  the motion is continuous and the compositor resamples
+     *                 the layer, which softens text slightly and, at speed,
+     *                 lets rows whose layout tops carry different fractions
+     *                 hop a pixel against their neighbours as tiles repaint.
+     *   'auto'        snap only above a device pixel per frame, which is why
+     *                 the reading creep glides and a scroll steps.
+     */
+    snap: 'auto' | 'grid' | 'fractional';
     /** A flick in its own terms. `carry` is the throw, in frames of the
      *  finger's own speed (distance = v x carry); `launch` is the multiple
      *  of that speed the glide leaves at, 1 being a clean hand-over. The

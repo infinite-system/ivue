@@ -506,6 +506,7 @@ test('a nested knob left out reads as its tuned default at every depth, a suppli
       VirtualScroller.Class.SCROLL_KNOBS.touch.carry,
     touchInertiaMultiplier: VirtualScroller.Class.SCROLL_KNOBS.touch.carry,
     syncTouchGlide: VirtualScroller.Class.SCROLL_KNOBS.touch.glide,
+    renderSnap: VirtualScroller.Class.SCROLL_KNOBS.snap,
     touchMaxPxPerMs: 0
   });
   tuned.unmount();

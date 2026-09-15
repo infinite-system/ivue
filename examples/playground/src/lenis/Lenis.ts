@@ -86,6 +86,29 @@ class $Lenis {
   }
 
   /**
+   * The speed above which 'auto' writes on the device-pixel grid, in device
+   * pixels per frame. The quantising error is a whole device pixel either
+   * way, so what matters is its size RELATIVE to the step: at 40 device
+   * px/frame it is 2.5% and invisible, at 2 it is half the motion. Raising
+   * this keeps gentle scrolling fractional, where the creep already is and
+   * where nobody has ever called the motion steppy; the cost is that the
+   * layer re-rasterizes in that range — and that is where the idea dies.
+   * Measured on the files list, a flick at each setting:
+   *
+   *   threshold 1 (this)   max frame  33 ms   long tasks   0 ms
+   *   threshold 6          max frame  67 ms   long tasks  66 ms   reversal never landed
+   *   fractional always    max frame 117 ms   long tasks 451 ms   reversal 271 ms
+   *
+   * So the grid is not a cosmetic choice, it is what keeps a frame cheap,
+   * and the quantised motion under a scroll is its price. The lever that
+   * would actually buy fractional back is a lighter layer — the rows are
+   * what makes a re-raster expensive, not the transform.
+   */
+  static get SNAP_ABOVE_DEVICE_PX() {
+    return 1;
+  }
+
+  /**
    * Constant deceleration, as an easing. A flick that leaves at v and
    * decelerates at a fixed rate covers `x(t) = v t - a t^2 / 2`, which over
    * its own duration is exactly `1 - (1 - p)^2` — so the friction model
@@ -150,6 +173,7 @@ class $Lenis {
     syncTouchLerp = 0.075,
     touchInertiaMultiplier = 35,
     syncTouchGlide = 'exponential',
+    renderSnap = 'auto',
     duration, // in seconds
     easing,
     lerp = 0.1,
@@ -211,6 +235,7 @@ class $Lenis {
       syncTouchLerp,
       touchInertiaMultiplier,
       syncTouchGlide,
+      renderSnap,
       duration,
       easing,
       lerp,
@@ -688,9 +713,16 @@ class $Lenis {
     // f32 still resolves sub-pixel fractions. Resting positions stay crisp
     // regardless: scrollTo rounds its targets, so completed inertia lands
     // on integers.
+    // Which side of that trade to take is a setting, because it is a trade:
+    // 'grid' keeps every glyph on the raster and quantises the motion,
+    // 'fractional' keeps the motion continuous and lets the compositor
+    // resample, 'auto' takes the speed rule above.
     const dpr = window.devicePixelRatio || 1;
-    const fast = Math.abs(this.velocity) * dpr >= 1;
-    const rendered = fast ? Math.round(scroll * dpr) / dpr : scroll;
+    const snap = this.options.renderSnap ?? 'auto';
+    const onGrid =
+      snap === 'grid' ||
+      (snap === 'auto' && Math.abs(this.velocity) * dpr >= this.self.SNAP_ABOVE_DEVICE_PX);
+    const rendered = onGrid ? Math.round(scroll * dpr) / dpr : scroll;
 
     if (this.isHorizontal) {
       (this.options.content as HTMLElement).style.transform = `translateX(${-rendered}px)`;
@@ -1045,6 +1077,7 @@ class $Lenis {
         | 'syncTouchLerp'
         | 'touchInertiaMultiplier'
         | 'syncTouchGlide'
+        | 'renderSnap'
         | 'wheelMaxPxPerMs'
         | 'touchMaxPxPerMs'
       >
@@ -1612,6 +1645,14 @@ export namespace Lenis {
      * @default 'exponential'
      */
     syncTouchGlide?: 'exponential' | 'friction';
+    /**
+     * How the applied translate meets the device-pixel grid. 'auto' snaps
+     * only while the content moves a device pixel or more per frame;
+     * 'grid' always snaps (crisp glyphs, quantised motion); 'fractional'
+     * never does (continuous motion, the compositor resamples).
+     * @default 'auto'
+     */
+    renderSnap?: 'auto' | 'grid' | 'fractional';
     /**
      * Scroll duration in seconds
      */

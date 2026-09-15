@@ -1422,3 +1422,23 @@ faster, and the thing worth proving is that it did not get slower. Frame
 time cannot answer this question at all: vsync pins it to 16.7 ms on
 both sides. Reach for CPU metrics under throttling, and report the
 spread, not a single median.
+
+## The probe rig degrades, and a stale threshold is worse than none (2026-09-14)
+
+`npm run probe:scroller` measured a files flick at 17–33 ms with zero long
+tasks all morning, and by evening the SAME COMMIT measured 83–183 ms with
+280–1,100 ms of long tasks. Nothing in the code explained it: checking out
+the commit before the change under test reproduced the bad numbers exactly,
+which is the only reason the change was not blamed. Nine orphaned
+`playwright-mcp` processes (three sets, days old, ~600 MB RSS but 0% CPU)
+accounted for part of it — killing them took long tasks from 1,101 to ~300 —
+and the rest never resolved within the session.
+
+Three rules follow. Never read a probe number without a baseline from a
+commit you trust, taken in the same minutes — a `git stash push -u -m <tag>`
+and a re-run costs two minutes and is the difference between a diagnosis and
+a guess. The first probe after a dev-server restart is always the worst
+(Vite compiles on demand); discard it. And when the rig is drifting, do not
+retune a threshold to make it pass — a threshold set from a degraded rig
+encodes the degradation forever, which is the one failure mode a feel gate
+cannot survive.
