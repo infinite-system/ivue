@@ -7,6 +7,7 @@
  */
 import ChatShell from '../../../../../examples/playground/src/examples/ai-chat/ChatShell.vue';
 import { ExampleFeelToggle } from './ExampleFeelToggle';
+import ExampleNativeChat from './ExampleNativeChat.vue';
 
 // docs chrome: the two feel choices that can only be judged by hand, live
 const feel = new ExampleFeelToggle.Class('.ac-thread .virtual-scroller');
@@ -58,6 +59,7 @@ const { glide, snap } = feel;
     <div class="eac-frame">
       <ChatShell />
     </div>
+    <ExampleNativeChat />
   </section>
 </template>
 

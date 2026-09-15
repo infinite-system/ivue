@@ -1076,8 +1076,17 @@ class $Lenis {
         ? {
             ...(friction && frictionDuration > 0
               ? { duration: frictionDuration, easing: this.self.frictionEasing }
-              : { lerp: hasTouchInertia ? this.options.syncTouchLerp : 1 })
-            // immediate: !hasTouchInertia,
+              : { lerp: hasTouchInertia ? this.options.syncTouchLerp : 1 }),
+            // A DRAG is not an animation: the content belongs under the
+            // finger, at the pixel the finger is at, the way the browser's
+            // own scrolling puts it there. Through a lerp — even a lerp of
+            // 1, which damp turns into 63% of the remaining distance per
+            // frame — the content trails the finger by about 50 ms and
+            // arrives only when the half-pixel settle snaps it, which is
+            // felt as the content creeping after the thumb rather than
+            // moving with it. A flick is the opposite case and keeps its
+            // animation.
+            immediate: !hasTouchInertia
           }
         : {
             lerp: this.options.lerp,
@@ -1332,9 +1341,15 @@ class $Lenis {
     this.userData = userData ?? {};
 
     if (immediate) {
+      // The speed the content is actually moving at, kept across the jump:
+      // `reset` below zeroes it, and the render pad sizes its lookahead from
+      // it — zeroed on every move of a drag, the pad collapses to its base
+      // and the rows a fast drag is about to reach are mounted late.
+      const moved = target - this.animatedScroll;
       this.animatedScroll = this.targetScroll = target;
       this.setScroll(this.scroll);
       this.reset();
+      this.velocity = moved;
       this.preventNextNativeScrollEvent();
       this.emit();
       onComplete?.(this);

@@ -8,6 +8,7 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 [A touch on a glide keeps it running until the first move](lenis.invariants.md#a-touch-on-a-glide-keeps-it-running-until-the-first-move)
 [A flick under friction stops where its throw runs out](lenis.invariants.md#a-flick-under-friction-stops-where-its-throw-runs-out)
 [Speed crosses every seam in px per millisecond](lenis.invariants.md#speed-crosses-every-seam-in-px-per-millisecond)
+// domain-invariant: $Lenis — If a finger DRAGS, then the content is put where the finger is in that same event, with no animation between; only a flick's release animates.
 // domain-invariant: $Lenis — If the display runs at any refresh rate, then `velocityPerMs` reports the same speed for the same motion, because it divides the frame's scroll delta by the frame's REAL duration rather than an assumed 16.7 ms.
 // domain-invariant: $Lenis — If a flick glides under friction, then it decelerates at a constant rate and ARRIVES over `2 / lerp` frames, where the exponential model approaches its target and settles within half a pixel.
 // domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
@@ -123,6 +124,57 @@ test('an idle frame before the touchend does not zero the flick: the trail still
 
 // invariant: A flick under friction stops where its throw runs out (examples/playground/src/lenis/lenis.invariants.md)
 // invariant: Speed crosses every seam in px per millisecond (examples/playground/src/lenis/lenis.invariants.md)
+// domain-invariant: $Lenis — If a finger DRAGS, then the content is put where the finger is in that same event, with no animation between; only a flick's release animates.
+test('a drag puts the content under the finger in the same event; the release animates', () => {
+  class ObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
+  const wrapper = document.createElement('div');
+  const content = document.createElement('div');
+  wrapper.appendChild(content);
+  document.body.appendChild(wrapper);
+  const lenis = new Lenis.Class({ wrapper, content, autoRaf: false, syncTouch: true });
+  lenis.virtualLimit = () => 100_000;
+  const gesture = (type: string, deltaY: number) => {
+    const event = {
+      type,
+      ctrlKey: false,
+      preventDefault: vi.fn(),
+      composedPath: () => [content, wrapper, document.body],
+      target: content
+    };
+    (
+      lenis as unknown as {
+        onVirtualScroll: (data: { deltaX: number; deltaY: number; event: unknown }) => void;
+      }
+    ).onVirtualScroll({ deltaX: 0, deltaY, event });
+  };
+  const animate = (lenis as unknown as { animate: { isRunning: boolean } }).animate;
+
+  // forward, away from the top: a gesture at a limit belongs to the page
+  gesture('touchstart', 0);
+  gesture('touchmove', 40); // the take-over
+  const from = lenis.animatedScroll;
+
+  // each move lands whole, in the event itself — no frame has to run first
+  gesture('touchmove', 40);
+  expect(lenis.animatedScroll - from).toBe(40);
+  expect(animate.isRunning).toBe(false);
+  gesture('touchmove', 40);
+  expect(lenis.animatedScroll - from).toBe(80);
+  // and the speed the pad reads survives the jump, rather than being reset away
+  expect(lenis.velocity).toBeCloseTo(40, 5);
+
+  // the release is the one part that animates
+  gesture('touchend', 40);
+  expect(animate.isRunning).toBe(true);
+  expect(lenis.targetScroll).toBeGreaterThan(lenis.animatedScroll);
+  wrapper.remove();
+});
+
 // domain-invariant: $Lenis — If the display runs at any refresh rate, then `velocityPerMs` reports the same speed for the same motion, because it divides the frame's scroll delta by the frame's REAL duration rather than an assumed 16.7 ms.
 test('the same motion reports the same speed at 60 Hz and at 120', () => {
   const lenis = Object.create(Lenis.Class.prototype) as {
