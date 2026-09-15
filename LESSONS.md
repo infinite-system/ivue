@@ -1578,3 +1578,22 @@ Two general shapes worth keeping:
 Also rejected here, with numbers: holding the pad until the reader moves
 again. It never returns to the base, so each gesture starts from the last
 one's pad — more than twice the frame work.
+
+### Correction — the timer was load-bearing; deleting it broke iOS
+
+The entry above ends with "the fix was to delete the timer". It was
+not. Without the timer the release depends on the window walk running
+on a frame whose reading is already still, and on an iPhone that frame
+never came: the pad was never released, the window grew with every
+gesture, and the scroller went choppy and stopped unloading rows. The
+change was reverted.
+
+The observation stands — a leading-side release at rest hops text lines.
+The remedy does not. What is still true: the END side (rows below the
+viewport) can be released at rest without moving anything, because only
+the trailing spacer changes; the START side folds into the leading spacer
+and shifts every row below it by the LayoutUnit residual. A release rule
+that honours that split has not been built. The general shape holds:
+measure a "simplification" on every platform it ships to before calling
+it one, and a mechanism with a comment explaining why it exists is a
+mechanism to measure the removal of, not to delete.
