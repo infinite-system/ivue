@@ -1662,3 +1662,54 @@ the heights exact, the knob had no job left and came out: ~150 lines and a
 setting a reader could get wrong. When a mechanism exists to HIDE an
 observation rather than explain it, check the model's inputs first; the
 observation may be a bug wearing the costume of a trade-off.
+
+## Removing one string from history: git plumbing, not filter-repo
+
+A Google Maps key leaked into a published sample file
+(`docs_v2/public/examples/chat/sample/page-003.json`, one blob, added in
+one commit). The goal was surgical: change that one blob, re-hash only
+the commits that descend from it, keep every other hash.
+
+`git filter-repo --replace-text` looked like the tool and was not.
+It re-hashed 1,828 of 1,833 commits and moved 85 refs, every release tag
+included. It runs history through fast-export/fast-import, which
+normalises commits: a 2023 README commit that was signed and had no
+final newline came back without the signature, got a new hash, and every
+commit after it inherited a new parent. `--refs <range>` still passes the
+range through the same export, so it is not byte-exact either.
+
+What worked, in about two seconds: plumbing. For every commit descending
+from the leak, in topological order, read the raw bytes with
+`git cat-file commit`, change only the `tree` line (where the old blob
+sits at that path; new tree built with a temporary `GIT_INDEX_FILE`,
+`read-tree`, `update-index --cacheinfo`, `write-tree`) and the `parent`
+lines (only where a parent was itself re-written), and store it with
+`git hash-object -t commit -w --stdin`. An annotated tag is the same
+move on its `object` line. Nothing parses or re-serialises signatures,
+encodings or messages, so nothing else can change.
+
+Procedure that held up:
+1. Mirror backup (`git clone --mirror`), and a separate fresh copy to
+   rewrite (`--no-local`, `refs/stash` dropped from the copy only).
+2. Rewrite in the copy, then **point the copy's refs at the new commits**
+   — the first attempt skipped this, so a fetch carried the old refs
+   and none of the new objects.
+3. Prove it in the copy before touching the live repo: the string is in
+   no reachable blob; exactly the expected commits changed and every
+   other hash is identical; each rewritten commit is byte-identical
+   except its `tree`/`parent` lines; its tree differs only at the one
+   path; the tip tree is unchanged if the file was already fixed on the
+   branch; `fsck` is clean.
+4. Fetch into a private namespace (`refs/rewrite/*`), check the fetched
+   hashes equal the rewrite, then move each live ref with
+   `git update-ref <ref> <new> <old>` so a ref that moved meanwhile is
+   refused. Reset only the worktrees whose files differ. Drop the
+   private refs.
+
+The script and the old-to-new commit map for this rewrite are kept in
+`~/ivue-rewrite-2026-09-15/`.
+
+`git fsck` in this repo reports `refs/heads/._main: badRefName`. That is
+a macOS AppleDouble file from 2026-07-14, not a ref and not related to
+any rewrite; there are 7 `._*` files under `.git`. Git ignores them; a
+mirror clone does not copy them, which is why a backup's `fsck` is clean.
