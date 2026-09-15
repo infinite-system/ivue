@@ -3,7 +3,7 @@ title: 'One question deleted 537 lines'
 description: A virtual scroller that feels like the browser's own on an iPhone and a Galaxy, exact to a fraction of a pixel. Then the 3 days of machinery one question made unnecessary.
 date: 2026-09
 tags: [story, performance, philosophy]
-relatedPosts: [a-million-rows-twelve-divs, select-text-across-a-million-rows, measured-not-promised, win-by-reduction]
+relatedPosts: [subpixel-perfect-scrolling, a-million-rows-twelve-divs, select-text-across-a-million-rows, measured-not-promised, win-by-reduction]
 ---
 
 <script setup>
@@ -62,7 +62,9 @@ to look.
 
 ## 3 days of the wrong question
 
-The question I asked was: *what is the browser doing with the fraction?*
+The question on the table was: *what is the browser doing with the fraction?*
+I was working this with an AI agent, and that was the agent's question. It
+was a good one. It was also the wrong one, and for 3 days I did not stop it.
 
 The scroller writes fractional positions, like `translateY(-107293.6458px)`.
 To move a drawn layer by a fraction of a pixel, the browser has to
@@ -80,7 +82,8 @@ that said fractional was the expensive one.
 Then we measured, because the knob did not remove the line shift. Every
 frame of a glide, recorded at the source. We caught the moment the glide
 came to rest: a half-pixel jump onto the grid with nothing else moving,
-my own rule, reverted. We tried a claim that fresh tiles were the trigger,
+a rule the agent had added that same morning, reverted. We tried a claim
+that fresh tiles were the trigger,
 so the 2 frames after any window change took the grid: built, measured,
 fixed nothing, reverted. We found that releasing spare rows at rest moved
 every remaining row by exactly **3/64 px**, so we moved the release to the
@@ -94,7 +97,10 @@ Every one was about the costume.
 
 > "Don't you already know the heights? Why is there a 3/64 px diff at all?"
 
-That was the user, not the instruments. The scroller records each row's
+That was me. Not the tracing, not the per-frame capture, not the agent
+with 3 days of numbers. I had no instrument at all, only the thought that
+we were arguing about the browser's rounding while our own model claimed
+to know the heights. The scroller records each row's
 height when it mounts. So the model knows to the pixel what the spacers
 should be. If the model knows the heights, releasing rows into a spacer
 should move nothing. The leftover was not the browser rounding. It was the
@@ -166,7 +172,7 @@ the only instrument that counts for that claim, which is a thumb.
 
 ## The shape of it
 
-I had every instrument pointed at the browser. Tracing. Per-frame
+The agent had every instrument pointed at the browser. Tracing. Per-frame
 capture. A PNG decoder written to measure glyph edges at sub-pixel
 offsets. A synthetic page to isolate line-height rounding. All of it
 measured the costume with great precision. None of it asked whether the

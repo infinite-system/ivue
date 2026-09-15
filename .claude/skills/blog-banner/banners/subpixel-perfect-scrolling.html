@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face { font-family: 'Geist'; font-style: normal; font-weight: 300 800; src: url(./fonts/geist-latin.woff2) format('woff2'); }
+  @font-face { font-family: 'Geist Mono'; font-style: normal; font-weight: 400 600; src: url(./fonts/geist-mono-latin.woff2) format('woff2'); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(1000px 560px at 50% -20%, rgba(99, 102, 241, 0.25), transparent 60%),
+      radial-gradient(900px 560px at 50% 130%, rgba(34, 211, 238, 0.14), transparent 55%),
+      #050a18;
+    font-family: 'Geist', 'DejaVu Sans', 'Inter', sans-serif; position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+    -webkit-mask-image: radial-gradient(760px 480px at 50% 50%, black 25%, transparent 75%);
+  }
+  .lockup { position: absolute; top: 34px; left: 44px; }
+  .lockup img { display: block; width: 178px; }
+  .stage {
+    position: absolute; left: 0; right: 0; top: 130px; bottom: 44px;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    padding: 0 70px; text-align: center;
+  }
+  .pair { display: flex; gap: 22px; width: 960px; }
+  .term {
+    flex: 1; border-radius: 14px; border: 1px solid rgba(96, 165, 250, 0.35);
+    background: rgba(8, 14, 32, 0.92);
+    box-shadow: 0 0 60px rgba(59, 130, 246, 0.22), inset 0 1px 0 rgba(255,255,255,0.04);
+    text-align: left; overflow: hidden;
+  }
+  .bar { display: flex; gap: 8px; padding: 11px 16px; border-bottom: 1px solid rgba(96,165,250,0.18); }
+  .bar i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .code { font-family: 'Geist Mono', 'DejaVu Sans Mono', monospace; font-size: 21px; line-height: 1.6; padding: 16px 22px 18px; color: #a8c0e8; white-space: pre; }
+  .c { color: #52688f; } .k { color: #c4b5fd; } .n { color: #67e8f9; text-shadow: 0 0 14px rgba(34, 211, 238, 0.6); }
+  .title { font-size: 60px; font-weight: 750; color: #eaf2ff; letter-spacing: -0.015em; line-height: 1.1; text-shadow: 0 0 44px rgba(59, 130, 246, 0.5); }
+  .title .glow { color: #67e8f9; text-shadow: 0 0 36px rgba(34, 211, 238, 0.8); }
+  .sub { font-size: 24px; color: #7e9cd0; line-height: 1.5; max-width: 980px; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="lockup"><img src="../../../../docs_v2/public/brand-lockup-dark.png" alt="ivue — Infinite Vue" /></div>
+  <div class="stage">
+    <div class="pair">
+      <div class="term">
+        <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+        <div class="code"><span class="c">/* the browser's own scroll */</span>
+overflow-y: <span class="k">auto</span>;
+<span class="c">/* 10,000 rows in the DOM      */</span></div>
+      </div>
+      <div class="term">
+        <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+        <div class="code"><span class="c">// a virtual list</span>
+translateY(<span class="n">-107293.6458px</span>)
+<span class="c">// 12 rows in the DOM, same thumb</span></div>
+      </div>
+    </div>
+    <div class="title">Subpixel-perfect <span class="glow">scrolling</span></div>
+    <div class="sub">9 things that have to be true before a thumb cannot tell a virtual list<br/>from the browser's own scroll, on an iPhone and an Android, each with its number</div>
+  </div>
+</body>
+</html>
