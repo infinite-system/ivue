@@ -1101,6 +1101,8 @@ test('a shift under a running glide moves the glide and the position cell togeth
   instance.syncItemSize(10, 130);
   instance.syncItemSize(11, 130);
   expect(lenis.shiftBy).toHaveBeenCalledTimes(2);
+  // under a glide the integrator paints the shift — the write is asked for
+  expect(lenis.shiftBy).toHaveBeenCalledWith(100, true);
   expect(lenis.targetScroll).toBe(3200);
   expect(lenis.animatedScroll).toBe(2800);
   // the position cell followed the target — a clamp reading it sees the truth
@@ -1145,8 +1147,11 @@ test('a shift under a dragging finger goes through the integrator too — a drag
   instance.syncItemSize(10, 130);
   instance.syncItemSize(11, 130);
   // the integrator moved whole — the trail rides inside shiftBy, which is
-  // exactly why the shift must not be written straight onto the target
+  // exactly why the shift must not be written straight onto the target —
+  // but with the write declined: this class writes the layer itself right
+  // after, and on Safari a second write is a second raster of the layer
   expect(lenis.shiftBy).toHaveBeenCalledTimes(2);
+  expect(lenis.shiftBy).toHaveBeenCalledWith(100, false);
   expect(lenis.targetScroll).toBe(3200);
   expect(lenis.animatedScroll).toBe(3200);
   expect(Number(instance.scrollPosition.value)).toBe(3200);

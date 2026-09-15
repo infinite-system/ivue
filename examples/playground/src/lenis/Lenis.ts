@@ -736,7 +736,7 @@ class $Lenis {
    * written at once: the DOM already holds the new size, and a frame late
    * is a visible jerk.
    */
-  shiftBy(delta: number) {
+  shiftBy(delta: number, write = true) {
     this.targetScroll += delta;
     this.animatedScroll += delta;
     if (this.animate.isRunning) this.animate.shift(delta);
@@ -745,7 +745,15 @@ class $Lenis {
     // finger's motion over them — rows measuring above the reader mid-drag
     // moved the positions without the finger, and the flick read as still
     for (const point of this.touchTrail) point.position += delta;
-    this.setScroll(this.scroll);
+    // The write is the caller's to decline. A caller that writes the layer
+    // itself right after (a virtual window restoring its anchor, from a
+    // rebased offset only it knows) needs the MODEL shifted — target,
+    // animated position, lerp, trail — and not a second write of the same
+    // frame. On Safari that second write is not cheap: setScroll cycles
+    // will-change with a forced layout between, and the whole layer is
+    // rasterised again. Once per anchor restore, on every measurement
+    // wave, it read as a choppy scroll on an iPhone that Chrome never saw.
+    if (write) this.setScroll(this.scroll);
   }
 
   protected setScroll(scroll: number) {

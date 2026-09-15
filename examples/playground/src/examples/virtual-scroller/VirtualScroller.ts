@@ -1440,8 +1440,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // the rows of the first screens are still measuring, the release then
     // flicked BACKWARD and the thread bounced back to the end. The one
     // case the trail matters most was the one case it was not shifted.
-    lenis.shiftBy(delta);
-    if (this.lerpRunning) {
+    // under a glide the integrator paints the shift itself; otherwise this
+    // class writes the layer below, and a second write here would be a
+    // second Safari re-raster for nothing
+    const gliding = this.lerpRunning;
+    lenis.shiftBy(delta, gliding);
+    if (gliding) {
       // the glide moves with the content: its lerp keeps its remaining
       // distance and the compensation paints in this frame. The position
       // cell follows the shifted target — the clamp that runs after a

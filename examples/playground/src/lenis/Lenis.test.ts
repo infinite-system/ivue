@@ -15,7 +15,7 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 // domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
 // domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
 // domain-invariant: $Lenis — If a nested box scrolls natively and can still move the way the wheel asks, then the wheel is the box's, in either direction
-// domain-invariant: $Lenis — If the content shifts under a finger's drag, then the trail shifts with it, so the flick's velocity is the finger's motion and never the shift's.
+// domain-invariant: $Lenis — If the content shifts under a finger's drag, then the trail shifts with it, so the flick's velocity is the finger's motion and never the shift's; and a caller that writes the layer itself can decline the shift's own write, so a shift is never a second raster.
 // domain-invariant: $Lenis — If overscroll is on and a gesture at an end asks for more than the end has, then the scroller takes none of it and scrolls the nearest scrollable ancestor, else the window, by the gesture's own delta; an inward gesture, or overscroll off, is taken as before.
 // domain-invariant: $Lenis — If a finger lands on a glide, then the glide's target is pulled to a few frames of travel ahead under a steep lerp and its momentum is remembered for a flick the same way; the first move takes over where the content is.
 // domain-invariant: $Lenis — If a wheel runs mostly across the scroller's axis, then the scroller leaves it alone — no cancel, no scroll — so whatever scrolls that way under the pointer takes it; a wheel along the axis with a little drift across is the scroller's.
@@ -292,7 +292,7 @@ test('a nested native box keeps the wheel in both directions while it can still 
   if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
 });
 
-// domain-invariant: $Lenis — If the content shifts under a finger's drag, then the trail shifts with it, so the flick's velocity is the finger's motion and never the shift's.
+// domain-invariant: $Lenis — If the content shifts under a finger's drag, then the trail shifts with it, so the flick's velocity is the finger's motion and never the shift's; and a caller that writes the layer itself can decline the shift's own write, so a shift is never a second raster.
 // impossible-if-true: $Lenis — A swipe over rows that measured taller mid-drag reading a velocity of zero.
 test('a shift under the finger moves the trail with the content: the flick reads the finger, not the rows that grew', () => {
   class ObserverStub {
@@ -319,7 +319,18 @@ test('a shift under the finger moves the trail with the content: the flick reads
     { at: 1000, position: 5000 },
     { at: 1016, position: 4900 }
   ];
-  lenis.shiftBy(1000);
+  // the shift with the write DECLINED — the caller writes the layer itself —
+  // moves the model and the trail and leaves the transform alone; the same
+  // shift with the write moves the transform too. On Safari the write is a
+  // forced layout and a raster of the whole layer, so a caller that writes
+  // anyway must be able to say no.
+  const before = content.style.transform;
+  lenis.shiftBy(1000, false);
+  expect(inner.targetScroll).toBe(6000);
+  expect(inner.animatedScroll).toBe(6000);
+  expect(content.style.transform).toBe(before);
+  lenis.shiftBy(0);
+  expect(content.style.transform).not.toBe(before);
   // the finger goes on from where the shifted content is: two more 100 px moves
   inner.touchTrail.push({ at: 1032, position: inner.targetScroll - 200 });
   inner.touchTrail.push({ at: 1048, position: inner.targetScroll - 300 });
