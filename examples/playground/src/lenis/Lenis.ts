@@ -182,6 +182,7 @@ class $Lenis {
     touchInertiaMultiplier = 35,
     syncTouchGlide = 'exponential',
     renderSnap = 'auto',
+    snapWhen,
     duration, // in seconds
     easing,
     lerp = 0.1,
@@ -244,6 +245,7 @@ class $Lenis {
       touchInertiaMultiplier,
       syncTouchGlide,
       renderSnap,
+      snapWhen,
       duration,
       easing,
       lerp,
@@ -716,6 +718,9 @@ class $Lenis {
     // actually shows, and snapping a step already below a device pixel is
     // what turns it into a stutter. Everything else reads px per ms.
     const onGrid =
+      // a frame that rasters outranks the knob: the knob is about how the
+      // MOTION reads, and a tile made off-phase is wrong in every setting
+      this.options.snapWhen?.() === true ||
       this.isScrolling === false ||
       snap === 'grid' ||
       (snap === 'auto' && Math.abs(this.velocity) * dpr >= this.self.SNAP_ABOVE_DEVICE_PX);
@@ -1736,6 +1741,18 @@ export namespace Lenis {
      */
     renderSnap?: 'auto' | 'grid' | 'fractional';
     /**
+     * Asked before every write: is the browser about to RASTER new content?
+     * A tile is rasterised at whatever sub-pixel phase the layer holds at
+     * that moment and keeps it; a neighbour made at a different phase rounds
+     * its line boxes the other way, and the seam between them shows as one
+     * line sitting a pixel off. Answering true puts the layer on the device
+     * grid for that write, so every tile is made at the same phase — phase
+     * zero — and none of them can disagree. A virtual window answers with
+     * "the window changed"; a fixed list has no answer to give and leaves
+     * this unset.
+     */
+    snapWhen?: () => boolean;
+    /**
      * Scroll duration in seconds
      */
     duration?: number;
@@ -1834,7 +1851,7 @@ export namespace Lenis {
   /** The options as resolved: every default filled, four left optional. */
   export type ResolvedOptions = OptionalPick<
     Required<Options>,
-    'duration' | 'easing' | 'prevent' | 'virtualScroll'
+    'duration' | 'easing' | 'prevent' | 'virtualScroll' | 'snapWhen'
   >;
   type OptionalPick<T, F extends keyof T> = Omit<T, F> & Partial<Pick<T, F>>;
 }

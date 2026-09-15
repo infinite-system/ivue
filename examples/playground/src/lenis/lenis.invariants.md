@@ -97,25 +97,27 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 ### The device-pixel grid is met at the write and nowhere else
 
-**Invariant:** If a position is put on the device-pixel grid, then it is put there once, by `snapRendered`, at the moment the transform is written — never on a target, and never by a second writer of the same layer. A resting position always lands on the grid; in motion the `renderSnap` knob alone decides.
+**Invariant:** If a position is put on the device-pixel grid, then it is put there once, by `snapRendered`, at the moment the transform is written — never on a target, and never by a second writer of the same layer. A resting position always lands on the grid, and so does a position written while the browser is about to RASTER new content; in motion, between rasters, the `renderSnap` knob alone decides.
 
-**Scope:** `Lenis.ts` `snapRendered`, `setScroll`, `scrollTo` (the target it no longer rounds); `VirtualScroller.ts` `snapForRender` (the instance method that defers to the integrator, and the static that remains for a write before one exists).
+**Scope:** `Lenis.ts` `snapRendered`, `setScroll`, `scrollTo` (the target it no longer rounds), the `snapWhen` option; `VirtualScroller.ts` `snapForRender` (the instance method that defers to the integrator, and the static that remains for a write before one exists), `rasterIsComing`, `rasterSnap`, `retireRasterClaim`.
 
 **Mechanism:** Two things used to round. `scrollTo` rounded every target, which was harmless for a programmatic seek and destructive for a drag: a drag re-targets every frame from the finger's own position, so each sub-pixel of the gesture was discarded before it could reach the layer, and the content walked under the thumb in whole pixels. The scroller then rounded again at its own write, unconditionally, so the knob that exists to turn snapping off could not reach the frames the scroller owned — the reading creep looked smooth only because it is the one caller that passes `snapRender` false. Both were the same mistake in two places: the grid is a property of the RENDERED offset, not of the scroll model, so it belongs at the write, once. Rest is the case the knob does not get to answer — off-grid rest resamples every glyph for as long as the reader sits there, and there is no motion left for the compositor to filter.
 
-**Generates:** A finger's fractional pixel surviving into the transform, on every phone whose touch stream is sub-pixel. A snap knob that means the same thing on every frame. Crisp text wherever the content stops.
+The raster exception. A composited tile is rasterised at whatever sub-pixel phase the layer holds at that moment, and it keeps that phase until it is thrown away. A tile made at a different phase from its neighbour rounds its line boxes the other way, and the seam shows as one line of text sitting a pixel off — reported from an Android phone as a line shifting down 1 px as a new section scrolls into view, and rare exactly because it needs a fresh raster. Fresh rasters follow new content, so the window's own change is the signal: the two frames after it claim the grid through `snapWhen`, every tile is made at phase zero, and none of them can disagree. Measured over the chat, one flick: 5 window-change frames, all 5 on the grid, and every other frame of the glide fully fractional. A grid frame outranks both the knob and a caller's `snapRender: false`, because the knob is about how the MOTION reads and a tile made off-phase is wrong in every setting.
+
+**Generates:** A finger's fractional pixel surviving into the transform, on every phone whose touch stream is sub-pixel. A snap knob that means the same thing on every frame. Crisp text wherever the content stops. Fractional motion that costs no raster seam — the trade `grid` and `fractional` used to sit on either side of.
 
 **Rejected alternatives:** Keeping the target rounded so the lerp could finish on `Math.round(value) === to` — that test is gone; `Animate` settles inside half a pixel instead, which is also what lets a fractional target ever complete.
 
 **Evidence:** Instrumented in Chrome at dpr 3 over the chat: every glide frame is written fractionally with `renderSnap: 'fractional'` (107362.823, 107350.147, 107337.802 …), from one writer. Before, the same frames were whole pixels whatever the knob said.
 
-**Impossible if true:** A drag that advances the content in whole pixels while the finger advances in thirds of one. A snap setting that changes the glide but not the drag, or the reverse.
+**Impossible if true:** A drag that advances the content in whole pixels while the finger advances in thirds of one. A snap setting that changes the glide but not the drag, or the reverse. A tile rasterised at one sub-pixel phase sitting beside a tile rasterised at another.
 
-**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "snap policy"`
+**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "snap policy"` and `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "window change puts"`
 
 **Status:** provisional
 
-**Last refined:** 2026-09-14
+**Last refined:** 2026-09-15
 
 ### A flick under friction stops where its throw runs out
 
