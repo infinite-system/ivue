@@ -1543,3 +1543,38 @@ is free), not to make measuring cheaper.
 Useful ratio while sizing that work: 62-89% of mount-time measurements
 during a flick are of rows the window already measured — the window
 churns the same rows in and out.
+
+## A layout change at rest is the one a reader sees
+
+The render pad used to release its rows ~236 ms after the content stopped,
+through a timer that bumped a reactive cell so the window walk ran once
+more. The rows it saved were real. The timing was the bug.
+
+Releasing rows folds their heights back into the leading spacer, and Blink
+lays out in 1/64 px, so the sum of N row boxes does not round to the one
+box replacing them. Measured over the chat: the window went 15 rows to 11,
+the leading spacer 104725 px to 106048 px, and all 11 surviving rows moved
+**-0.0469 px** — exactly 3/64. Nobody can see 3/64 of a pixel move. What
+they see is the raster it forces: each text line box is snapped to the
+device grid independently at raster time, from the layer's new sub-pixel
+phase, so lines whose baselines sat near a boundary hop a whole pixel and
+their neighbours do not.
+
+While anything is moving this is invisible. At rest it is the only thing
+on screen that moves. The fix was to delete the timer: the walk runs on a
+position change, so the release lands on the last frame that moved.
+
+Two general shapes worth keeping:
+
+- **A sub-pixel layout shift is not a small version of a big one.** It is
+  a raster trigger, and the raster quantises per line box. Chasing "is the
+  motion smooth" will never find it; measure `getBoundingClientRect().top`
+  of rows that SURVIVE a window change and look for movement of any size.
+- **Anything scheduled to happen a few hundred ms after motion stops is
+  suspect by construction.** That is the moment a reader is staring at a
+  still screen. Prefer to do such work on the last moving frame, or not
+  at all.
+
+Also rejected here, with numbers: holding the pad until the reader moves
+again. It never returns to the base, so each gesture starts from the last
+one's pad — more than twice the frame work.
