@@ -140,10 +140,11 @@ not projected once unmounted.
 
 ## Selection is a set of ids
 
-The index keeps selected message ids plus an anchor. A click picks one
-and anchors; shift-click selects the range between the anchor and the
-click in the current filtered order; ctrl or cmd-click toggles without
-moving the anchor. Changing a filter never loses a pick. Export leaves in
+The index keeps selected message ids plus an anchor. A click on a row
+points at it: it becomes the anchor and the selection does not change.
+The checkbox toggles its row and anchors; shift on a row or on a checkbox
+selects the range between the anchor and it in the current filtered order;
+ctrl or cmd-click toggles without moving the anchor. Changing a filter never loses a pick. Export leaves in
 thread order, whatever order the picks were made in, after loading the
 pages the selection needs.
 

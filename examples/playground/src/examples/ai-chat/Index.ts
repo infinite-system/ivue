@@ -208,10 +208,14 @@ class $Index {
     return id ? this.rows.value.find((row) => row.id === id) : undefined;
   }
 
-  /** what the head line describes: the row under the pointer, else the last pick, else the chat's row */
+  /** what the head line describes: the row under the pointer, else the last pick, else the
+   *  chat's row, else the first row — so the line is never empty while there are rows */
   get focusRow(): Index.Row | undefined {
     return (
-      this.hovered.value ?? this.anchorRow ?? this.rows.value.find((row) => this.isCurrent(row))
+      this.hovered.value ??
+      this.anchorRow ??
+      this.rows.value.find((row) => this.isCurrent(row)) ??
+      this.rows.value[0]
     );
   }
 
@@ -405,11 +409,16 @@ class $Index {
     this.setOrder((event.target as HTMLSelectElement).value as Index.Order);
   }
 
-  onRowEnter(row: Index.Row) {
+  /** A mouse over a row shows its position. A finger does not hover: a tap
+   *  fires enter and then leave as it lifts, which cleared the line it had
+   *  just set. On touch the tap's own pick is what the line reads. */
+  onRowEnter(row: Index.Row, event: PointerEvent) {
+    if (event.pointerType !== 'mouse') return;
     this.hovered.value = row;
   }
 
-  onListLeave() {
+  onListLeave(event: PointerEvent) {
+    if (event.pointerType !== 'mouse') return;
     this.hovered.value = null;
   }
 
@@ -431,23 +440,24 @@ class $Index {
 
   /* ---- selection ---- */
 
-  /** click picks one and sets the anchor; shift takes the range; ctrl or cmd toggles without moving the anchor */
+  /** A click on a row points at it: it becomes the anchor and the focus, and the
+   *  selection does not change — only the checkbox ticks. Shift takes the range
+   *  from the anchor; ctrl or cmd toggles without moving the anchor. */
   onRowClick(row: Index.Row, event: MouseEvent) {
     if (this.takeArmedRange(row)) return;
     if (event.shiftKey && this.anchorId.value) this.selectRange(this.anchorId.value, row.id);
     else if (event.metaKey || event.ctrlKey) this.toggleOne(row.id);
-    else {
-      this.selected.value = new Set([row.id]);
-      this.anchorId.value = row.id;
-    }
+    else this.anchorId.value = row.id;
     this.focusedIndex.value = this.rows.value.indexOf(row);
   }
 
-  /** the checkbox: toggle, and become the anchor */
-  onRowCheck(row: Index.Row, event: Event) {
+  /** The checkbox toggles its row and becomes the anchor; with shift it takes
+   *  every row from the anchor to it, the way a file list does. */
+  onRowCheck(row: Index.Row, event: MouseEvent) {
     event.stopPropagation();
     if (this.takeArmedRange(row)) return;
-    this.toggleOne(row.id);
+    if (event.shiftKey && this.anchorId.value) this.selectRange(this.anchorId.value, row.id);
+    else this.toggleOne(row.id);
     this.anchorId.value = row.id;
     this.focusedIndex.value = this.rows.value.indexOf(row);
   }

@@ -13,21 +13,12 @@ import ExampleAiChat from '../.vitepress/theme/components/examples/ExampleAiChat
 
 # AI chat: a real 10,000-message session
 
-Most chat interfaces do two things that stop working past a few thousand
-messages: they render the whole thread into the DOM, and they load the
-whole thread as one JSON body. This page does neither. The conversation
-is a real Claude Code session, 82,000 records on disk, parsed and scrubbed
-into 10,350 messages. The page fetches a 1 MB index first, so every
-message is a row from the start, and it fetches a message's content only
-when the scroller's window reaches its page. Watch the receipts strip as
-you scroll: the DOM holds a few dozen rows, and the bytes fetched stay
-proportional to what you read.
+A real Claude Code session: 10,350 messages. Only the few rows you can
+see are in the page, and a message's text loads when you scroll to it.
+The strip above the chat counts both as you go.
 
-Everything above geometry is an ivue class: the thread and its paging,
-the composer, the index, one class per message part and one per tool.
-The scroller underneath is the same production class as the
-[million-row example](/examples/virtual-scroller); it never learns that a
-row is unloaded.
+Every part is an ivue class, on the same scroller as the
+[million-row example](/examples/virtual-scroller).
 
 <ClientOnly>
   <ExampleAiChat />

@@ -131,7 +131,7 @@ const {
       </div>
     </header>
 
-    <div class="ac-index-list" @pointerleave="model.onListLeave()">
+    <div class="ac-index-list" @pointerleave="model.onListLeave($event)">
       <component
         :is="model.kit.Scroller.view"
         ref="scroller"
@@ -147,7 +147,7 @@ const {
           <div
             class="ac-ix-row"
             :class="model.rowClass(item)"
-            @pointerenter="model.onRowEnter(item)"
+            @pointerenter="model.onRowEnter(item, $event)"
             @click="model.onRowClick(item, $event)"
             @dblclick="model.onRowDoubleClick(item)"
           >

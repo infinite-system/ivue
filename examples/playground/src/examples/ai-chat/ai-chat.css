@@ -1751,6 +1751,9 @@
 .ai-chat .ac-stats .ac-receipts {
   flex-wrap: nowrap;
   overflow-x: auto;
+  /* sideways only: a vertical swipe on the strip belongs to the page */
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
 .ai-chat .ac-stats .ac-receipts::-webkit-scrollbar {

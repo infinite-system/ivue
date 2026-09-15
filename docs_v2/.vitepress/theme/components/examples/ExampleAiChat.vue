@@ -29,30 +29,38 @@ const {
     note="A real session, scrubbed. Every message is a row; its content is fetched only when you scroll to its page. Replies are replays of real turns. Nothing you type leaves the tab."
   >
     <div class="eac-feel">
-      <span class="eac-feel-label">flick rests by</span>
-      <button
-        v-for="option in feel.glideOptions"
-        :key="option"
-        type="button"
-        class="eac-feel-btn"
-        :disabled="!feel.isLive"
-        :class="{ on: feel.isGlide(option) }"
-        @click="feel.pickGlide(option)"
-      >
-        {{ option }}
-      </button>
-      <span class="eac-feel-label">carries</span>
-      <button
-        v-for="option in feel.carryOptions"
-        :key="option"
-        type="button"
-        class="eac-feel-btn"
-        :disabled="!feel.isLive"
-        :class="{ on: feel.isCarry(option) }"
-        @click="feel.pickCarry(option)"
-      >
-        {{ option }}
-      </button>
+      <div class="eac-feel-group">
+        <span class="eac-feel-label">flick rests by</span>
+        <div class="eac-feel-options">
+          <button
+            v-for="option in feel.glideOptions"
+            :key="option"
+            type="button"
+            class="eac-feel-btn"
+            :disabled="!feel.isLive"
+            :class="{ on: feel.isGlide(option) }"
+            @click="feel.pickGlide(option)"
+          >
+            {{ option }}
+          </button>
+        </div>
+      </div>
+      <div class="eac-feel-group">
+        <span class="eac-feel-label">carries</span>
+        <div class="eac-feel-options">
+          <button
+            v-for="option in feel.carryOptions"
+            :key="option"
+            type="button"
+            class="eac-feel-btn"
+            :disabled="!feel.isLive"
+            :class="{ on: feel.isCarry(option) }"
+            @click="feel.pickCarry(option)"
+          >
+            {{ option }}
+          </button>
+        </div>
+      </div>
       <span class="eac-feel-now">{{ glide }} &middot; {{ carry }}</span>
     </div>
     <div class="eac-frame">
@@ -74,12 +82,18 @@ const {
   background: rgba(148, 163, 184, 0.06);
   font-size: 12px;
 }
+.eac-feel-group,
+.eac-feel-options {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.eac-feel-group + .eac-feel-group {
+  margin-left: 10px;
+}
 .eac-feel-label {
   opacity: 0.6;
   margin-right: 2px;
-}
-.eac-feel-label:not(:first-child) {
-  margin-left: 10px;
 }
 .eac-feel-btn {
   padding: 4px 10px;
@@ -122,6 +136,25 @@ const {
   border-radius: 0;
 }
 @media (max-width: 640px) {
+  /* each knob is a label over its buttons, the two side by side with a rule between */
+  .eac-feel {
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0;
+  }
+  .eac-feel-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  .eac-feel-group + .eac-feel-group {
+    margin-left: 12px;
+    padding-left: 12px;
+    border-left: 1px solid rgba(148, 163, 184, 0.2);
+  }
+  .eac-feel-now {
+    display: none;
+  }
   /* the chat is the page on a phone: edge to edge, most of the screen */
   .eac {
     margin: 16px -24px;

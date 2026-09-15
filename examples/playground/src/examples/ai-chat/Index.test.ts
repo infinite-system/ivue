@@ -51,7 +51,13 @@ function make() {
 }
 
 const click = (extra: Partial<MouseEvent> = {}) =>
-  ({ shiftKey: false, metaKey: false, ctrlKey: false, ...extra }) as MouseEvent;
+  ({
+    shiftKey: false,
+    metaKey: false,
+    ctrlKey: false,
+    stopPropagation() {},
+    ...extra
+  }) as MouseEvent;
 
 describe('Index', () => {
   afterEach(() => {
@@ -128,9 +134,12 @@ describe('Index', () => {
     const { index, unmount } = make();
     index.setSpeaker('assistant');
     const [b, e, f] = index.rows.value;
+    // a plain click points at the row: anchor and focus, no tick
     index.onRowClick(b, click());
-    expect([...index.selected.value]).toEqual(['b']);
+    expect(index.selectedCount).toBe(0);
     expect(index.anchorId.value).toBe('b');
+    index.onRowCheck(b, click());
+    expect([...index.selected.value]).toEqual(['b']);
     index.onRowClick(f, click({ shiftKey: true }));
     expect([...index.selected.value].sort()).toEqual(['b', 'e', 'f']);
     index.onRowClick(e, click({ ctrlKey: true }));
@@ -147,8 +156,13 @@ describe('Index', () => {
     expect(index.selectAllLabel).toBe('Clear all');
     index.toggleAllShown();
     expect(index.selectedCount).toBe(0);
-    index.onRowCheck(index.rows.value[2], { stopPropagation() {} } as Event);
+    index.onRowCheck(index.rows.value[2], click());
     expect([...index.selected.value]).toEqual(['c']);
+    // shift on the checkbox takes the range from the anchor, like a file list
+    index.onRowCheck(index.rows.value[5], click({ shiftKey: true }));
+    expect([2, 3, 4, 5].every((at) => index.isSelected(index.rows.value[at]))).toBe(true);
+    expect(index.selectedCount).toBe(4);
+    expect(index.anchorId.value).toBe(index.rows.value[5].id);
     index.clearSelection();
     expect(index.hasSelection).toBe(false);
     expect(index.anchorId.value).toBeNull();
@@ -158,22 +172,31 @@ describe('Index', () => {
     expect(index.selectedCount).toBe(0);
     // a phone's shift-click: arm a range, and the next pick takes every row from the anchor
     index.clearSelection();
-    index.onRowCheck(index.rows.value[1], { stopPropagation() {} } as Event);
+    index.onRowCheck(index.rows.value[1], click());
     expect(index.canArmRange).toBe(true);
     expect(index.rangeLabel).toBe('Select range');
     index.armRange();
     expect(index.rangeArmed.value).toBe(true);
     expect(index.rangeLabel).toBe('Tap the end of the range');
-    index.onRowCheck(index.rows.value[4], { stopPropagation() {} } as Event);
+    index.onRowCheck(index.rows.value[4], click());
     expect([1, 2, 3, 4].every((at) => index.isSelected(index.rows.value[at]))).toBe(true);
     expect(index.rangeArmed.value).toBe(false);
     expect(index.anchorId.value).toBe(index.rows.value[4].id);
     // the head line reads the last pick, and the row under the pointer over it
     expect(index.positionLabel).toBe(`#${index.rows.value[4].index + 1} of 7`);
-    index.onRowEnter(index.rows.value[0]);
+    const mouse = { pointerType: 'mouse' } as PointerEvent;
+    const finger = { pointerType: 'touch' } as PointerEvent;
+    index.onRowEnter(index.rows.value[0], mouse);
     expect(index.positionLabel).toBe(`#${index.rows.value[0].index + 1} of 7`);
-    index.onListLeave();
+    index.onListLeave(mouse);
     expect(index.positionLabel).toBe(`#${index.rows.value[4].index + 1} of 7`);
+    // a finger does not hover: its enter and its leave as it lifts change nothing
+    index.onRowEnter(index.rows.value[0], finger);
+    index.onListLeave(finger);
+    expect(index.positionLabel).toBe(`#${index.rows.value[4].index + 1} of 7`);
+    // with no pick the line still reads a row, never goes blank
+    index.clearSelection();
+    expect(index.positionLabel).not.toBe('');
     unmount();
   });
 
@@ -273,7 +296,7 @@ describe('Index', () => {
     vi.spyOn(chat, 'messagesFor').mockImplementation(async (ids) =>
       messages.filter((entry) => ids.has(entry.id))
     );
-    index.onRowClick(index.rows.value[2], click());
+    index.onRowClick(index.rows.value[2], click({ ctrlKey: true }));
     index.onRowClick(index.rows.value[0], click({ ctrlKey: true }));
     index.onRowClick(index.rows.value[1], click({ ctrlKey: true }));
     const markdown = await index.exportText();
