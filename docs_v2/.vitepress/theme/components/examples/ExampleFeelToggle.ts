@@ -1,4 +1,5 @@
-import { onMounted, ref } from 'vue';
+import { ref, watch } from 'vue';
+import type { ChatShell } from '../../../../../examples/playground/src/examples/ai-chat/ChatShell';
 import { Reactive } from '../../../../../examples/playground/src/ivue';
 
 /**
@@ -7,16 +8,33 @@ import { Reactive } from '../../../../../examples/playground/src/ivue';
  * how a flick comes to rest, and how far it carries — can be swapped on the
  * device without an edit and a reload.
  *
- * It reaches the mounted instance through the DOM rather than a prop, which
- * is what keeps it chrome: the example under it is the shipped component,
- * configured exactly as a consumer would get it, and nothing about this
- * strip is in its contract. Both settings are live through `lenis.tune`, so
- * a press takes effect on the very next frame with the scroll position and
- * the window untouched.
+ * It reaches the scroller along the exposed chain — the shell's template
+ * ref, the shell's mounted view, the view's scroller — which is what keeps
+ * it chrome: the example under it is the shipped component, configured
+ * exactly as a consumer would get it, and nothing about this strip is in
+ * its contract. Both settings are live through `lenis.tune`, so a press
+ * takes effect on the very next frame with the scroll position and the
+ * window untouched.
+ *
+ * The chain is the standard's own unwrapping surface (`defineExpose` +
+ * template refs), and it exists in a production build. The first version
+ * read `element.__vueParentComponent`, a Vue dev-build internal: on the
+ * built site every button highlighted and none of them tuned anything.
  */
 class $ExampleFeelToggle {
-  constructor(public selector: string) {
-    onMounted(() => this.onMount());
+  constructor() {
+    // the shell mounts, then its view mounts a beat later; the moment the
+    // scroller is reachable, read the settings it shipped with
+    watch(
+      () => this.scroller,
+      (scroller) => this.onScrollerReady(scroller),
+      { immediate: true }
+    );
+  }
+
+  /** The shell beneath the strip — a template ref the SFC binds. */
+  get shell() {
+    return ref<ChatShell.Instance | null>(null);
   }
 
   /** How a flick comes to rest. Judged on the devices: 'exponential' reads
@@ -30,6 +48,11 @@ class $ExampleFeelToggle {
     return ref(35);
   }
 
+  /** Whether the strip has something to drive yet — the chain has mounted. */
+  get isLive(): boolean {
+    return this.scroller !== null;
+  }
+
   /** What the strip offers, in the order it offers it. */
   get glideOptions(): Array<'friction' | 'exponential'> {
     return ['friction', 'exponential'];
@@ -41,27 +64,22 @@ class $ExampleFeelToggle {
     return [16, 24, 30, 35];
   }
 
-  /** The scroller the strip drives — found once the example beneath has mounted. */
+  /** The scroller the strip drives: shell → mounted view → its scroller,
+   *  null until the chain has mounted. */
   protected get scroller() {
-    const frame = document.querySelector(this.selector) as
-      (Element & { __vueParentComponent?: { setupState?: Record<string, unknown> } }) | null;
-    return (frame?.__vueParentComponent?.setupState?.virtualScroller ?? null) as {
+    return (this.shell.value?.view?.scroller ?? null) as {
       lenis?: { tune?: (options: Record<string, unknown>) => void };
-      props?: { scroll?: { touch?: { launch?: number } } };
+      props?: { scroll?: { touch?: { launch?: number; glide?: string; carry?: number } } };
     } | null;
   }
 
-  protected onMount() {
-    // the example mounts its own tree first; read the settings it shipped with
-    // so the strip opens showing the truth rather than its own guesses
-    window.setTimeout(() => this.readShipped(), 600);
+  /** The chain has just resolved (or been torn down): read the shipped feel once it is there. */
+  protected onScrollerReady(scroller: unknown) {
+    if (scroller) this.readShipped();
   }
 
   protected readShipped() {
-    const model = this.scroller as {
-      props?: { scroll?: { touch?: { glide?: string; carry?: number } } };
-    } | null;
-    const shipped = model?.props?.scroll;
+    const shipped = this.scroller?.props?.scroll;
     if (shipped?.touch?.glide) this.glide.value = shipped.touch.glide as 'friction' | 'exponential';
     if (typeof shipped?.touch?.carry === 'number') this.carry.value = shipped.touch.carry;
   }

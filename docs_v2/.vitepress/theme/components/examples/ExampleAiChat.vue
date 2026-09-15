@@ -10,8 +10,14 @@ import DemoBox from '../DemoBox.vue';
 import { ExampleFeelToggle } from './ExampleFeelToggle';
 
 // docs chrome: the two feel choices that can only be judged by hand, live
-const feel = new ExampleFeelToggle.Class('.ac-thread .virtual-scroller');
-const { glide, carry } = feel;
+const feel = new ExampleFeelToggle.Class();
+const {
+  // state refs
+  glide,
+  carry,
+  // element refs
+  shell
+} = feel;
 </script>
 
 <template>
@@ -29,6 +35,7 @@ const { glide, carry } = feel;
         :key="option"
         type="button"
         class="eac-feel-btn"
+        :disabled="!feel.isLive"
         :class="{ on: feel.isGlide(option) }"
         @click="feel.pickGlide(option)"
       >
@@ -40,6 +47,7 @@ const { glide, carry } = feel;
         :key="option"
         type="button"
         class="eac-feel-btn"
+        :disabled="!feel.isLive"
         :class="{ on: feel.isCarry(option) }"
         @click="feel.pickCarry(option)"
       >
@@ -48,7 +56,7 @@ const { glide, carry } = feel;
       <span class="eac-feel-now">{{ glide }} &middot; {{ carry }}</span>
     </div>
     <div class="eac-frame">
-      <ChatShell />
+      <ChatShell ref="shell" />
     </div>
   </DemoBox>
 </template>
@@ -80,6 +88,10 @@ const { glide, carry } = feel;
   background: transparent;
   font: inherit;
   cursor: pointer;
+}
+.eac-feel-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 .eac-feel-btn.on {
   border-color: var(--vp-c-brand-1, #3b82f6);

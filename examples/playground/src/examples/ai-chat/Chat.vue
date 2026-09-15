@@ -20,6 +20,8 @@ const {
   scroller,
   peek
 } = chat;
+
+defineExpose(chat as Chat.Instance);
 </script>
 
 <template>

@@ -1,9 +1,11 @@
+import { ref } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import type { Kit } from '../../kit/Kit';
 import { ChatSettings } from './ChatSettings';
 import { ChatVariants } from './variants/ChatVariants';
 import ChatView from './Chat.vue';
+import type { Chat } from './Chat';
 
 // The shell around the example: it reads the page's settings and hands the
 // example the entry for the tree the reader picked. The tree's namespace
@@ -17,6 +19,16 @@ class $ChatShell {
 
   protected get self() {
     return this.constructor as typeof $ChatShell;
+  }
+
+  /** The mounted example view (a template ref). A frame around the shell —
+   *  the docs' feel strip — reaches the chat, and through it the scroller,
+   *  along the exposed chain: shell → view → scroller. That is the
+   *  standard's unwrapping surface, and it exists in production. A
+   *  dev-only DOM internal (`__vueParentComponent`) used to be read
+   *  instead, and on the built site it is simply not there. */
+  get view() {
+    return ref<Chat.Instance | null>(null);
   }
 
   protected get $settings(): ChatSettings.Model {
