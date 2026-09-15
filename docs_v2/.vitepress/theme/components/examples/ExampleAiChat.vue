@@ -22,12 +22,8 @@ const { glide, carry } = feel;
         <span class="eac-badge">Live &middot; runs the shipped engine</span>
       </div>
       <p class="eac-note">
-        The thread is a real session, scrubbed. One small index arrives first; every message is a
-        row from that moment on, and its content is fetched only when the window reaches its page —
-        a page landing above the viewport moves nothing. Tool calls contract to batches and expand
-        to their full code; the index on the right filters, selects with shift-click, and exports.
-        Replies to what you type are replays of real turns, streamed at the picked model's pace.
-        Nothing you type or attach leaves the tab.
+        A real session, scrubbed. Every message is a row; its content is fetched only when you
+        scroll to its page. Replies are replays of real turns. Nothing you type leaves the tab.
       </p>
     </header>
     <div class="eac-feel">
