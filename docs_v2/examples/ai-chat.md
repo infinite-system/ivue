@@ -108,7 +108,7 @@ The sample is built from a real session file by
 `docs_v2/scripts/chat-sample.ts`: the conversation records are kept, the
 session's bookkeeping (about a third of the records and most of the
 bytes) is dropped, emails, key-shaped strings, secret assignments, PEM
-blocks and home paths are scrubbed, tool outputs are cut in the middle
+blocks and home paths are replaced, tool outputs are cut in the middle
 with a marker that says how much was removed, and images are kept within
 a budget. The build refuses to write a page in which a forbidden pattern
 survives. The same scrub runs in the browser over a session you open

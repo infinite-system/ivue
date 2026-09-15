@@ -26,7 +26,7 @@ const {
     title="AI chat — a real 10,000-message Claude Code session"
     badge=""
     flush
-    note="A real session, scrubbed. Every message is a row; its content is fetched only when you scroll to its page. Replies are replays of real turns. Nothing you type leaves the tab."
+    note="A real session. Every message is a row; its content is fetched only when you scroll to its page. Replies are replays of real turns. Nothing you type leaves the tab."
   >
     <div class="eac-feel">
       <div class="eac-feel-group">
