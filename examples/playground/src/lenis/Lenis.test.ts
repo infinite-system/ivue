@@ -6,6 +6,8 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 [A flick carries the glide it interrupted](lenis.invariants.md#a-flick-carries-the-glide-it-interrupted)
 [A cross-axis wheel belongs to what is under it](lenis.invariants.md#a-cross-axis-wheel-belongs-to-what-is-under-it)
 [A touch on a glide keeps it running until the first move](lenis.invariants.md#a-touch-on-a-glide-keeps-it-running-until-the-first-move)
+[A flick under friction stops where its throw runs out](lenis.invariants.md#a-flick-under-friction-stops-where-its-throw-runs-out)
+// domain-invariant: $Lenis — If a flick glides under friction, then it decelerates at a constant rate and ARRIVES over `2 / lerp` frames, where the exponential model approaches its target and settles within half a pixel.
 // domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
 // domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
 // domain-invariant: $Lenis — If a nested box scrolls natively and can still move the way the wheel asks, then the wheel is the box's, in either direction
@@ -115,6 +117,26 @@ test('an idle frame before the touchend does not zero the flick: the trail still
     { at: 400, position: 100 }
   ]);
   expect(trailVelocity(paused, 0)).toBe(0);
+});
+
+// invariant: A flick under friction stops where its throw runs out (examples/playground/src/lenis/lenis.invariants.md)
+// domain-invariant: $Lenis — If a flick glides under friction, then it decelerates at a constant rate and ARRIVES over `2 / lerp` frames, where the exponential model approaches its target and settles within half a pixel.
+test('friction decelerates to a stop over the frames its throw implies; the curve is constant deceleration', () => {
+  const Lenis_ = Lenis.Class;
+  // a throw of `carry` frames of finger speed takes 2 x carry frames to stop,
+  // and carry is launch / lerp — so the duration is 2 / lerp, no new knob
+  expect(Lenis_.frictionFrames(1 / 35)).toBeCloseTo(70, 6);
+  expect(Lenis_.frictionFrames(1 / 15)).toBeCloseTo(30, 6);
+  expect(Lenis_.frictionFrames(0)).toBe(0);
+
+  // the curve IS constant deceleration: x(p) = 1 - (1 - p)^2
+  expect(Lenis_.frictionEasing(0)).toBe(0);
+  expect(Lenis_.frictionEasing(1)).toBe(1); // it ARRIVES — no asymptote to creep
+  expect(Lenis_.frictionEasing(0.5)).toBeCloseTo(0.75, 6);
+  // speed falls linearly: the first tenth covers 19x what the last tenth does
+  const first = Lenis_.frictionEasing(0.1) - Lenis_.frictionEasing(0);
+  const last = Lenis_.frictionEasing(1) - Lenis_.frictionEasing(0.9);
+  expect(first / last).toBeCloseTo(19, 5);
 });
 
 // domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.

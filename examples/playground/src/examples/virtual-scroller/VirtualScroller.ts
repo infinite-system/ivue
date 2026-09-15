@@ -247,16 +247,25 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * restores the decay the original pair had (1/15 against 0.065) and lands
    * in about a third of that, at a throw of 15 frames rather than 35.
    *
-   * A throw that stays long while the tail gets short is not reachable by
-   * tuning this pair — it wants a different integrator (friction
-   * decelerates to a definite stop instead of approaching a target
-   * forever), which `Animate.advance` has the shape for but does not yet
-   * offer as a knob.
+   * So `glide` names the model, because a long throw with a short tail is
+   * not reachable by tuning the pair at all:
+   *
+   *   'exponential'  approaches the target and settles within half a pixel.
+   *                  Tail length is tied to the throw — carry 35 takes 3.5 s
+   *                  to land, carry 15 about 1.5 s.
+   *   'friction'     decelerates at a constant rate and ARRIVES, over
+   *                  `2 x carry` frames. The throw is whatever carry says
+   *                  and the stop is definite: carry 35 lands in 1.17 s.
+   *
+   * Friction needs no integrator of its own — constant deceleration IS
+   * `1 - (1 - p)^2` over its duration, which Animate's duration-and-easing
+   * branch already runs. The shipped pair is the long throw with the
+   * definite stop: carry 35, launch 1, friction.
    */
   static get SCROLL_KNOBS(): VirtualScroller.ScrollKnobs {
     return {
       wheel: { gain: 1, follow: 0.1, maxPxPerMs: 0 },
-      touch: { gain: 1, carry: 15, launch: 1, maxPxPerMs: 0 }
+      touch: { gain: 1, carry: 35, launch: 1, glide: 'friction', maxPxPerMs: 0 }
     };
   }
 
@@ -574,6 +583,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // `launch / carry` of what remains each frame, by definition
       syncTouchLerp: touch.launch / touch.carry,
       touchInertiaMultiplier: touch.carry,
+      syncTouchGlide: touch.glide,
       touchMaxPxPerMs: touch.maxPxPerMs
     };
   }
@@ -2010,7 +2020,14 @@ export namespace VirtualScroller {
      *  finger's own speed (distance = v x carry); `launch` is the multiple
      *  of that speed the glide leaves at, 1 being a clean hand-over. The
      *  lerp follows from the two and is never set directly. */
-    touch: { gain: number; carry: number; launch: number; maxPxPerMs: number };
+    touch: {
+      gain: number;
+      carry: number;
+      launch: number;
+      /** how the throw comes to rest: decelerating to a stop, or approaching its target */
+      glide: 'friction' | 'exponential';
+      maxPxPerMs: number;
+    };
   }
 
   /** The selection knobs: a pointer's and a finger's autoscroll cadence. */

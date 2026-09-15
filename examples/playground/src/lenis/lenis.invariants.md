@@ -23,6 +23,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [A touch on a glide keeps it running until the first move](#a-touch-on-a-glide-keeps-it-running-until-the-first-move) — why a re-flick has no stall.
 - [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend) — why a browser claiming the gesture does not freeze the content.
 - [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted) — why flick after flick gains speed instead of restarting.
+- [A flick under friction stops where its throw runs out](#a-flick-under-friction-stops-where-its-throw-runs-out) — why a long throw can still have a short tail.
 - [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target) — why a glide always ends, and the scroller can rest.
 - [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page) — why a reader at an end is never trapped inside the scroller.
 - [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it) — why a trackpad can scroll a code block sideways.
@@ -68,6 +69,29 @@ Chosen invariants stand on reality invariants, never the reverse.
 **Last refined:** 2026-09-07
 
 ## Chosen invariants
+
+### A flick under friction stops where its throw runs out
+
+**Invariant:** If a flick glides under the friction model, then it decelerates at a constant rate and arrives at its target over `2 / lerp` frames, where the exponential model approaches the target asymptotically and settles only once it is within half a pixel.
+
+**Scope:** `Lenis.ts` `frictionEasing`, `frictionFrames`, the `syncTouchGlide` option and the touchend branch that chooses between the two; `Animate.ts`'s duration-and-easing path, which runs it.
+
+**Mechanism:** Constant deceleration covers `v t - a t^2 / 2`, which over its own duration is exactly `1 - (1 - p)^2` — so friction needs no integrator of its own, only that curve and the right duration. A throw of `carry` frames of the finger's speed decelerates to rest in `2 x carry` frames, and `carry` is `launch / lerp`, so the duration is `2 / lerp` and Lenis needs no knob it does not already have. The models differ in where the speed goes: the exponential sheds it early and crawls the last pixels, friction holds it and then stops.
+
+**Generates:** The `scroll.touch.glide` knob; a long throw with a short tail, which no tuning of the exponential pair reaches.
+
+**Rejected alternatives:** A velocity integrator of its own in `Animate.advance` — the easing IS the integral, and the duration path already runs it.
+
+**Evidence:** Tests: "friction decelerates to a stop over the frames its throw implies; the curve is constant deceleration". Measured on a synthetic 40 px/frame flick, same throw of 1,400 px: exponential settles in 3,473 ms with its last frames at 0.1 px, friction in 1,163 ms with its last frames at 3.2, 2.7, 2.1, 1.5, 0.9 px.
+
+**Impossible if true:** A friction glide still moving after its duration. A flick that decelerates to a stop and still creeps sub-pixel.
+
+**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "friction decelerates"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-14
+
 
 ### A lerp completes within half a pixel of any target
 

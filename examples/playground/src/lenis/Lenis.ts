@@ -85,6 +85,29 @@ class $Lenis {
     return 0.5;
   }
 
+  /**
+   * Constant deceleration, as an easing. A flick that leaves at v and
+   * decelerates at a fixed rate covers `x(t) = v t - a t^2 / 2`, which over
+   * its own duration is exactly `1 - (1 - p)^2` — so the friction model
+   * needs no integrator of its own, only this curve and the right duration.
+   * Unlike a lerp toward a target it ARRIVES: at p = 1 the content is
+   * stopped, with no asymptote to creep through.
+   */
+  static frictionEasing(progress: number): number {
+    const remaining = 1 - progress;
+    return 1 - remaining * remaining;
+  }
+
+  /**
+   * How long a friction glide runs, in frames. Constant deceleration over a
+   * throw of `carry` frames of the finger's own speed takes `2 x carry`
+   * frames, and `carry` is `launch / lerp` — so the duration is `2 / lerp`
+   * and Lenis needs no knob it does not already have.
+   */
+  static frictionFrames(lerp: number): number {
+    return lerp > 0 ? 2 / lerp : 0;
+  }
+
   /** A touch on a glide pulls its target to this many frames of travel ahead: the brake's length. */
   static get TOUCH_BRAKE_FRAMES() {
     return 4;
@@ -126,6 +149,7 @@ class $Lenis {
     syncTouch = false,
     syncTouchLerp = 0.075,
     touchInertiaMultiplier = 35,
+    syncTouchGlide = 'exponential',
     duration, // in seconds
     easing,
     lerp = 0.1,
@@ -186,6 +210,7 @@ class $Lenis {
       syncTouch,
       syncTouchLerp,
       touchInertiaMultiplier,
+      syncTouchGlide,
       duration,
       easing,
       lerp,
@@ -971,11 +996,20 @@ class $Lenis {
       );
     }
 
+    // A flick carries either way; the model decides HOW it comes to rest.
+    // 'friction' decelerates to a full stop over a duration the throw
+    // implies; 'exponential' approaches the target forever and settles when
+    // it is within half a pixel.
+    const friction = hasTouchInertia && this.options.syncTouchGlide === 'friction';
+    const frictionDuration =
+      (this.self.frictionFrames(this.options.syncTouchLerp ?? 0) * this.self.FRAME_MS) / 1000;
     this.scrollTo(this.targetScroll + delta, {
       programmatic: false,
       ...(isSyncTouch
         ? {
-            lerp: hasTouchInertia ? this.options.syncTouchLerp : 1
+            ...(friction && frictionDuration > 0
+              ? { duration: frictionDuration, easing: this.self.frictionEasing }
+              : { lerp: hasTouchInertia ? this.options.syncTouchLerp : 1 })
             // immediate: !hasTouchInertia,
           }
         : {
@@ -1010,6 +1044,7 @@ class $Lenis {
         | 'lerp'
         | 'syncTouchLerp'
         | 'touchInertiaMultiplier'
+        | 'syncTouchGlide'
         | 'wheelMaxPxPerMs'
         | 'touchMaxPxPerMs'
       >
@@ -1570,6 +1605,13 @@ export namespace Lenis {
      * @default 35
      */
     touchInertiaMultiplier?: number;
+    /**
+     * How a flick comes to rest: 'exponential' approaches its target and
+     * settles within half a pixel, 'friction' decelerates at a constant rate
+     * to a full stop over the duration its throw implies.
+     * @default 'exponential'
+     */
+    syncTouchGlide?: 'exponential' | 'friction';
     /**
      * Scroll duration in seconds
      */
