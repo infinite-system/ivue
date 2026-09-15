@@ -3,7 +3,7 @@ title: 'Example: AI Chat on the Virtual Scroller'
 description: 'A real 10,000-message Claude Code session as a chat: history fetched a page at a time, tool calls that expand to their code, streaming replies, and a filterable index that selects and exports — every piece an ivue class over the virtual scroller.'
 aside: false
 pageClass: benchmarks-wide examples-page
-relatedPosts: [a-million-rows-twelve-divs, select-text-across-a-million-rows]
+relatedPosts: [one-question-deleted-537-lines, a-million-rows-twelve-divs, select-text-across-a-million-rows]
 ---
 
 <script setup>
