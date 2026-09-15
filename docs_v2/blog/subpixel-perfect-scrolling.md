@@ -211,11 +211,14 @@ that 2 thumbs, on 2 phones, called the result native.
 
 ## The shape of it
 
-None of the 9 is a trick. Each is a thing that has to be true if a
-thumb is to feel nothing, and each was found by measuring what the
-phones showed and asking what would have to hold for it to be otherwise.
-The result is smaller than the code that came before it: 537 lines fewer
-than the first build that reached parity, and 3 settings fewer.
+None of the 9 is a trick. Each is something that has to be true if a
+thumb is to feel nothing. Each was found the same way: measure what the
+phone shows, ask what would have to hold for it to be otherwise, delete
+whatever the answer does not need. The scroller that reached parity is
+537 lines smaller than the one that was trying to.
 
-Native feel is not a feature you add. It is what is left when nothing
-between the finger and the pixel is lying.
+That is the part I keep coming back to. We did not add native feel. We
+removed everything that was not it.
+
+Native feel is not a feature. It is what is left when nothing between the
+finger and the pixel is lying.

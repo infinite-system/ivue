@@ -172,22 +172,26 @@ the only instrument that counts for that claim, which is a thumb.
 
 ## The shape of it
 
-The agent had every instrument pointed at the browser. Tracing. Per-frame
-capture. A PNG decoder written to measure glyph edges at sub-pixel
-offsets. A synthetic page to isolate line-height rounding. All of it
-measured the costume with great precision. None of it asked whether the
-model's own inputs matched the thing it was modelling.
+Every instrument was pointed at the browser. Tracing. Per-frame capture.
+A PNG decoder written to measure glyph edges at sub-pixel offsets. A
+synthetic page to isolate line-height rounding. All of it measured the
+costume, with great precision.
 
-The right question is not a clever one. It asks about what must be true
-before it asks about what is happening. *Do we know the heights?* We did.
-We were reading them wrong. Every mechanism we built on top reasoned
-carefully about a fraction that was never the problem.
+None of it asked whether our own numbers were true.
+
+That is the whole lesson, and it is older than software. Before you ask
+what the world is doing, ask what you are claiming to know about it. *Do
+we know the heights?* We did not. We had a ruler with a hair missing and
+3 days of careful reasoning about what the hair was doing to the browser.
+
+The right question is not clever. It points at the thing you already
+believe. It costs nothing to ask. This one deleted 537 lines.
 
 This is the way of working that produced ivue and keeps shrinking it. Ask
-what reality requires. Delete what it does not. Keep what survives. It
-made a 1.1 kB engine. Here it made 537 lines disappear in a morning. It is
-coming as its own thing, and it is bigger than the library.
+what must be true. Delete what reality does not require. Keep what
+survives. It made a 1.1 kB engine. Here it made 3 days of machinery
+vanish before lunch. It is coming as its own thing, and it is bigger than
+the library.
 
-When a mechanism exists to hide an observation rather than explain it,
-check the inputs first. The observation may be a bug wearing the costume
-of a trade-off.
+A mechanism that hides an observation is hiding a mistake of yours. Check
+the ruler before you argue about the world.

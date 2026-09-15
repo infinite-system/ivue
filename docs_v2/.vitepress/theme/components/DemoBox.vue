@@ -1,5 +1,8 @@
 <script setup lang="ts">
-defineProps<{ title: string; note?: string }>();
+withDefaults(defineProps<{ title: string; note?: string; badge?: string; flush?: boolean }>(), {
+  badge: 'Live \u00b7 runs the shipped engine',
+  flush: false
+});
 </script>
 
 <template>
@@ -7,9 +10,9 @@ defineProps<{ title: string; note?: string }>();
     <div class="dbx-head">
       <span class="dot" aria-hidden="true" />
       <span class="t">{{ title }}</span>
-      <span class="badge">Live &middot; runs the shipped engine</span>
+      <span v-if="badge" class="badge">{{ badge }}</span>
     </div>
-    <div class="dbx-body">
+    <div class="dbx-body" :class="{ flush }">
       <slot />
     </div>
     <div v-if="note" class="dbx-note">{{ note }}</div>
@@ -53,6 +56,9 @@ defineProps<{ title: string; note?: string }>();
 }
 .dbx-body {
   padding: 18px;
+}
+.dbx-body.flush {
+  padding: 0;
 }
 .dbx-note {
   padding: 10px 18px 13px;
