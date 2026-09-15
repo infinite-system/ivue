@@ -91,7 +91,7 @@ test('the creep advances by elapsed time over the cadence, so a slow frame trave
   // the first frame has no previous timestamp: one frame's worth
   step(1000);
   expect(lenis.targetScroll).toBeCloseTo(Logic.FRAME_MS / Logic.CREEP_MS_PER_PX, 6);
-  expect(owner.setScrollPosition).toHaveBeenCalledWith(-lenis.targetScroll, true, false);
+  expect(owner.setScrollPosition).toHaveBeenCalledWith(-lenis.targetScroll);
 
   // a 16 ms frame and then a 48 ms frame: the slow one advances three times as far
   const afterFirst = lenis.targetScroll;

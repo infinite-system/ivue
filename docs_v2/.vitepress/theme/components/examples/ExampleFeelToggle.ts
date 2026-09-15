@@ -3,10 +3,9 @@ import { Reactive } from '../../../../../examples/playground/src/ivue';
 
 /**
  * Docs chrome, not a scroller feature: a strip of buttons that re-tunes the
- * live scroller's feel so the three choices that can only be judged by hand —
- * how a flick comes to rest, how far it carries, and how each step meets the
- * device-pixel grid — can be swapped on the device without an edit and a
- * reload.
+ * live scroller's feel so the two choices that can only be judged by hand —
+ * how a flick comes to rest, and how far it carries — can be swapped on the
+ * device without an edit and a reload.
  *
  * It reaches the mounted instance through the DOM rather than a prop, which
  * is what keeps it chrome: the example under it is the shipped component,
@@ -25,11 +24,6 @@ class $ExampleFeelToggle {
     return ref<'friction' | 'exponential'>('friction');
   }
 
-  /** How the applied translate meets the device-pixel grid. */
-  get snap() {
-    return ref<'auto' | 'grid' | 'fractional'>('fractional');
-  }
-
   /** How many 60 Hz frames of the finger's own speed a flick carries. */
   get carry() {
     return ref(35);
@@ -38,10 +32,6 @@ class $ExampleFeelToggle {
   /** What the strip offers, in the order it offers it. */
   get glideOptions(): Array<'friction' | 'exponential'> {
     return ['friction', 'exponential'];
-  }
-
-  get snapOptions(): Array<'auto' | 'grid' | 'fractional'> {
-    return ['auto', 'grid', 'fractional'];
   }
 
   /** 16 is what the browser's own fling measures at — same launch speed, it
@@ -68,10 +58,9 @@ class $ExampleFeelToggle {
 
   protected readShipped() {
     const model = this.scroller as {
-      props?: { scroll?: { snap?: string; touch?: { glide?: string; carry?: number } } };
+      props?: { scroll?: { touch?: { glide?: string; carry?: number } } };
     } | null;
     const shipped = model?.props?.scroll;
-    if (shipped?.snap) this.snap.value = shipped.snap as 'auto' | 'grid' | 'fractional';
     if (shipped?.touch?.glide) this.glide.value = shipped.touch.glide as 'friction' | 'exponential';
     if (typeof shipped?.touch?.carry === 'number') this.carry.value = shipped.touch.carry;
   }
@@ -85,11 +74,6 @@ class $ExampleFeelToggle {
   pickGlide(value: 'friction' | 'exponential') {
     this.glide.value = value;
     this.scroller?.lenis?.tune?.({ syncTouchGlide: value });
-  }
-
-  pickSnap(value: 'auto' | 'grid' | 'fractional') {
-    this.snap.value = value;
-    this.scroller?.lenis?.tune?.({ renderSnap: value });
   }
 
   /**
@@ -110,10 +94,6 @@ class $ExampleFeelToggle {
   /** Whether a button is the live one — the template asks by name, never with a comparison. */
   isGlide(value: string) {
     return this.glide.value === value;
-  }
-
-  isSnap(value: string) {
-    return this.snap.value === value;
   }
 
   isCarry(value: number) {

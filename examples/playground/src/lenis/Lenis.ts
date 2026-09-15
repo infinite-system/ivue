@@ -91,29 +91,6 @@ class $Lenis {
   }
 
   /**
-   * The speed above which 'auto' writes on the device-pixel grid, in device
-   * pixels per frame. The quantising error is a whole device pixel either
-   * way, so what matters is its size RELATIVE to the step: at 40 device
-   * px/frame it is 2.5% and invisible, at 2 it is half the motion. Raising
-   * this keeps gentle scrolling fractional, where the creep already is and
-   * where nobody has ever called the motion steppy; the cost is that the
-   * layer re-rasterizes in that range — and that is where the idea dies.
-   * Measured on the files list, a flick at each setting:
-   *
-   *   threshold 1 (this)   max frame  33 ms   long tasks   0 ms
-   *   threshold 6          max frame  67 ms   long tasks  66 ms   reversal never landed
-   *   fractional always    max frame 117 ms   long tasks 451 ms   reversal 271 ms
-   *
-   * So the grid is not a cosmetic choice, it is what keeps a frame cheap,
-   * and the quantised motion under a scroll is its price. The lever that
-   * would actually buy fractional back is a lighter layer — the rows are
-   * what makes a re-raster expensive, not the transform.
-   */
-  static get SNAP_ABOVE_DEVICE_PX() {
-    return 1;
-  }
-
-  /**
    * Constant deceleration, as an easing. A flick that leaves at v and
    * decelerates at a fixed rate covers `x(t) = v t - a t^2 / 2`, which over
    * its own duration is exactly `1 - (1 - p)^2` — so the friction model
@@ -181,7 +158,6 @@ class $Lenis {
     syncTouchLerp = 0.075,
     touchInertiaMultiplier = 35,
     syncTouchGlide = 'exponential',
-    renderSnap = 'auto',
     duration, // in seconds
     easing,
     lerp = 0.1,
@@ -243,7 +219,6 @@ class $Lenis {
       syncTouchLerp,
       touchInertiaMultiplier,
       syncTouchGlide,
-      renderSnap,
       duration,
       easing,
       lerp,
@@ -694,40 +669,6 @@ class $Lenis {
   }
 
   /**
-   * A rendered offset put where this integrator's snap policy wants it.
-   *
-   * ONE rule for the layer, wherever the write comes from. `setScroll`
-   * applies it to its own transform, and so does any other owner of the
-   * same layer — a virtual window that writes the transform itself, from
-   * a rebased offset only it knows. A second rule there is a second
-   * policy: whichever writer runs last in the frame decides, and the knob
-   * the reader is holding stops meaning anything.
-   *
-   * Coming to rest is the one moment a snap is SEEN. A layer that moves
-   * onto the grid as it stops travels up to half a device pixel with no
-   * motion to hide it, and the raster that follows re-snaps every line box
-   * from the new phase — a line of text drops a pixel exactly as the scroll
-   * ends. So rest does not override the knob: 'auto' and 'grid' land on the
-   * grid because they were already on it a frame earlier and the last step
-   * is nothing, and 'fractional' stays where it stopped, which is what the
-   * word means. Resting off-grid costs a resampled glyph; resting ONTO the
-   * grid costs a visible jump, and the reader is looking right at it.
-   */
-  snapRendered(value: number): number {
-    const dpr = window.devicePixelRatio || 1;
-    const snap = this.options.renderSnap ?? 'auto';
-    // Per RENDERED frame on purpose, and the one speed here that should be:
-    // the question is how far the layer moves between two frames the display
-    // actually shows, and snapping a step already below a device pixel is
-    // what turns it into a stutter. Everything else reads px per ms.
-    const onGrid =
-      (this.isScrolling === false && snap !== 'fractional') ||
-      snap === 'grid' ||
-      (snap === 'auto' && Math.abs(this.velocity) * dpr >= this.self.SNAP_ABOVE_DEVICE_PX);
-    return onGrid ? Math.round(value * dpr) / dpr : value;
-  }
-
-  /**
    * The content shifted under a running glide — rows above the reader
    * changed size — and the scroller asks the glide to move with it: the
    * target, the animated position and the running lerp's origin, value
@@ -761,29 +702,17 @@ class $Lenis {
 
     scroll -= this.renderOffset;
 
-    // SNAP BY SPEED. Fast motion (a device pixel or more per frame) is
-    // written on the device-pixel grid; slow motion is written fractional.
-    //   - Fractional at speed re-rasterizes the layer at a new sub-pixel
-    //     offset as tiles are repainted, and Chrome snaps each text line
-    //     and box edge to whole device pixels independently at every
-    //     re-raster: rows whose layout tops carry different fractions
-    //     shift by a pixel relative to their neighbours mid-glide (seen as
-    //     "some elements hop 1px" on wheel scrolls). On the grid the
-    //     raster offset never changes, so every row keeps its snap.
-    //   - Snapped at the slow tail (velocity decaying below ~1 device
-    //     px/frame) turns the exponential decay into whole-pixel steps at
-    //     stretching, IRREGULAR intervals — a visible chop just before the
-    //     creep takes over, worst on dpr-1 screens. Fractional there, the
-    //     compositor filters the sub-pixel motion into an apparent glide.
-    // The renderOffset rebasing keeps this value small (≤ ~131k px), where
-    // f32 still resolves sub-pixel fractions. Resting positions stay crisp
-    // regardless: scrollTo rounds its targets, so completed inertia lands
-    // on integers.
-    // Which side of that trade to take is a setting, because it is a trade:
-    // 'grid' keeps every glyph on the raster and quantises the motion,
-    // 'fractional' keeps the motion continuous and lets the compositor
-    // resample, 'auto' takes the speed rule above.
-    const rendered = this.snapRendered(scroll);
+    // Written where the model says, to the fraction. Nothing between the
+    // scroll model and this transform rounds: not the target (a finger's
+    // sub-pixel reaches the screen), not the write (the compositor
+    // resamples a fractional offset, and that is what a browser's own
+    // scroll does too). A device-pixel snap used to live here in three
+    // flavours — see the contract's rejected alternatives for the history:
+    // the hop it was adopted to stop was the scroller recording row
+    // heights a few hundredths of a pixel off, never the fraction itself.
+    // renderOffset rebasing keeps this value small (≤ ~131k px), where f32
+    // still resolves the fraction.
+    const rendered = scroll;
 
     if (this.isHorizontal) {
       (this.options.content as HTMLElement).style.transform = `translateX(${-rendered}px)`;
@@ -1154,7 +1083,6 @@ class $Lenis {
         | 'syncTouchLerp'
         | 'touchInertiaMultiplier'
         | 'syncTouchGlide'
-        | 'renderSnap'
         | 'wheelMaxPxPerMs'
         | 'touchMaxPxPerMs'
       >
@@ -1349,9 +1277,9 @@ class $Lenis {
     target += offset;
     // The target is NOT rounded. It used to be, so the lerp could finish on
     // `Math.round(value) === to`; that test is gone (Animate settles inside
-    // half a pixel instead), and the grid is now kept where it belongs — at
-    // the write, by `snapRendered`, which puts every RESTING position on it.
-    // Rounding here quantised the one thing that must not be: a finger's
+    // half a pixel instead), and nothing else rounds either — the layer is
+    // written where the model says. Rounding here quantised the one thing
+    // that must not be: a finger's
     // own motion. A drag re-targets every frame, so each sub-pixel of the
     // gesture was thrown away before it reached the layer, and the content
     // walked under the finger in whole-pixel steps — the drag reads
@@ -1740,14 +1668,6 @@ export namespace Lenis {
      * @default 'exponential'
      */
     syncTouchGlide?: 'exponential' | 'friction';
-    /**
-     * How the applied translate meets the device-pixel grid. 'auto' snaps
-     * only while the content moves a device pixel or more per frame;
-     * 'grid' always snaps (crisp glyphs, quantised motion); 'fractional'
-     * never does (continuous motion, the compositor resamples).
-     * @default 'auto'
-     */
-    renderSnap?: 'auto' | 'grid' | 'fractional';
     /**
      * Scroll duration in seconds
      */

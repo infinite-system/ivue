@@ -32,7 +32,7 @@ Goal: Render a window of a few dozen rows over a list of any length, at the exac
 // domain-invariant: $VirtualScroller — If a patch mounts or unmounts a wave of rows, then their captures apply together: one geometry bump, one anchor taken before the first and restored after the last, one clamp — never a transform write between two rows' reads.
 // domain-invariant: $VirtualScroller — If the window changes, then itemsChanged fires once with the padded bounds; a scroll that keeps the window fires nothing.
 // domain-invariant: $VirtualScroller — If the vertical seams are read, then they name the y axis: translateY and deltaY, and the frame gives the browser no gesture at all: touch-action none.
-// domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
+// domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded — nothing between the model and the layer rounds.
 // domain-invariant: $VirtualScroller — If nudgePaint runs on WebKit, then the inner layer's will-change is cycled through auto with a layout read between; elsewhere it does nothing.
 // domain-invariant: $VirtualScroller — If the scroll rests part-way into a tall row, then the window still reaches a container below the SCROLL POSITION, not below that row's top, so the row at the bottom edge is mounted.
 // domain-invariant: $VirtualScroller — If the frame scrolls natively, then the offset becomes a virtual scroll and the frame is zeroed; Lenis never adopts a native scroll on either axis.
@@ -540,7 +540,6 @@ test('a nested knob left out reads as its tuned default at every depth, a suppli
       VirtualScroller.Class.SCROLL_KNOBS.touch.carry,
     touchInertiaMultiplier: VirtualScroller.Class.SCROLL_KNOBS.touch.carry,
     syncTouchGlide: VirtualScroller.Class.SCROLL_KNOBS.touch.glide,
-    renderSnap: VirtualScroller.Class.SCROLL_KNOBS.snap,
     touchMaxPxPerMs: 0
   });
   tuned.unmount();
@@ -621,7 +620,7 @@ test('the two spacers and the rendered rows add up to the extent, and the traili
   unmount();
 });
 
-// domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded; only a landing snaps.
+// domain-invariant: $VirtualScroller — If a row before the window has a fractional size, then the leading spacer renders that fraction unrounded — nothing between the model and the layer rounds.
 test('a fractional row above the window keeps the leading spacer fractional — a snapped spacer would hop the content at every window move', () => {
   const { instance, unmount } = scroller(rows(100), { assumedSize: 30 });
   instance.syncItemSize(1, 30.375);

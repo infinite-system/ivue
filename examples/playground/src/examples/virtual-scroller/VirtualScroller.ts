@@ -189,29 +189,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  borrowing this knob for it. */
   protected static readonly RENDER_BIAS_CHUNK = 65536;
 
-  /**
-   * Device-pixel snap for LANDINGS (seeks/jumps): a resting position on
-   * the grid keeps text crisp. The snap policy is "slow motion is
-   * fractional, fast motion and landings snap" — the reading creep
-   * (snapRender=false) and the slow tail of a wheel lerp bypass this:
-   * snapped sub-device-pixel-per-frame motion degenerates into whole-pixel
-   * ticks at visible rates, while fractional translateY is filtered by the
-   * compositor into an apparent glide. The wheel lerp snaps by speed
-   * inside lenis.setScroll (a device pixel or more per frame): fractional
-   * offsets at speed re-raster the layer and snap each row's text and
-   * edges independently, a 1 px shimmer between neighbours. The SPACERS never
-   * snap either: they change mid-motion at every window move, and a
-   * spacer rounded to the grid while the transform under it is fractional
-   * hops the visible content by its rounding error (up to half a device
-   * pixel, measured) exactly when the window advances. Safe at any depth —
-   * renderBias keeps rendered offsets ≤ ~131k px, where f32 resolves both
-   * integers and fractions.
-   */
-  protected static snapForRender(value: number) {
-    const dpr = window.devicePixelRatio || 1;
-    return Math.round(value * dpr) / dpr;
-  }
-
   /** WebKit, iOS browsers included (every one of them is WebKit): the
    *  engine that needs its composited layer re-promoted to rasterize
    *  fresh content under a held touch — see nudgePaint. */
@@ -271,14 +248,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   static get SCROLL_KNOBS(): VirtualScroller.ScrollKnobs {
     return {
       wheel: { gain: 1, follow: 0.1, maxPxPerMs: 0 },
-      touch: { gain: 1, carry: 35, launch: 1, glide: 'friction', maxPxPerMs: 0 },
-      // Live for a feel test: every step written fractional, the way the
-      // reading creep already is. 'auto' is the tuned rule and one word
-      // back. Watch for what the grid was adopted to stop — rows whose
-      // layout tops carry different fractions hopping a pixel against
-      // their neighbours mid-scroll — and for the frame cost, which the
-      // probe reads as much higher (on a rig that is itself suspect).
-      snap: 'fractional'
+      touch: { gain: 1, carry: 35, launch: 1, glide: 'friction', maxPxPerMs: 0 }
     };
   }
 
@@ -597,7 +567,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       syncTouchLerp: touch.launch / touch.carry,
       touchInertiaMultiplier: touch.carry,
       syncTouchGlide: touch.glide,
-      renderSnap: this.props.scroll.snap,
       touchMaxPxPerMs: touch.maxPxPerMs
     };
   }
@@ -646,8 +615,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   // invariant: The two spacers and the rendered rows sum to the extent (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   /** Fractional on purpose — a row sum is fractional whenever a row is,
-   *  and a snapped spacer hops the content at every window move (see
-   *  snapForRender). */
+   *  and a spacer rounded away from that sum moves every row below it by
+   *  the rounding at every window change. */
   get leadingSpacerPx() {
     return Math.max(0, this.leadingSpacerSize.value - this.renderBias.value) + 'px';
   }
@@ -1398,7 +1367,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     const container = this.containerSpan;
     const max = Math.max(0, this.scrollExtent.value - container);
     if (this.scrollPosition.value <= max) return;
-    this.setScrollPosition(-max, true, false);
+    this.setScrollPosition(-max);
   }
 
   /**
@@ -1450,7 +1419,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.landing.shiftLanding(delta);
     const lenis = this.lenis;
     if (!lenis) {
-      this.setScrollPosition(-Math.max(0, this.scrollPosition.value + delta), true, false);
+      this.setScrollPosition(-Math.max(0, this.scrollPosition.value + delta));
       return;
     }
     // The integrator moves WHOLE: its target, its animated position, a
@@ -1481,7 +1450,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     // with it, or the next frame's velocity is the clamp's distance
     if (next !== lenis.targetScroll) lenis.animatedScroll = next;
     lenis.targetScroll = next;
-    this.setScrollPosition(-next, true, false);
+    this.setScrollPosition(-next);
   }
 
   // invariant: Rendered sizes are known only after a row mounts (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -1607,37 +1576,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return element.scrollTop;
   }
 
-  /**
-   * Where this write meets the device-pixel grid. The integrator owns the
-   * policy and the knob that sets it — this layer is the layer it writes —
-   * so the question goes there, and the static rule below is only what is
-   * left before one exists (a landing applied at mount).
-   *
-   * Two rules here was the bug: every glide frame came through this write
-   * and was rounded unconditionally, so the whole-pixel ticks the snap
-   * knob exists to remove survived being switched off. The reading creep
-   * looked smooth because it is the one caller that passes snapRender
-   * false, which is exactly the difference a reader reports between the
-   * creep and a flick.
-   */
-  protected snapForRender(value: number): number {
-    return this.lenis ? this.lenis.snapRendered(value) : this.self.snapForRender(value);
-  }
-
   protected resetNativeScroll(element: HTMLElement) {
     element.scrollTop = 0;
   }
 
-  setScrollPosition(
-    position: number,
-    translateY = true,
-    /** The creep passes false: at sub-device-pixel speeds a snapped
-     *  transform ticks whole pixels at a visible rate; fractional motion
-     *  lets the compositor filter it into an apparent glide. Safe at any
-     *  depth — renderBias keeps the effective offset small, where f32
-     *  still resolves fractions. */
-    snapRender = true
-  ) {
+  setScrollPosition(position: number, translateY = true) {
     // A non-finite position would poison lenis.targetScroll and freeze the
     // scroller until remount (invalid transforms are silently ignored, so
     // nothing ever recovers). Refuse it.
@@ -1677,12 +1620,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.scrollPosition.value = absolutePosition;
 
     if (inner && translateY) {
-      // Rebased + snapped for GPU precision (see renderBias/snapForRender);
-      // scrollPosition and lenis keep full precision for the scroll math.
+      // Rebased for GPU precision (see renderBias) and written to the
+      // fraction — the model's number, nothing rounded between them.
       const rendered = position + this.renderBias.value;
-      inner.style.transform = this.transformFor(
-        snapRender ? this.snapForRender(rendered) : rendered
-      );
+      inner.style.transform = this.transformFor(rendered);
       // Programmatic jumps write the transform directly — lenis must ADOPT
       // the jump, not just be told about it. Adopting kills any in-flight
       // wheel animation (a running lerp holds its own captured target;
@@ -2006,7 +1947,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     if (!this.lenis) return;
     const lenis = this.lenisRequired;
     lenis.targetScroll = Math.max(0, lenis.targetScroll + delta);
-    this.setScrollPosition(-lenis.targetScroll, true, false);
+    this.setScrollPosition(-lenis.targetScroll);
   }
 
   // invariant: WebKit re-rasterizes the layer on every autoscroll write (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -2096,21 +2037,6 @@ export namespace VirtualScroller {
     /** The wheel has no flick, so it has no launch: a notch sets the target
      *  and `follow` is simply how fast the transform chases it. */
     wheel: { gain: number; follow: number; maxPxPerMs: number };
-    /**
-     * How the applied translate meets the device-pixel grid — the one place
-     * a virtual scroll differs from the browser's own, and a real trade
-     * rather than a bug:
-     *
-     *   'grid'        every glyph stays on the raster, and the motion is
-     *                 quantised to whole device pixels.
-     *   'fractional'  the motion is continuous and the compositor resamples
-     *                 the layer, which softens text slightly and, at speed,
-     *                 lets rows whose layout tops carry different fractions
-     *                 hop a pixel against their neighbours as tiles repaint.
-     *   'auto'        snap only above a device pixel per frame, which is why
-     *                 the reading creep glides and a scroll steps.
-     */
-    snap: 'auto' | 'grid' | 'fractional';
     /** A flick in its own terms. `carry` is the throw, in frames of the
      *  finger's own speed (distance = v x carry); `launch` is the multiple
      *  of that speed the glide leaves at, 1 being a clean hand-over. The

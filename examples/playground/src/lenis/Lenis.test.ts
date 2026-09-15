@@ -8,7 +8,7 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 [A touch on a glide keeps it running until the first move](lenis.invariants.md#a-touch-on-a-glide-keeps-it-running-until-the-first-move)
 [A flick under friction stops where its throw runs out](lenis.invariants.md#a-flick-under-friction-stops-where-its-throw-runs-out)
 [Speed crosses every seam in px per millisecond](lenis.invariants.md#speed-crosses-every-seam-in-px-per-millisecond)
-[The device-pixel grid is met at the write and nowhere else](lenis.invariants.md#the-device-pixel-grid-is-met-at-the-write-and-nowhere-else)
+[The layer is written where the model says](lenis.invariants.md#the-layer-is-written-where-the-model-says)
 // domain-invariant: $Lenis — If a finger DRAGS, then the content is put where the finger is in that same event, with no animation between; only a flick's release animates.
 // domain-invariant: $Lenis — If the display runs at any refresh rate, then `velocityPerMs` reports the same speed for the same motion, because it divides the frame's scroll delta by the frame's REAL duration rather than an assumed 16.7 ms.
 // domain-invariant: $Lenis — If a flick glides under friction, then it decelerates at a constant rate and ARRIVES over `2 / lerp` frames, where the exponential model approaches its target and settles within half a pixel.
@@ -19,8 +19,6 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 // domain-invariant: $Lenis — If overscroll is on and a gesture at an end asks for more than the end has, then the scroller takes none of it and scrolls the nearest scrollable ancestor, else the window, by the gesture's own delta; an inward gesture, or overscroll off, is taken as before.
 // domain-invariant: $Lenis — If a finger lands on a glide, then the glide's target is pulled to a few frames of travel ahead under a steep lerp and its momentum is remembered for a flick the same way; the first move takes over where the content is.
 // domain-invariant: $Lenis — If a wheel runs mostly across the scroller's axis, then the scroller leaves it alone — no cancel, no scroll — so whatever scrolls that way under the pointer takes it; a wheel along the axis with a little drift across is the scroller's.
-// domain-invariant: $Lenis — If a rendered offset is put on the device-pixel grid, then it is put there by this one policy, at the write, and coming to rest never overrides the knob — a layer that slides onto the grid as it stops moves a visible half pixel with nothing to hide it.
-Impossible if true: A second writer of the same layer keeping its own rule, so the snap knob changes nothing on the frames it does not own. A line of text dropping a pixel at the exact moment a scroll ends.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
 Impossible if true: A wheel up over a nested box scrolled down that moves the list instead of the box.
 Impossible if true: A swipe over rows that measured taller mid-drag reading a velocity of zero.
@@ -430,6 +428,7 @@ test('an outward gesture at a limit is handed to the page, an inward one is take
 // domain-invariant: $Lenis — If a finger lands on a glide, then the glide's target is pulled to a few frames of travel ahead under a steep lerp and its momentum is remembered for a flick the same way; the first move takes over where the content is.
 // impossible-if-true: $Lenis — A reversal that waits for the old glide to run its distance.
 // invariant: A touch on a glide keeps it running until the first move (examples/playground/src/lenis/lenis.invariants.md)
+// invariant: The layer is written where the model says (examples/playground/src/lenis/lenis.invariants.md)
 test('a finger on a glide brakes it to a few frames ahead and keeps its momentum for a flick the same way', () => {
   class ObserverStub {
     observe() {}
@@ -492,64 +491,6 @@ test('a finger on a glide brakes it to a few frames ahead and keeps its momentum
   expect(inner.carriedVelocity).toBe(velocity);
   // the finger's own delta, taken from where the content is
   expect(lenis.targetScroll).toBeCloseTo(at - 40, 0);
-  lenis.destroy();
-  wrapper.remove();
-  if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
-});
-
-// domain-invariant: $Lenis — If a rendered offset is put on the device-pixel grid, then it is put there by this one policy, at the write, and coming to rest never overrides the knob — a layer that slides onto the grid as it stops moves a visible half pixel with nothing to hide it.
-// impossible-if-true: $Lenis — A second writer of the same layer keeping its own rule, so the snap knob changes nothing on the frames it does not own. A line of text dropping a pixel at the exact moment a scroll ends.
-// invariant: The device-pixel grid is met at the write and nowhere else (examples/playground/src/lenis/lenis.invariants.md)
-test('the snap policy: crisp at rest, and in motion whatever the knob says', () => {
-  class ObserverStub {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-  const hadObserver = 'ResizeObserver' in globalThis;
-  if (!hadObserver)
-    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
-  const wrapper = document.createElement('div');
-  const content = document.createElement('div');
-  wrapper.appendChild(content);
-  document.body.appendChild(wrapper);
-  const lenis = new Lenis.Class({ wrapper, content, autoRaf: false });
-  const inner = lenis as unknown as { isScrolling: false | 'native' | 'smooth'; velocity: number };
-
-  // rest does not override the knob. 'auto' and 'grid' land on the grid —
-  // they were already on it a frame earlier, so the last step moves nothing
-  for (const snap of ['auto', 'grid'] as const) {
-    lenis.tune({ renderSnap: snap });
-    inner.isScrolling = false;
-    expect(lenis.snapRendered(12.4)).toBe(12);
-  }
-  // 'fractional' stops where it stopped: a layer that slides onto the grid
-  // as it comes to rest travels up to half a device pixel with no motion to
-  // hide it, and the raster that follows drops a line of text a pixel —
-  // seen on a phone as the text shifting at the exact moment scrolling ends
-  lenis.tune({ renderSnap: 'fractional' });
-  inner.isScrolling = false;
-  expect(lenis.snapRendered(12.4)).toBe(12.4);
-
-  // in motion the knob decides, and 'auto' decides by speed: a step of a
-  // device pixel or more goes on the grid, a step below one stays
-  // fractional — snapping that one is what turns a decay into whole-pixel
-  // ticks at stretching intervals
-  inner.isScrolling = 'smooth';
-  lenis.tune({ renderSnap: 'auto' });
-  inner.velocity = 8;
-  expect(lenis.snapRendered(12.4)).toBe(12);
-  inner.velocity = 0.3;
-  expect(lenis.snapRendered(12.4)).toBe(12.4);
-
-  lenis.tune({ renderSnap: 'fractional' });
-  inner.velocity = 8;
-  expect(lenis.snapRendered(12.4)).toBe(12.4);
-
-  lenis.tune({ renderSnap: 'grid' });
-  inner.velocity = 0.3;
-  expect(lenis.snapRendered(12.4)).toBe(12);
-
   lenis.destroy();
   wrapper.remove();
   if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;

@@ -1650,3 +1650,15 @@ between a model and the DOM, check the model's INPUTS against the DOM
 before theorising about the engine — five rows and one
 `getBoundingClientRect` would have shown the 0.03–0.06 px per-row error
 on the first day.
+
+
+## The snap knob was scaffolding around a measurement bug
+
+`renderSnap` — grid / fractional / auto, a Lenis option, a scroller knob, a
+row of buttons — existed to stop rows hopping a pixel against their
+neighbours as a fractional layer re-rastered. That hop was the scroller
+recording row heights 3–6 hundredths of a pixel off (the entry above). With
+the heights exact, the knob had no job left and came out: ~150 lines and a
+setting a reader could get wrong. When a mechanism exists to HIDE an
+observation rather than explain it, check the model's inputs first; the
+observation may be a bug wearing the costume of a trade-off.
