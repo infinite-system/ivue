@@ -1489,6 +1489,14 @@ a.feature-inline-link {
     margin-right: 0;
     border-radius: 8px;
   }
+  /* smaller code on a phone, so an example shows more of each line before
+     it scrolls sideways; set on the blocks only, so inline code in a
+     sentence keeps the sentence's size. Line numbers read the same
+     variable and shrink with it. */
+  .vp-doc div[class*='language-'],
+  .vp-doc .vp-code-group {
+    --vp-code-font-size: 0.78em;
+  }
 }
 /* homepage sections: grid children may not force the page wider than the
    viewport; fences scroll inside themselves */

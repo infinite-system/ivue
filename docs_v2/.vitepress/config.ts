@@ -147,6 +147,16 @@ export default defineConfig({
       // One Vue copy for both the docs and the lib, or tracking breaks.
       dedupe: ['vue'],
       alias: [
+        // The "On this page" dropdown a narrow screen shows: ours keeps
+        // VitePress's behaviour and adds previous/next links at its bottom.
+        // The file name differs from the one matched, so the swap cannot
+        // match itself.
+        {
+          find: /^.*\/VPLocalNavOutlineDropdown\.vue$/,
+          replacement: fileURLToPath(
+            new URL('./theme/components/DocOutlineDropdown.vue', import.meta.url),
+          ),
+        },
         // The playground is the canonical source of every example — docs
         // demos import the SAME classes the example pages show as code.
         {
