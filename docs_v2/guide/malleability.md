@@ -1,5 +1,5 @@
 ---
-title: Infinite Malleability
+title: Infinite Malleability Kit
 description: Replace any part of any component tree — a view, a class, a section, a knob, a declared prop or event — at any depth, from outside, without editing a file. One static on the class holds the roles; one seam shape passes one entry; an override is a subclass written as data.
 relatedPosts: [fix-the-scroller-never-open-the-selection, runtime-props-all-along, ship-the-variant-keep-the-tuning, the-options-api-everyone-wanted]
 ---
@@ -9,7 +9,7 @@ import LazyCodeGroup from '../.vitepress/theme/components/LazyCodeGroup.vue'
 import ExampleMalleability from '../.vitepress/theme/components/examples/ExampleMalleability.vue'
 </script>
 
-# Infinite Malleability
+# Infinite Malleability Kit
 
 Replace any part of any component tree from outside, at any depth,
 without editing a file. The view of a role, the class behind it, a
@@ -25,6 +25,10 @@ bar, the colour engine swaps from shiki to highlight.js, and a
 configuration layer opens the theme, the line numbers and the fold as
 settings the entry turns. Nothing is passed down but the entry at each
 seam.
+
+The [AI chat example](/examples/ai-chat) is a whole application built
+with the kit: the thread, the composer, the index and every message part
+are roles you can replace the same way.
 
 <ExampleMalleability />
 
@@ -47,8 +51,8 @@ else.
 ## The four moves
 
 ivue components are already [classes with their contract as data](/guide/extensible-components).
-Infinite Malleability adds one more piece of data and one rule for
-templates.
+The Infinite Malleability Kit adds one more piece of data and one rule
+for templates.
 
 The samples below are from the spec's tree, whose files sit under
 "The source" at the end; the demo's tree has the same shape with a

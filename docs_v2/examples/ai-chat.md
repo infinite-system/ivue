@@ -17,8 +17,10 @@ A real Claude Code session: 10,350 messages. Only the few rows you can
 see are in the page, and a message's text loads when you scroll to it.
 The strip above the chat counts both as you go.
 
-Every part is an ivue class, on the same scroller as the
-[million-row example](/examples/virtual-scroller).
+The chat is built with the
+[Infinite Malleability Kit](/guide/malleability): every part is an ivue
+class you can replace from outside, without editing a file. It runs on
+the same scroller as the [million-row example](/examples/virtual-scroller).
 
 <ClientOnly>
   <ExampleAiChat />

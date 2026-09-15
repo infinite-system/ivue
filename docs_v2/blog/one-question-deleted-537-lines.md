@@ -43,8 +43,9 @@ thread. It has to mount rows before you reach them, and it has to measure
 each one after it appears, because a chat message is as tall as its
 text. The goal: a reader on a phone cannot tell the difference.
 
-The thread below is the test bed. It is a real Claude Code session with
-10,350 messages. Every message is a row. Content is fetched a page at a
+The thread below is the test bed: the [AI chat example](/examples/ai-chat),
+built with the [Infinite Malleability Kit](/guide/malleability). It is a
+real Claude Code session with 10,350 messages. Every message is a row. Content is fetched a page at a
 time as the window reaches it. Scroll it on a phone.
 
 <ClientOnly>

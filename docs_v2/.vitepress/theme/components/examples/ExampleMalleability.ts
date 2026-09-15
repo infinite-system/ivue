@@ -11,7 +11,7 @@ import { HljsCode } from './malleability/HljsCode';
 import TabHeadView from './malleability/TabHead.vue';
 import StatsFootView from './malleability/StatsFoot.vue';
 
-// The live proof for the Infinite Malleability page: one shipped tree — a
+// The live proof for the Infinite Malleability Kit page: one shipped tree — a
 // gallery of snippet cards, each a head, a shiki-coloured code block and a
 // foot — and four overrides written as data, each a `Kit.Class.derive`
 // over the shipped root. The reader picks an override; the same

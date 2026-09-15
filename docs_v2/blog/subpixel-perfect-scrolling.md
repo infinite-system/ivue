@@ -37,8 +37,10 @@ tell the 2 apart. Each item has a number. Both phones, an iPhone and a
 Galaxy S22 Ultra, were judged by hand against a plain browser scroll box
 until the answer was "same".
 
-The thread below is where it was judged: a real Claude Code session,
-10,350 messages, content fetched a page at a time as you reach it.
+The thread below is where it was judged: the
+[AI chat example](/examples/ai-chat), built with the
+[Infinite Malleability Kit](/guide/malleability). It is a real Claude Code
+session, 10,350 messages, content fetched a page at a time as you reach it.
 
 <ClientOnly>
   <ExampleAiChat />
