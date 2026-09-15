@@ -18,6 +18,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 **Scope:** The fork's touch path: `onVirtualScroll` from the touchstart to the inertia `scrollTo`; `trailVelocity`, `trimTrail`, `FLICK_WINDOW_MS`; the `touchPending` and `touchTrail` state; `VirtualScroll.ts` touch listeners; `Animate.ts` for the cap.
 
 **Components:** One per gear, each delete-testable:
+
 - [Android holds the first move back and may coalesce a swipe into one](#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one) — why nothing about a flick may depend on the last frame or on a second move.
 - [A flick reads its velocity off the last stretch](#a-flick-reads-its-velocity-off-the-last-stretch) — why a coalesced swipe still glides at the finger's speed.
 - [A touch on a glide keeps it running until the first move](#a-touch-on-a-glide-keeps-it-running-until-the-first-move) — why a re-flick has no stall.
@@ -26,6 +27,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [A flick under friction stops where its throw runs out](#a-flick-under-friction-stops-where-its-throw-runs-out) — why a long throw can still have a short tail.
 - [Speed crosses every seam in px per millisecond](#speed-crosses-every-seam-in-px-per-millisecond) — why a 120 Hz phone feels what a 60 Hz one does.
 - [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target) — why a glide always ends, and the scroller can rest.
+- [The device-pixel grid is met at the write and nowhere else](#the-device-pixel-grid-is-met-at-the-write-and-nowhere-else) — why the finger's own sub-pixel reaches the screen, and why the snap knob means the same thing on every frame.
 - [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page) — why a reader at an end is never trapped inside the scroller.
 - [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it) — why a trackpad can scroll a code block sideways.
 
@@ -93,6 +95,28 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Last refined:** 2026-09-15
 
+### The device-pixel grid is met at the write and nowhere else
+
+**Invariant:** If a position is put on the device-pixel grid, then it is put there once, by `snapRendered`, at the moment the transform is written — never on a target, and never by a second writer of the same layer. A resting position always lands on the grid; in motion the `renderSnap` knob alone decides.
+
+**Scope:** `Lenis.ts` `snapRendered`, `setScroll`, `scrollTo` (the target it no longer rounds); `VirtualScroller.ts` `snapForRender` (the instance method that defers to the integrator, and the static that remains for a write before one exists).
+
+**Mechanism:** Two things used to round. `scrollTo` rounded every target, which was harmless for a programmatic seek and destructive for a drag: a drag re-targets every frame from the finger's own position, so each sub-pixel of the gesture was discarded before it could reach the layer, and the content walked under the thumb in whole pixels. The scroller then rounded again at its own write, unconditionally, so the knob that exists to turn snapping off could not reach the frames the scroller owned — the reading creep looked smooth only because it is the one caller that passes `snapRender` false. Both were the same mistake in two places: the grid is a property of the RENDERED offset, not of the scroll model, so it belongs at the write, once. Rest is the case the knob does not get to answer — off-grid rest resamples every glyph for as long as the reader sits there, and there is no motion left for the compositor to filter.
+
+**Generates:** A finger's fractional pixel surviving into the transform, on every phone whose touch stream is sub-pixel. A snap knob that means the same thing on every frame. Crisp text wherever the content stops.
+
+**Rejected alternatives:** Keeping the target rounded so the lerp could finish on `Math.round(value) === to` — that test is gone; `Animate` settles inside half a pixel instead, which is also what lets a fractional target ever complete.
+
+**Evidence:** Instrumented in Chrome at dpr 3 over the chat: every glide frame is written fractionally with `renderSnap: 'fractional'` (107362.823, 107350.147, 107337.802 …), from one writer. Before, the same frames were whole pixels whatever the knob said.
+
+**Impossible if true:** A drag that advances the content in whole pixels while the finger advances in thirds of one. A snap setting that changes the glide but not the drag, or the reverse.
+
+**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "snap policy"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-14
+
 ### A flick under friction stops where its throw runs out
 
 **Invariant:** If a flick glides under the friction model, then it decelerates at a constant rate and arrives at its target over `2 / lerp` frames, where the exponential model approaches the target asymptotically and settles only once it is within half a pixel.
@@ -114,7 +138,6 @@ Chosen invariants stand on reality invariants, never the reverse.
 **Status:** provisional
 
 **Last refined:** 2026-09-14
-
 
 ### A lerp completes within half a pixel of any target
 

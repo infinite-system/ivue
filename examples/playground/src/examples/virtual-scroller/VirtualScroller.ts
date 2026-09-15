@@ -844,9 +844,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   /** Nothing left for the frame loop to paint: no creep armed, no input
    *  arriving, no lerp remaining. */
   get isAtRest(): boolean {
-    return (
-      !this.isAutoPlaying.value && !this.inputLive && !this.lerpRunning && this.lerpLanded
-    );
+    return !this.isAutoPlaying.value && !this.inputLive && !this.lerpRunning && this.lerpLanded;
   }
 
   /** The track renders only when asked for AND there is travel to show. */
@@ -1559,6 +1557,23 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return element.scrollTop;
   }
 
+  /**
+   * Where this write meets the device-pixel grid. The integrator owns the
+   * policy and the knob that sets it — this layer is the layer it writes —
+   * so the question goes there, and the static rule below is only what is
+   * left before one exists (a landing applied at mount).
+   *
+   * Two rules here was the bug: every glide frame came through this write
+   * and was rounded unconditionally, so the whole-pixel ticks the snap
+   * knob exists to remove survived being switched off. The reading creep
+   * looked smooth because it is the one caller that passes snapRender
+   * false, which is exactly the difference a reader reports between the
+   * creep and a flick.
+   */
+  protected snapForRender(value: number): number {
+    return this.lenis ? this.lenis.snapRendered(value) : this.self.snapForRender(value);
+  }
+
   protected resetNativeScroll(element: HTMLElement) {
     element.scrollTop = 0;
   }
@@ -1616,7 +1631,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // scrollPosition and lenis keep full precision for the scroll math.
       const rendered = position + this.renderBias.value;
       inner.style.transform = this.transformFor(
-        snapRender ? this.self.snapForRender(rendered) : rendered
+        snapRender ? this.snapForRender(rendered) : rendered
       );
       // Programmatic jumps write the transform directly — lenis must ADOPT
       // the jump, not just be told about it. Adopting kills any in-flight
@@ -1957,7 +1972,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     void inner.offsetHeight;
     inner.style.willChange = 'transform';
   }
-
 }
 
 /**

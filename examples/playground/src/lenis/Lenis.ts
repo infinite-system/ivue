@@ -694,6 +694,35 @@ class $Lenis {
   }
 
   /**
+   * A rendered offset put where this integrator's snap policy wants it.
+   *
+   * ONE rule for the layer, wherever the write comes from. `setScroll`
+   * applies it to its own transform, and so does any other owner of the
+   * same layer — a virtual window that writes the transform itself, from
+   * a rebased offset only it knows. A second rule there is a second
+   * policy: whichever writer runs last in the frame decides, and the knob
+   * the reader is holding stops meaning anything.
+   *
+   * At rest the answer is always the grid: a resting position off it
+   * leaves every glyph resampled for as long as the reader sits there,
+   * and there is no motion left for the compositor to filter. In motion
+   * the knob decides — see `renderSnap` for the trade.
+   */
+  snapRendered(value: number): number {
+    const dpr = window.devicePixelRatio || 1;
+    const snap = this.options.renderSnap ?? 'auto';
+    // Per RENDERED frame on purpose, and the one speed here that should be:
+    // the question is how far the layer moves between two frames the display
+    // actually shows, and snapping a step already below a device pixel is
+    // what turns it into a stutter. Everything else reads px per ms.
+    const onGrid =
+      this.isScrolling === false ||
+      snap === 'grid' ||
+      (snap === 'auto' && Math.abs(this.velocity) * dpr >= this.self.SNAP_ABOVE_DEVICE_PX);
+    return onGrid ? Math.round(value * dpr) / dpr : value;
+  }
+
+  /**
    * The content shifted under a running glide — rows above the reader
    * changed size — and the scroller asks the glide to move with it: the
    * target, the animated position and the running lerp's origin, value
@@ -741,16 +770,7 @@ class $Lenis {
     // 'grid' keeps every glyph on the raster and quantises the motion,
     // 'fractional' keeps the motion continuous and lets the compositor
     // resample, 'auto' takes the speed rule above.
-    const dpr = window.devicePixelRatio || 1;
-    const snap = this.options.renderSnap ?? 'auto';
-    // Per RENDERED frame on purpose, and the one speed here that should be:
-    // the question is how far the layer moves between two frames the display
-    // actually shows, and snapping a step already below a device pixel is
-    // what turns it into a stutter. Everything else reads px per ms.
-    const onGrid =
-      snap === 'grid' ||
-      (snap === 'auto' && Math.abs(this.velocity) * dpr >= this.self.SNAP_ABOVE_DEVICE_PX);
-    const rendered = onGrid ? Math.round(scroll * dpr) / dpr : scroll;
+    const rendered = this.snapRendered(scroll);
 
     if (this.isHorizontal) {
       (this.options.content as HTMLElement).style.transform = `translateX(${-rendered}px)`;
@@ -1314,7 +1334,15 @@ class $Lenis {
     if (typeof target !== 'number') return;
 
     target += offset;
-    target = Math.round(target);
+    // The target is NOT rounded. It used to be, so the lerp could finish on
+    // `Math.round(value) === to`; that test is gone (Animate settles inside
+    // half a pixel instead), and the grid is now kept where it belongs — at
+    // the write, by `snapRendered`, which puts every RESTING position on it.
+    // Rounding here quantised the one thing that must not be: a finger's
+    // own motion. A drag re-targets every frame, so each sub-pixel of the
+    // gesture was thrown away before it reached the layer, and the content
+    // walked under the finger in whole-pixel steps — the drag reads
+    // crisper, the glide out of it starts from a lie.
 
     if (this.options.infinite) {
       if (programmatic) {
