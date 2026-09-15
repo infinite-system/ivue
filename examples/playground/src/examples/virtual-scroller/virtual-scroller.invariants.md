@@ -25,6 +25,7 @@ tier each record is proven at, and how the colocated tests bind to it.
 **Scope:** The virtual scroller subsystem: vertical and horizontal, mouse and touch, selection and padding. The goal vector is a million-item list that behaves like a short one.
 
 **Components:** One per gear, each delete-testable:
+
 - [Rendered sizes are known only after a row mounts](#rendered-sizes-are-known-only-after-a-row-mounts) — why positions are prefix sums over an estimate that refines.
 - [A row under the reader stays put while sizes settle](#a-row-under-the-reader-stays-put-while-sizes-settle) — why a row measuring above the reader never moves the content under them.
 - [A native selection dies with the node that anchors it](#a-native-selection-dies-with-the-node-that-anchors-it) — why the selection cannot be the browser's.
@@ -237,25 +238,25 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Invariant:** If rows above the row under the edge the reader reads from change size — a row measuring as it mounts, a placeholder becoming its content, a batch re-measure, the estimate calibrating — then the scroll moves by exactly what the content above moved, and that row stays where the reader had it. Scrolling down the edge is the top; while actually moving up it is the bottom, so a row growing inside the view expands upward, away from what was just read; at rest the edge is the top whatever the last direction was, so a row a click opened grows downward from where the reader left it. Rows below the anchor move nothing.
 
-**Scope:** `VirtualScroller.ts`: `captureAnchor`, `restoreAnchor`, `shiftScroll`, `contentShift`, and the paths that change sizes — `syncItemSize` on its own, the coalesced capture wave (`captureItemSize` / `flushItemSizes`) and `remeasureRenderedItems` (the wrapper's observer, anchored once around its wave). Under a running glide `shiftScroll` moves the glide through `lenis.shiftBy` AND sets the position cell to the shifted target, so the clamp that follows reads the truth; a stale cell above the new limit read as out of range, adopted the limit and killed the flick. `contentShift` sums every shift, so a reader of the position can subtract the content's motion from the reader's own. Applies to every list the scroller renders, at any scroll position but the top, where nothing sits above the anchor.
+**Scope:** `VirtualScroller.ts`: `captureAnchor`, `restoreAnchor`, `shiftScroll`, `contentShift`, and the paths that change sizes — `syncItemSize` on its own, the coalesced capture wave (`captureItemSize` / `flushItemSizes`) and `remeasureRenderedItems` (the wrapper's observer, anchored once around its wave). `shiftScroll` always moves the integrator WHOLE, through `lenis.shiftBy` — target, animated position, a running lerp, and the finger's flick trail. Under a running glide it also sets the position cell to the shifted target, so the clamp that follows reads the truth; a stale cell above the new limit read as out of range, adopted the limit and killed the flick. A drag used to bypass `shiftBy` entirely — it has no lerp, so the shift was written straight onto the target — and the trail it left behind then carried the content's own motion into the flick's velocity. `contentShift` sums every shift, so a reader of the position can subtract the content's motion from the reader's own. Applies to every list the scroller renders, at any scroll position but the top, where nothing sits above the anchor.
 
 **Renegotiable at:** Layout — a list whose rows above the viewport never changed size would not need it; every virtual list's rows do, because sizes are known only after a row mounts.
 
-**Mechanism:** `captureAnchor` names the row under the reading edge (`getIndexAtPosition` at the scroll position, or at the position plus the frame's border-box size when the last scroll went up) and its top; after the sizes land, `restoreAnchor` reads the row's new top and `shiftScroll` moves the scroll by the difference. At rest the move is a direct write that lenis adopts; mid-glide both lerp endpoints shift so the glide keeps its remaining distance; a seek's recorded landing shifts with it, so the converge loop does not read the move as the reader taking over.
+**Mechanism:** `captureAnchor` names the row under the reading edge (`getIndexAtPosition` at the scroll position, or at the position plus the frame's border-box size when the last scroll went up) and its top; after the sizes land, `restoreAnchor` reads the row's new top and `shiftScroll` moves the scroll by the difference. The integrator takes the move whole in every case — mid-glide both lerp endpoints shift so the glide keeps its remaining distance, mid-drag the trail shifts so the release still reads the finger — and a seek's recorded landing shifts with it, so the converge loop does not read the move as the reader taking over.
 
 **Generates:** Chat-shaped lists that open at the bottom and load content upward, where the estimate is never calibrated and every mounted row above the reader is a size change; the post player's paragraphs settling on a phone.
 
 **Rejected alternatives:** Keeping an absolute scroll position — every mount above the reader moved the content under them, by a screen or more when a placeholder became a long message.
 
-**Evidence:** `VirtualScroller.ts` `captureAnchor`, `restoreAnchor`, `shiftScroll`. Test: "measuring rows above the anchored row moves the scroll by the same amount; rows below move nothing".
+**Evidence:** `VirtualScroller.ts` `captureAnchor`, `restoreAnchor`, `shiftScroll`. Tests: "measuring rows above the anchored row moves the scroll by the same amount; rows below move nothing", "a shift under a dragging finger goes through the integrator too — a drag is not the exception".
 
-**Impossible if true:** A row above the reader's changing size and the reader's row moving on screen. A row below the reader's changing size and the scroll position changing.
+**Impossible if true:** A row above the reader's changing size and the reader's row moving on screen. A row below the reader's changing size and the scroll position changing. A flick whose velocity carries the content's own shift because the trail stayed behind.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScroller.test.ts -t "anchored row"`; in the AI chat example with content pages throttled to 1.2 s, a far seek through the index and a 60,000 px fling both hold the row under the leading edge at the same pixel while pages land.
 
 **Status:** provisional
 
-**Last refined:** 2026-09-09
+**Last refined:** 2026-09-14
 
 ## Chosen invariants
 
@@ -351,21 +352,21 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Scope:** `VirtualScrollerLanding.ts` whole — `toFraction`, `toProgress`, `toIndex`, `alignOffset`, `snapToNearest` and the converge holder; `VirtualScrollerGeometry.ts` `ratioPosition` and `anchoredPosition`, which turn a ratio into the item it names. The scroller forwards `seekToFraction`, `seekToProgress`, `scrollToIndex` and `cancelSeek` to it.
 
-**Mechanism:** `ratioPosition` scales the fraction over `itemCount − 1` and anchors at the floor item plus the remainder; `toIndex` computes the target from the geometry on every wave and stops only after the position has been quiet for `QUIET_MS` or the reader takes over — a wheel glide, the reading creep moving on from the landing, a scroll position that no longer matches the last landing (a glide that ended between two waves), or the owner calling `cancelSeek()` because the reader acted on the content instead of scrolling (a creep that kept mounting rows shifted the target at every mount, and every shift snapped the content back under it, for as long as the creep ran). `seekToProgress` is the built-in track's inverse of `scrollbarProgress`: position space resolved to an item plus a fraction, so a marquee chunk wider than the container still reaches its tail.
+**Mechanism:** `ratioPosition` scales the fraction over `itemCount − 1` and anchors at the floor item plus the remainder; `toIndex` computes the target from the geometry on every wave and stops only after the position has been quiet for `QUIET_MS` or the reader takes over — the reader's own input, which ends the loop the moment it arrives (`onVirtualScroll` calls `cancel()`), a wheel glide, a finger on the glass, the reading creep moving on from the landing, a scroll position that no longer matches the last landing (a glide that ended between two waves), or the owner calling `cancelSeek()` because the reader acted on the content instead of scrolling (a creep that kept mounting rows shifted the target at every mount, and every shift snapped the content back under it, for as long as the creep ran). `seekToProgress` is the built-in track's inverse of `scrollbarProgress`: position space resolved to an item plus a fraction, so a marquee chunk wider than the container still reaches its tail.
 
 **Generates:** The `endGapPx` dead-zone that keeps the promised item clear of the top edge; the `snapAlign` center placement.
 
 **Rejected alternatives:** A raw `lenis.scrollTo` — translates the content without rebasing the window.
 
-**Evidence:** `VirtualScrollerGeometry.ts` `ratioPosition`; `VirtualScrollerLanding.ts` `toIndex`. Tests: "a ratio names an item plus a fraction inside it, and the end gap keeps the next item’s top clear of the viewport top", "a landing re-applies its target on every size wave and lets go once the position has been quiet", "the reader moving the content ends the loop on the next wave, and nothing is re-pinned", "seeking to a fraction lands on the item that fraction names, flush to the start by default and centered when asked".
+**Evidence:** `VirtualScrollerGeometry.ts` `ratioPosition`; `VirtualScrollerLanding.ts` `toIndex`. Tests: "a ratio names an item plus a fraction inside it, and the end gap keeps the next item’s top clear of the viewport top", "a landing re-applies its target on every size wave and lets go once the position has been quiet", "the reader moving the content ends the loop on the next wave, and nothing is re-pinned", "seeking to a fraction lands on the item that fraction names, flush to the start by default and centered when asked", "a reader's own input ends a converging seek on the spot".
 
-**Impossible if true:** A seek landing that moves to different content when a late size wave arrives. An animated landing that slides the layer over content the walk never mounted.
+**Impossible if true:** A seek landing that moves to different content when a late size wave arrives. An animated landing that slides the layer over content the walk never mounted. A reader's flick during a landing pulled back to where the landing wanted it — reported from an Android phone as a flick on arrival that bounced back to the newest message, because a drag has no lerp and the loop asked whose the position was only when the geometry next changed.
 
 **Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller/VirtualScrollerLanding.test.ts`
 
 **Status:** provisional
 
-**Last refined:** 2026-09-06
+**Last refined:** 2026-09-14
 
 ### The thumb never shrinks below a grabbable fraction
 

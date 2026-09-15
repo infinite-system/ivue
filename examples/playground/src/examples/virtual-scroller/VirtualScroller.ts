@@ -832,13 +832,21 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return this.props.autoPlay && !this.props.snapToItems;
   }
 
-  /** The reader is moving the content themselves — a glide, or the reading
-   *  creep moving on from a landing. What a converge loop ends on: a creep
-   *  that kept mounting rows shifted the target at every mount, and every
-   *  shift re-pinned the landing under it, a 6 px snap-back every few frames
-   *  for as long as the creep ran. */
+  /** The reader is moving the content themselves — a finger on the glass, a
+   *  glide, or the reading creep moving on from a landing. What a converge
+   *  loop ends on: a creep that kept mounting rows shifted the target at
+   *  every mount, and every shift re-pinned the landing under it, a 6 px
+   *  snap-back every few frames for as long as the creep ran.
+   *
+   *  A DRAG belongs here for the same reason and was missing: a drag puts
+   *  the content under the finger with no lerp, so `lerpRunning` is false
+   *  for the whole gesture and the loop went on re-pinning its landing
+   *  underneath it. The window it can happen in is arrival — the landing
+   *  onto the newest message is still converging while the first screens
+   *  measure — which is exactly when a reader's first flick was pulled
+   *  back to where the landing wanted it. */
   get readerIsMoving(): boolean {
-    return this.lerpRunning || this.autoplay.isCreeping;
+    return this.contentIsMoving || this.autoplay.isCreeping;
   }
 
   /** Nothing left for the frame loop to paint: no creep armed, no input
@@ -1419,18 +1427,34 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.shiftMark.total += delta;
     this.landing.shiftLanding(delta);
     const lenis = this.lenis;
-    if (lenis && this.lerpRunning) {
+    if (!lenis) {
+      this.setScrollPosition(-Math.max(0, this.scrollPosition.value + delta), true, false);
+      return;
+    }
+    // The integrator moves WHOLE: its target, its animated position, a
+    // running lerp, and the finger's trail. A drag used to be the
+    // exception — it has no lerp, so the shift went straight to the target
+    // and left the trail where it was. The trail is where a flick's
+    // velocity comes from, so a wave of rows measuring mid-drag wrote
+    // hundreds of px into the finger's apparent motion: on arrival, where
+    // the rows of the first screens are still measuring, the release then
+    // flicked BACKWARD and the thread bounced back to the end. The one
+    // case the trail matters most was the one case it was not shifted.
+    lenis.shiftBy(delta);
+    if (this.lerpRunning) {
       // the glide moves with the content: its lerp keeps its remaining
       // distance and the compensation paints in this frame. The position
       // cell follows the shifted target — the clamp that runs after a
       // shift reads it, and a stale target above the new limit read as
       // out of range and adopted the limit, killing the glide.
-      lenis.shiftBy(delta);
       this.scrollPosition.value = Math.max(0, lenis.targetScroll);
       return;
     }
-    const next = Math.max(0, this.scrollPosition.value + delta);
-    if (lenis) lenis.targetScroll = next;
+    const next = Math.max(0, lenis.targetScroll);
+    // a shift that would push the content above the start takes both ends
+    // with it, or the next frame's velocity is the clamp's distance
+    if (next !== lenis.targetScroll) lenis.animatedScroll = next;
+    lenis.targetScroll = next;
     this.setScrollPosition(-next, true, false);
   }
 
@@ -1823,6 +1847,12 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       this.isAutoPlaying.value = true;
     }
     this.virtualScrolling = true;
+    // The reader's own input ends a landing, here and not at the next wave:
+    // a converge loop only asks whether the reader has taken over when the
+    // geometry shifts, so between two waves it kept re-pinning the target
+    // over a finger that had already moved the content. One notch, one
+    // move, and the landing is theirs to abandon.
+    this.landing.cancel();
     clearTimeout(this.virtualScrollTimeout);
     this.scrollDirection.value = delta < 0 ? 'up' : 'down';
     if (!this.frame) {

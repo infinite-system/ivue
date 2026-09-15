@@ -43,6 +43,8 @@ Impossible if true: A scroller at rest requesting a frame every tick.
 // domain-invariant: $VirtualScroller — If the walk runs mid-lerp, then the window covers the animated position in pixels over the measured sizes, whatever the rows between it and the target measure
 // domain-invariant: $VirtualScroller — If a write moves the position without writing the transform, then the render bias stays where the frame's transform write put it
 // domain-invariant: $VirtualScroller — If a touch begins inside an element that scrolls across the own axis with room to go, then the browser's pan is the default from the first move and only a clearly own-axis move is the scroller's; a block with nowhere to go changes nothing.
+// domain-invariant: $VirtualScroller — If rows above the reader shift the scroll while a FINGER drags, then the shift goes through the integrator the same way it does under a glide, so the target, the animated position and the finger's flick trail all move with the content.
+// domain-invariant: $VirtualScroller — If the reader's own input arrives while a seek is converging, then the loop ends on that input, not at the next wave — so a finger dragging during a landing keeps what it moved.
 // domain-invariant: $VirtualScroller — If rows above the reader shift the scroll while a glide runs, then the glide keeps its remaining distance, the position cell follows the shifted target, the clamp adopts nothing, and contentShift has grown by the shift
 // domain-invariant: $VirtualScroller — If a frame's position write, the clamp or the limit runs, then it reads the observed container size and never the element's offsetHeight, scrollTop or a rect — no layout is forced on a frame
 Impossible if true: A rendered scroll position beyond the extent.
@@ -55,6 +57,8 @@ Impossible if true: A container that grew leaving the last row above its bottom 
 Impossible if true: A row capture that moves the content before the wave's last row has been read.
 Impossible if true: A finger scrolling a code block sideways that scrolls the list by its drift.
 Impossible if true: A glide killed by a clamp that read a position the shift had already moved.
+Impossible if true: A drag whose flick reads the content's own shift as the finger's motion.
+Impossible if true: A flick on arrival pulled back to where the landing wanted it, because the landing only asked whose the position was when the geometry next changed.
 Impossible if true: A layout read on the per-frame position write.
 
 === GENERATOR-DESCRIBED ===
@@ -296,6 +300,22 @@ test('measuring rows above the anchored row moves the scroll by the same amount;
   instance.syncItemSize(90, assumed + 250);
   expect(shifted).toEqual([250]);
   (instance as unknown as { lenis: unknown }).lenis = null;
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If the reader's own input arrives while a seek is converging, then the loop ends on that input, not at the next wave — so a finger dragging during a landing keeps what it moved.
+// impossible-if-true: $VirtualScroller — A flick on arrival pulled back to where the landing wanted it, because the landing only asked whose the position was when the geometry next changed.
+// invariant: A seek names an item not a pixel (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test("a reader's own input ends a converging seek on the spot", async () => {
+  const { instance, unmount } = scroller(rows(1000));
+  instance.scrollElement.value = document.createElement('div');
+  instance.scrollToIndex(500, undefined, false);
+  await nextTick();
+  expect(instance.probeConverging()).toBe(true);
+  // one notch, one finger move: the landing is the reader's to abandon, and
+  // nothing has to shift for the loop to hear about it
+  instance.onVirtualScroll({ deltaX: 0, deltaY: 120 });
+  expect(instance.probeConverging()).toBe(false);
   unmount();
 });
 
@@ -1090,6 +1110,46 @@ test('a shift under a running glide moves the glide and the position cell togeth
   // a row below the anchor measuring moves nothing and shifts nothing
   instance.syncItemSize(150, 130);
   expect(lenis.shiftBy).toHaveBeenCalledTimes(2);
+  expect(instance.contentShift).toBe(200);
+  unmount();
+});
+
+// domain-invariant: $VirtualScroller — If rows above the reader shift the scroll while a FINGER drags, then the shift goes through the integrator the same way it does under a glide, so the target, the animated position and the finger's flick trail all move with the content.
+// impossible-if-true: $VirtualScroller — A drag whose flick reads the content's own shift as the finger's motion.
+// invariant: A row under the reader stays put while sizes settle (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a shift under a dragging finger goes through the integrator too — a drag is not the exception', () => {
+  const { instance, unmount } = scroller(rows(200), { assumedSize: 30 });
+  instance.setScrollPosition(-3000);
+  // a DRAG has no lerp: the content is under the finger, put there in the
+  // event itself, so isScrolling is false for the whole gesture
+  const lenis = {
+    time: 0,
+    isScrolling: false as const,
+    targetScroll: 3000,
+    animatedScroll: 3000,
+    scroll: 3000,
+    shiftBy: vi.fn(function (
+      this: { targetScroll: number; animatedScroll: number },
+      delta: number
+    ) {
+      this.targetScroll += delta;
+      this.animatedScroll += delta;
+    }),
+    adoptExternalScroll: vi.fn(),
+    stop() {},
+    start() {},
+    destroy() {},
+    raf() {}
+  };
+  (instance as unknown as { lenis: unknown }).lenis = lenis;
+  instance.syncItemSize(10, 130);
+  instance.syncItemSize(11, 130);
+  // the integrator moved whole — the trail rides inside shiftBy, which is
+  // exactly why the shift must not be written straight onto the target
+  expect(lenis.shiftBy).toHaveBeenCalledTimes(2);
+  expect(lenis.targetScroll).toBe(3200);
+  expect(lenis.animatedScroll).toBe(3200);
+  expect(Number(instance.scrollPosition.value)).toBe(3200);
   expect(instance.contentShift).toBe(200);
   unmount();
 });
