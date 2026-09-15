@@ -1442,3 +1442,37 @@ a guess. The first probe after a dev-server restart is always the worst
 retune a threshold to make it pass — a threshold set from a degraded rig
 encodes the degradation forever, which is the one failure mode a feel gate
 cannot survive.
+
+## The dev server does not see edits outside its own root
+
+The docs dev server (`docs_v2`, port 5174) serves the playground's
+sources through `/@fs/…`. On this VM the shared filesystem delivers no
+inotify events for those paths, so Vite's module graph keeps the
+transform it made at startup: an edit to `examples/playground/src/**`
+is on disk, passes `vitest` and `tsc`, and is still absent from the
+page. Every browser measurement taken after such an edit describes the
+code as it was when the server last started.
+
+Restart the server before any measurement that is supposed to show a
+change, and verify the change actually arrived — but verify with a CODE
+identifier, not a comment: esbuild strips comments, so grepping the
+served module for a phrase you wrote in a comment always reports
+missing, even when the file is current.
+
+```sh
+curl -s "http://localhost:5174/@fs/<abs path>/Lenis.ts" | grep -c snapRendered
+```
+
+Zero means the server is stale; restart it and check again. Clearing
+`docs_v2/.vitepress/cache` is not needed and does not help.
+
+## cwd drift silently retargets git at the main checkout
+
+Shell cwd resets to the repo root between some tool calls. A `git
+checkout HEAD -- <file>` written without its own `cd` then runs in the
+MAIN checkout rather than the worktree, and discards whatever was
+uncommitted there — irrecoverably, since unstaged changes have no
+reflog. Give every destructive git command its own absolute target:
+`git -C "$WORKTREE" checkout HEAD -- <file>`. The same applies to `rm`,
+`ls` and `grep`: a listing that shows files you know you created is the
+tell that you are reading the other checkout.
