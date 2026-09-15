@@ -11,7 +11,7 @@ import ExampleNativeChat from './ExampleNativeChat.vue';
 
 // docs chrome: the two feel choices that can only be judged by hand, live
 const feel = new ExampleFeelToggle.Class('.ac-thread .virtual-scroller');
-const { glide, snap } = feel;
+const { glide, snap, carry } = feel;
 </script>
 
 <template>
@@ -54,7 +54,18 @@ const { glide, snap } = feel;
       >
         {{ option }}
       </button>
-      <span class="eac-feel-now">{{ glide }} &middot; {{ snap }}</span>
+      <span class="eac-feel-label">carries</span>
+      <button
+        v-for="option in feel.carryOptions"
+        :key="option"
+        type="button"
+        class="eac-feel-btn"
+        :class="{ on: feel.isCarry(option) }"
+        @click="feel.pickCarry(option)"
+      >
+        {{ option }}
+      </button>
+      <span class="eac-feel-now">{{ glide }} &middot; {{ snap }} &middot; {{ carry }}</span>
     </div>
     <div class="eac-frame">
       <ChatShell />

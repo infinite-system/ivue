@@ -3,9 +3,10 @@ import { Reactive } from '../../../../../examples/playground/src/ivue';
 
 /**
  * Docs chrome, not a scroller feature: a strip of buttons that re-tunes the
- * live scroller's feel so the two choices that can only be judged by hand —
- * how a flick comes to rest, and how each step meets the device-pixel grid —
- * can be swapped on the device without an edit and a reload.
+ * live scroller's feel so the three choices that can only be judged by hand —
+ * how a flick comes to rest, how far it carries, and how each step meets the
+ * device-pixel grid — can be swapped on the device without an edit and a
+ * reload.
  *
  * It reaches the mounted instance through the DOM rather than a prop, which
  * is what keeps it chrome: the example under it is the shipped component,
@@ -29,6 +30,11 @@ class $ExampleFeelToggle {
     return ref<'auto' | 'grid' | 'fractional'>('fractional');
   }
 
+  /** How many 60 Hz frames of the finger's own speed a flick carries. */
+  get carry() {
+    return ref(35);
+  }
+
   /** What the strip offers, in the order it offers it. */
   get glideOptions(): Array<'friction' | 'exponential'> {
     return ['friction', 'exponential'];
@@ -38,13 +44,19 @@ class $ExampleFeelToggle {
     return ['auto', 'grid', 'fractional'];
   }
 
+  /** 16 is what the browser's own fling measures at — same launch speed, it
+   *  travels 310 px where 35 travels 491; 24 is the midpoint between them. */
+  get carryOptions(): number[] {
+    return [16, 24, 35];
+  }
+
   /** The scroller the strip drives — found once the example beneath has mounted. */
   protected get scroller() {
     const frame = document.querySelector(this.selector) as
-      | (Element & { __vueParentComponent?: { setupState?: Record<string, unknown> } })
-      | null;
+      (Element & { __vueParentComponent?: { setupState?: Record<string, unknown> } }) | null;
     return (frame?.__vueParentComponent?.setupState?.virtualScroller ?? null) as {
       lenis?: { tune?: (options: Record<string, unknown>) => void };
+      props?: { scroll?: { touch?: { launch?: number } } };
     } | null;
   }
 
@@ -55,11 +67,19 @@ class $ExampleFeelToggle {
   }
 
   protected readShipped() {
-    const model = this.scroller as { props?: { scroll?: { snap?: string; touch?: { glide?: string } } } } | null;
+    const model = this.scroller as {
+      props?: { scroll?: { snap?: string; touch?: { glide?: string; carry?: number } } };
+    } | null;
     const shipped = model?.props?.scroll;
     if (shipped?.snap) this.snap.value = shipped.snap as 'auto' | 'grid' | 'fractional';
-    if (shipped?.touch?.glide)
-      this.glide.value = shipped.touch.glide as 'friction' | 'exponential';
+    if (shipped?.touch?.glide) this.glide.value = shipped.touch.glide as 'friction' | 'exponential';
+    if (typeof shipped?.touch?.carry === 'number') this.carry.value = shipped.touch.carry;
+  }
+
+  /** The launch ratio the scroller shipped with — the flick leaves the finger
+   *  at this much of its speed, and carry alone decides how long it keeps it. */
+  protected shippedLaunch(): number {
+    return this.scroller?.props?.scroll?.touch?.launch ?? 1;
   }
 
   pickGlide(value: 'friction' | 'exponential') {
@@ -72,6 +92,21 @@ class $ExampleFeelToggle {
     this.scroller?.lenis?.tune?.({ renderSnap: value });
   }
 
+  /**
+   * Carry is stated in 60 Hz frames of the finger's own speed, and the lerp
+   * is derived from it — `launch / carry` — so a flick always leaves the
+   * finger at the same speed and only the distance changes. Tuning the
+   * multiplier without the lerp would change the launch too, and the strip
+   * would be moving two things behind one label.
+   */
+  pickCarry(value: number) {
+    this.carry.value = value;
+    this.scroller?.lenis?.tune?.({
+      touchInertiaMultiplier: value,
+      syncTouchLerp: this.shippedLaunch() / value
+    });
+  }
+
   /** Whether a button is the live one — the template asks by name, never with a comparison. */
   isGlide(value: string) {
     return this.glide.value === value;
@@ -79,6 +114,10 @@ class $ExampleFeelToggle {
 
   isSnap(value: string) {
     return this.snap.value === value;
+  }
+
+  isCarry(value: number) {
+    return this.carry.value === value;
   }
 }
 
