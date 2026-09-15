@@ -135,9 +135,9 @@ const { glide, carry } = feel;
   white-space: nowrap;
 }
 .eac-note {
-  margin: 8px 0 0;
-  font-size: 0.82rem;
-  line-height: 1.5;
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
   color: var(--vp-c-text-2);
 }
 .eac-frame {
