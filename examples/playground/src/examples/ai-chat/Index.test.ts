@@ -186,14 +186,18 @@ describe('Index', () => {
     expect(index.positionLabel).toBe(`#${index.rows.value[4].index + 1} of 7`);
     const mouse = { pointerType: 'mouse' } as PointerEvent;
     const finger = { pointerType: 'touch' } as PointerEvent;
-    index.onRowEnter(index.rows.value[0], mouse);
+    index.onRowEnter(index.rows.value[0]);
     expect(index.positionLabel).toBe(`#${index.rows.value[0].index + 1} of 7`);
     index.onListLeave(mouse);
     expect(index.positionLabel).toBe(`#${index.rows.value[4].index + 1} of 7`);
-    // a finger does not hover: its enter and its leave as it lifts change nothing
-    index.onRowEnter(index.rows.value[0], finger);
+    // a finger landing on a row shows it at once, and lifting keeps it shown
+    index.onRowEnter(index.rows.value[2]);
+    expect(index.positionLabel).toBe(`#${index.rows.value[2].index + 1} of 7`);
     index.onListLeave(finger);
-    expect(index.positionLabel).toBe(`#${index.rows.value[4].index + 1} of 7`);
+    expect(index.positionLabel).toBe(`#${index.rows.value[2].index + 1} of 7`);
+    index.onRowPointerDown(index.rows.value[3]);
+    expect(index.positionLabel).toBe(`#${index.rows.value[3].index + 1} of 7`);
+    index.onListLeave(mouse);
     // with no pick the line still reads a row, never goes blank
     index.clearSelection();
     expect(index.positionLabel).not.toBe('');

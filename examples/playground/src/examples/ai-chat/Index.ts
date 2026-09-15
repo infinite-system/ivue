@@ -409,14 +409,20 @@ class $Index {
     this.setOrder((event.target as HTMLSelectElement).value as Index.Order);
   }
 
-  /** A mouse over a row shows its position. A finger does not hover: a tap
-   *  fires enter and then leave as it lifts, which cleared the line it had
-   *  just set. On touch the tap's own pick is what the line reads. */
-  onRowEnter(row: Index.Row, event: PointerEvent) {
-    if (event.pointerType !== 'mouse') return;
+  /** The row under the pointer shows its position at once — a mouse over it,
+   *  or a finger landing on it, no click needed. */
+  onRowEnter(row: Index.Row) {
     this.hovered.value = row;
   }
 
+  /** A finger pressing a row shows it too — on touch the press is what lands
+   *  first, so the line changes before any tap completes. */
+  onRowPointerDown(row: Index.Row) {
+    this.onRowEnter(row);
+  }
+
+  /** A mouse leaving the list hands the line back to the last pick. A finger
+   *  leaves as it lifts, and that must not clear the row it just showed. */
   onListLeave(event: PointerEvent) {
     if (event.pointerType !== 'mouse') return;
     this.hovered.value = null;
