@@ -27,7 +27,7 @@
     },
     {
       "index": 3,
-      "bytes": 1241766,
+      "bytes": 1241741,
       "messages": 200,
       "firstId": "batch-a32e8c1a-4314-41fa-9b2f-10c548cb7b05"
     },
@@ -320,7 +320,7 @@
       "firstId": "f0d1e0fb-e625-4fc6-bd0f-fe1f9410c0c8"
     }
   ],
-  "totalBytes": 45248472,
+  "totalBytes": 45248447,
   "indexBytes": 1601946,
   "firstAt": 1782850937437,
   "lastAt": 1788974111546,
@@ -381,6 +381,6 @@
     "bare-gmail": 10,
     "pem-block": 6,
     "pem-marker": 9,
-    "api-key": 4
+    "api-key": 5
   }
 }

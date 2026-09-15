@@ -26,6 +26,8 @@ describe('Scrub', () => {
           'const ADMIN_SECRET = process.env.ADMIN_SECRET',
           'key sk-ant-abcdefghijklmnopqrstuvwxyz0123',
           'ghp_abcdefghijklmnopqrstuvwxyz0123456789',
+          // a Google key as it arrives in a console log: inside a URL's query
+          'https://maps.googleapis.com/maps/api/js?key=AIzaSyA0bcdefghijklmnopqrstuvwxyz012345&libraries=places',
           '-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n-----END OPENSSH PRIVATE KEY-----',
           'grep -----BEGIN',
           'ends with @gmail.com'
@@ -44,9 +46,12 @@ describe('Scrub', () => {
     expect(scrubbed.nested.list[3]).toBe('const ADMIN_SECRET = process.env.ADMIN_SECRET');
     expect(scrubbed.nested.list[4]).toBe('key [redacted-key]');
     expect(scrubbed.nested.list[5]).toBe('[redacted-key]');
-    expect(scrubbed.nested.list[6]).toBe('[redacted PEM block]');
-    expect(scrubbed.nested.list[7]).toBe('grep -----REDACTED');
-    expect(scrubbed.nested.list[8]).toBe('ends with @example.com');
+    expect(scrubbed.nested.list[6]).toBe(
+      'https://maps.googleapis.com/maps/api/js?key=[redacted-key]&libraries=places'
+    );
+    expect(scrubbed.nested.list[7]).toBe('[redacted PEM block]');
+    expect(scrubbed.nested.list[8]).toBe('grep -----REDACTED');
+    expect(scrubbed.nested.list[9]).toBe('ends with @example.com');
     expect(scrubbed.nested.number).toBe(7);
     expect(Scrub.Class.survivors(json)).toEqual([]);
     expect(counts).toMatchObject({
@@ -56,12 +61,16 @@ describe('Scrub', () => {
       'session-url': 1,
       'authorization-header': 1,
       'secret-assignment': 1,
-      'api-key': 2,
+      'api-key': 3,
       'pem-block': 1,
       'pem-marker': 1,
       'bare-gmail': 1
     });
     expect(Scrub.Class.survivors('call me at me@gmail.com')).toEqual(['@gmail\\.com']);
+    // the gate knows a Google key too, so the build refuses a page that still holds one
+    expect(Scrub.Class.survivors('js?key=AIzaSyA0bcdefghijklmnopqrstuvwxyz012345')).toEqual([
+      '\\bAIza[0-9A-Za-z_-]{35}'
+    ]);
     expect(Scrub.Class.text('plain text')).toBe('plain text');
     expect(Scrub.Class.value(null)).toBeNull();
   });

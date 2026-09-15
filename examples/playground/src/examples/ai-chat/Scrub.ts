@@ -26,7 +26,7 @@ class $Scrub {
     {
       name: 'api-key',
       pattern:
-        /\b(?:sk-(?:ant-)?[A-Za-z0-9_-]{20,}|(?:sk|pk|rk)_(?:live|test)_[A-Za-z0-9]{16,}|gh[pousr]_[A-Za-z0-9]{30,}|xox[abp]-[A-Za-z0-9-]{20,}|AKIA[0-9A-Z]{16})\b/g,
+        /\b(?:sk-(?:ant-)?[A-Za-z0-9_-]{20,}|(?:sk|pk|rk)_(?:live|test)_[A-Za-z0-9]{16,}|gh[pousr]_[A-Za-z0-9]{30,}|xox[abp]-[A-Za-z0-9-]{20,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35})\b/g,
       replacement: '[redacted-key]'
     },
     {
@@ -61,7 +61,8 @@ class $Scrub {
     /\/home\/[a-z]/,
     /\bsk-[A-Za-z0-9]{16,}/,
     /Bearer\s+[A-Za-z0-9._-]{16,}/,
-    /-----BEGIN/
+    /-----BEGIN/,
+    /\bAIza[0-9A-Za-z_-]{35}/
   ];
 
   /** every rule over one string, counting what each rule replaced */
