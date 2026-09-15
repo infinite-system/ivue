@@ -21,9 +21,14 @@ jobs:
           package-manager-cache: false
 
       # The root deliberately carries no lockfile (docs_v2 and the playground
-      # own their npm lockfiles), so plain install — not ci.
-      - name: npm install
-        run: npm install
+      # own their npm lockfiles), so plain install — not ci. docs_v2 installs
+      # too: the AI chat example colours code with shiki, and vitest.config.ts
+      # resolves `shiki` to docs_v2/node_modules/shiki — without it every
+      # suite that loads the chat fails to import.
+      - name: npm install (root, docs)
+        run: |
+          npm install
+          npm --prefix docs_v2 ci
 
       - name: vitest ivue
         run: npm run coverage
