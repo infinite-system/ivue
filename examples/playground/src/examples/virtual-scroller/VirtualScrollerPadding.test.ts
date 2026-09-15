@@ -34,15 +34,18 @@ afterEach(() => {
 
 // domain-invariant: $VirtualScrollerPadding — If the content moves at a speed, then the rows ahead cover the distance it travels in the lookahead, rounded up and capped, and a crawl counts as still.
 test('rows ahead cover the distance the content travels in the lookahead, rounded up and capped, and a crawl is still', () => {
-  // 40 px/frame at 16.7 ms/frame over 250 ms ≈ 599 px; 40 px rows → 15 rows.
-  expect(Logic.rowsAhead(40, 40)).toBe(15);
-  expect(Logic.rowsAhead(-40, 40)).toBe(15);
-  expect(Logic.rowsAhead(0.2, 40)).toBe(0);
+  // Speeds are px per MILLISECOND, so the same reading means the same pad on
+  // a 60 Hz display and a 120 Hz one. 40 px per 16.7 ms frame is 2.395 px/ms,
+  // which over the 250 ms lookahead is ≈ 599 px; 40 px rows → 15 rows.
+  const perFrame = (px: number) => px / 16.7;
+  expect(Logic.rowsAhead(perFrame(40), 40)).toBe(15);
+  expect(Logic.rowsAhead(perFrame(-40), 40)).toBe(15);
+  expect(Logic.rowsAhead(perFrame(0.2), 40)).toBe(0);
   expect(Logic.rowsAhead(10_000, 40)).toBe(Logic.MAX_ROWS_AHEAD);
-  expect(Logic.rowsAhead(40, 0)).toBe(0);
-  expect(Logic.directionOf(3)).toBe(1);
-  expect(Logic.directionOf(-3)).toBe(-1);
-  expect(Logic.directionOf(0.1)).toBe(0);
+  expect(Logic.rowsAhead(perFrame(40), 0)).toBe(0);
+  expect(Logic.directionOf(perFrame(3))).toBe(1);
+  expect(Logic.directionOf(perFrame(-3))).toBe(-1);
+  expect(Logic.directionOf(perFrame(0.1))).toBe(0);
 });
 
 // invariant: The pad covers the lerp gap exactly (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -111,7 +114,7 @@ test('settle grows at once, holds through the decay, shrinks at rest after the s
 test('pad() holds the gap rows and the lookahead across a decaying tail and releases both at rest, reading the owner each call', () => {
   const owner = {
     halfPaddingQuantity: 3,
-    scrollVelocity: 40,
+    scrollVelocity: 40 / 16.7, // px per ms: the 40 px/frame this was tuned at
     scrollGap: 800,
     estimatedItemSize: 40
   };
@@ -119,7 +122,7 @@ test('pad() holds the gap rows and the lookahead across a decaying tail and rele
   // Flick: 20 rows of gap behind the target-anchored window, 15 of lookahead beyond it.
   expect(padding.pad(0)).toEqual({ before: 23, after: 18 });
   // The lerp converges: neither the gap rows nor the lookahead shrink mid-glide.
-  owner.scrollVelocity = 8;
+  owner.scrollVelocity = 8 / 16.7;
   owner.scrollGap = 80;
   expect(padding.pad(100)).toEqual({ before: 23, after: 18 });
   // Still moving past the window: both held, nothing unmounts in the tail.
@@ -129,7 +132,7 @@ test('pad() holds the gap rows and the lookahead across a decaying tail and rele
   owner.scrollVelocity = 0;
   expect(padding.pad(200 + Logic.SETTLE_MS)).toEqual({ before: 3, after: 3 });
   // A flick back, from rest: everything mirrors.
-  owner.scrollVelocity = -40;
+  owner.scrollVelocity = -40 / 16.7;
   owner.scrollGap = -800;
   expect(padding.pad(1000)).toEqual({ before: 18, after: 23 });
   expect(padding.rowsAhead).toBe(15);
@@ -144,7 +147,12 @@ test('pad() holds the gap rows and the lookahead across a decaying tail and rele
 
 // invariant: A pad never outlives its flick (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 test('a walk that pads beyond the base arms one more walk after the settle window; a base walk arms nothing; dispose cancels', () => {
-  const owner = { halfPaddingQuantity: 3, scrollVelocity: 40, scrollGap: 0, estimatedItemSize: 40 };
+  const owner = {
+    halfPaddingQuantity: 3,
+    scrollVelocity: 40 / 16.7,
+    scrollGap: 0,
+    estimatedItemSize: 40
+  };
   const padding = new Logic(owner);
   expect(padding.settledVersion.value).toBe(0);
   padding.pad(0);
@@ -160,7 +168,7 @@ test('a walk that pads beyond the base arms one more walk after the settle windo
   expect(padding.settledVersion.value).toBe(1);
 
   // A flick, then dispose before the window: the bump never comes.
-  owner.scrollVelocity = 40;
+  owner.scrollVelocity = 40 / 16.7;
   padding.pad(20_000);
   padding.dispose();
   vi.advanceTimersByTime(Logic.SETTLE_MS + 100);

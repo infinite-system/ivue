@@ -677,11 +677,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return Math.ceil(this.paddingQuantity.value / 2);
   }
 
-  /** The content's velocity in px per animation frame, signed: positive
-   *  forward. Read, never tracked — Lenis is not reactive. */
+  /** The content's speed in px per MILLISECOND, signed: positive forward —
+   *  per ms rather than per animation frame, so the pad it sizes is the same
+   *  real distance at 60 Hz and at 120. Read, never tracked: Lenis is not
+   *  reactive. */
   // invariant: Lenis is read inside the walk never tracked (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   get scrollVelocity() {
-    return this.lenis?.velocity ?? 0;
+    return this.lenis?.velocityPerMs ?? 0;
   }
 
   /** The px the content has shifted under the reader so far, summed — the position less this

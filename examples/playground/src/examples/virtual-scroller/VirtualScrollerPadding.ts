@@ -65,19 +65,19 @@ class $VirtualScrollerPadding {
     return 300;
   }
 
-  /** Below this speed (px per frame) the content counts as still. */
-  static get STILL_PX_PER_FRAME() {
-    return 0.5;
+  /** Below this speed the content counts as still, in px per MILLISECOND —
+   *  the 0.5 px per frame this was tuned at, over a 60 Hz frame. Stated per
+   *  ms because a per-frame threshold means a different real speed on every
+   *  refresh rate, and Android runs at 90 and 120 where iOS mostly runs 60. */
+  static get STILL_PX_PER_MS() {
+    return 0.5 / 16.7;
   }
 
   /** Below this lerp gap (px) the content counts as landed — the lerp's own settle band. */
   static get STILL_GAP_PX() {
     return 0.5;
   }
-  /** Lenis reports velocity per animation frame; this converts it to per ms. */
-  static get FRAME_MS() {
-    return 16.7;
-  }
+
 
   /* Pure decisions — the spec covers these */
 
@@ -85,11 +85,11 @@ class $VirtualScrollerPadding {
    * Rows the content travels in LOOKAHEAD_MS at `pxPerFrame`, rounded up
    * and capped: the pad that keeps the leading edge covered.
    */
-  static rowsAhead(pxPerFrame: number, rowSize: number): number {
+  static rowsAhead(pxPerMs: number, rowSize: number): number {
     if (rowSize <= 0) return 0;
-    const speed = Math.abs(pxPerFrame);
-    if (speed < this.STILL_PX_PER_FRAME) return 0;
-    const distance = (speed / this.FRAME_MS) * this.LOOKAHEAD_MS;
+    const speed = Math.abs(pxPerMs);
+    if (speed < this.STILL_PX_PER_MS) return 0;
+    const distance = speed * this.LOOKAHEAD_MS;
     return Math.min(this.MAX_ROWS_AHEAD, Math.ceil(distance / rowSize));
   }
 
@@ -105,9 +105,9 @@ class $VirtualScrollerPadding {
   }
 
   /** Which way the content moves: 1 forward (down / right), -1 back, 0 still. */
-  static directionOf(pxPerFrame: number): -1 | 0 | 1 {
-    if (Math.abs(pxPerFrame) < this.STILL_PX_PER_FRAME) return 0;
-    return pxPerFrame > 0 ? 1 : -1;
+  static directionOf(pxPerMs: number): -1 | 0 | 1 {
+    if (Math.abs(pxPerMs) < this.STILL_PX_PER_MS) return 0;
+    return pxPerMs > 0 ? 1 : -1;
   }
 
   /**
@@ -315,7 +315,9 @@ export namespace VirtualScrollerPadding {
   export interface Owner {
     /** The base pad on each end — the paddingQuantity prop, halved. */
     readonly halfPaddingQuantity: number;
-    /** The content's velocity in px per animation frame, signed: positive forward. */
+    /** The content's speed in px per MILLISECOND, signed: positive forward.
+     *  Per ms rather than per frame so a 120 Hz display sizes the same pad a
+     *  60 Hz one does for the same motion. */
     readonly scrollVelocity: number;
     /** The lerp gap: target minus animated position, in px, signed the same way. */
     readonly scrollGap: number;

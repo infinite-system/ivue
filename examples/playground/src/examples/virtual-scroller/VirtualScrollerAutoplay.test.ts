@@ -40,6 +40,7 @@ function autoplay(overrides: Record<string, unknown> = {}) {
     animatedScroll: 0,
     actualScroll: 0,
     velocity: 0,
+    velocityPerMs: 0,
     isScrolling: false as false | 'smooth',
     adoptExternalScroll: vi.fn()
   };
@@ -139,12 +140,12 @@ test('a forward glide decaying to cruise is adopted where it is, and a faster on
   owner.lerpRunning = true;
 
   // still well above cruise: the creep waits rather than snatching the glide
-  lenis.velocity = 10;
+  lenis.velocityPerMs = 10;
   model.play();
   expect(lenis.adoptExternalScroll).not.toHaveBeenCalled();
 
   // decayed to cruise (1 px per 150 ms is ~0.11 px per frame): adopted here
-  lenis.velocity = Logic.FRAME_MS / Logic.CREEP_MS_PER_PX / 2;
+  lenis.velocityPerMs = 1 / Logic.CREEP_MS_PER_PX / 2;
   model.play();
   expect(lenis.adoptExternalScroll).toHaveBeenCalledWith(4242);
   expect(owner.parkLoopFrame).toHaveBeenCalled();
@@ -155,7 +156,7 @@ test('a forward glide decaying to cruise is adopted where it is, and a faster on
 test('a backward glide is never adopted: that is the reader taking over', () => {
   const { model, owner, lenis } = autoplay();
   lenis.isScrolling = 'smooth';
-  lenis.velocity = Logic.FRAME_MS / Logic.CREEP_MS_PER_PX / 2;
+  lenis.velocityPerMs = 1 / Logic.CREEP_MS_PER_PX / 2;
   owner.lerpRunning = true;
   owner.scrollDirection.value = 'up';
   model.play();

@@ -190,7 +190,7 @@ class $VirtualScrollerAutoplay {
     if (lenis.isScrolling !== 'smooth') return false;
     if (this.owner.scrollDirection.value !== 'down') return false;
     // lenis.velocity is px per rAF frame; at ~60fps that is px per 16.7ms.
-    const pxPerMs = lenis.velocity / this.self.FRAME_MS;
+    const pxPerMs = lenis.velocityPerMs;
     if (pxPerMs <= 0 || pxPerMs > 1 / this.msPerPx) return false;
     // Adopt the CURRENT animated position (not the farther wheel target): the
     // lerp dies where it is and the creep continues from that exact pixel at
@@ -286,6 +286,8 @@ export namespace VirtualScrollerAutoplay {
     readonly actualScroll: number;
     /** px per animation frame, signed: positive forward */
     readonly velocity: number;
+    /** px per millisecond, signed — the refresh-rate independent speed */
+    readonly velocityPerMs: number;
     /** false at rest; 'smooth' while a lerp travels */
     readonly isScrolling: Lenis.Scrolling;
     /** take this position as the current one, killing any lerp in flight */

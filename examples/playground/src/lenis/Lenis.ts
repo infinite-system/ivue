@@ -80,6 +80,11 @@ class $Lenis {
     return ((last.position - first.position) / span) * this.FRAME_MS;
   }
 
+  /** Past this a gap between frames is a suspension, not a frame time. */
+  static get MAX_FRAME_MS() {
+    return 100;
+  }
+
   /** Within this many px of an end the content counts as at it. */
   static get LIMIT_TOLERANCE_PX() {
     return 0.5;
@@ -376,6 +381,9 @@ class $Lenis {
    * The current velocity of the scroll
    */
   velocity = 0;
+
+  /** The wall time the last animation frame actually took, in ms. */
+  frameMs = this.self.FRAME_MS;
   /**
    * The direction of the scroll
    */
@@ -464,6 +472,19 @@ class $Lenis {
    */
   get isHorizontal() {
     return this.options.orientation === 'horizontal';
+  }
+
+  /**
+   * The content's speed in px per MILLISECOND — the refresh-rate independent
+   * one, and the only one worth doing arithmetic with. `velocity` is the
+   * per-animation-frame delta, so a 120 Hz display reports half of what a
+   * 60 Hz display does for the very same motion; anything that converts it
+   * with an assumed 16.7 ms frame is wrong by the ratio of the refresh
+   * rates, which is how a lookahead sized in milliseconds ends up half as
+   * long on the phones most likely to be running at 120.
+   */
+  get velocityPerMs() {
+    return this.frameMs > 0 ? this.velocity / this.frameMs : 0;
   }
 
   /**
@@ -1188,6 +1209,10 @@ class $Lenis {
   raf(time: number) {
     const deltaTime = time - (this.time || time);
     this.time = time;
+    // The REAL frame time, kept so speed can be expressed per millisecond.
+    // A suspended tab or a first frame is not a frame time; the tuned 60 Hz
+    // value stands in for those.
+    if (deltaTime > 0 && deltaTime < this.self.MAX_FRAME_MS) this.frameMs = deltaTime;
 
     this.animate.advance(deltaTime * 0.001);
 

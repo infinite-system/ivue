@@ -7,6 +7,7 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 [A cross-axis wheel belongs to what is under it](lenis.invariants.md#a-cross-axis-wheel-belongs-to-what-is-under-it)
 [A touch on a glide keeps it running until the first move](lenis.invariants.md#a-touch-on-a-glide-keeps-it-running-until-the-first-move)
 [A flick under friction stops where its throw runs out](lenis.invariants.md#a-flick-under-friction-stops-where-its-throw-runs-out)
+// domain-invariant: $Lenis — If the display runs at any refresh rate, then `velocityPerMs` reports the same speed for the same motion, because it divides the frame's scroll delta by the frame's REAL duration rather than an assumed 16.7 ms.
 // domain-invariant: $Lenis — If a flick glides under friction, then it decelerates at a constant rate and ARRIVES over `2 / lerp` frames, where the exponential model approaches its target and settles within half a pixel.
 // domain-invariant: $Lenis — If a flick runs the same way as the glide the finger interrupted, then the glide's velocity at the take-over is added to the flick's; a flick the other way, or no glide, adds nothing.
 // domain-invariant: $Lenis — If the finger's trail holds two or more samples spanning a readable time, then the flick's velocity is the position change over that span scaled to a frame; otherwise it is the frame's own velocity.
@@ -120,6 +121,37 @@ test('an idle frame before the touchend does not zero the flick: the trail still
 });
 
 // invariant: A flick under friction stops where its throw runs out (examples/playground/src/lenis/lenis.invariants.md)
+// domain-invariant: $Lenis — If the display runs at any refresh rate, then `velocityPerMs` reports the same speed for the same motion, because it divides the frame's scroll delta by the frame's REAL duration rather than an assumed 16.7 ms.
+test('the same motion reports the same speed at 60 Hz and at 120', () => {
+  const lenis = Object.create(Lenis.Class.prototype) as {
+    velocity: number; frameMs: number; time: number; animate: { advance: (dt: number) => void };
+    options: Record<string, unknown>; self: typeof Lenis.Class; velocityPerMs: number;
+    raf: (time: number) => void;
+  };
+  lenis.animate = { advance: () => undefined };
+  lenis.options = {};
+  lenis.frameMs = Lenis.Class.FRAME_MS;
+
+  // the same motion twice: 10 px in a 16.6 ms frame, 5 px in the 8.3 ms
+  // frame a 120 Hz display gives it
+  // a non-zero clock: the first raf of all has no previous frame to measure
+  lenis.time = 100;
+  lenis.raf(116.6);
+  lenis.velocity = 10;
+  const at60 = lenis.velocityPerMs;
+  lenis.raf(124.9);
+  lenis.velocity = 5;
+  const at120 = lenis.velocityPerMs;
+  // the claim is that the two AGREE — the same motion, the same number,
+  // whatever the display does
+  expect(at120).toBeCloseTo(at60, 6);
+  expect(at60).toBeCloseTo(0.6, 2);
+
+  // a suspended tab is not a frame time: the tuned value stands in
+  lenis.raf(5124.9);
+  expect(lenis.frameMs).toBeCloseTo(8.3, 3);
+});
+
 // domain-invariant: $Lenis — If a flick glides under friction, then it decelerates at a constant rate and ARRIVES over `2 / lerp` frames, where the exponential model approaches its target and settles within half a pixel.
 test('friction decelerates to a stop over the frames its throw implies; the curve is constant deceleration', () => {
   const Lenis_ = Lenis.Class;
