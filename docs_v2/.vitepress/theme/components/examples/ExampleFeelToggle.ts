@@ -19,7 +19,8 @@ class $ExampleFeelToggle {
     onMounted(() => this.onMount());
   }
 
-  /** How a flick comes to rest. */
+  /** How a flick comes to rest. Judged on the devices: 'exponential' reads
+   *  as the iPhone's own fling, 'friction' as Android's. */
   get glide() {
     return ref<'friction' | 'exponential'>('friction');
   }
@@ -35,9 +36,9 @@ class $ExampleFeelToggle {
   }
 
   /** 16 is what the browser's own fling measures at — same launch speed, it
-   *  travels 310 px where 35 travels 491; 24 is the midpoint between them. */
+   *  travels 310 px where 35 travels 491; 24 and 30 are the steps between. */
   get carryOptions(): number[] {
-    return [16, 24, 35];
+    return [16, 24, 30, 35];
   }
 
   /** The scroller the strip drives — found once the example beneath has mounted. */
