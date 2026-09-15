@@ -1476,3 +1476,30 @@ reflog. Give every destructive git command its own absolute target:
 `git -C "$WORKTREE" checkout HEAD -- <file>`. The same applies to `rm`,
 `ls` and `grep`: a listing that shows files you know you created is the
 tell that you are reading the other checkout.
+
+## During a glide there is no next frame to defer to
+
+The measure→shift→re-walk cascade a mounting row triggers runs inside the
+frame that is also painting the glide, and moving it to the next frame
+looked like the obvious win. It is not. The scroller's own frame loop is
+a `requestAnimationFrame`, so "the next frame" is another scroll frame,
+and rAF callbacks all run in the same phase — the cascade lands beside
+the loop instead of after it.
+
+Measured three runs a side, one flick, 6x CPU throttle, layout and style
+FORCED inside rAF callbacks:
+
+| | forced layout | forced style | late frames |
+| --- | --- | --- | --- |
+| microtask (today) | 38.4 ms | 56.6 ms | 6–8 |
+| next frame (rAF) | 51.6 ms | 61.5 ms | 6–8 |
+
+Dropped frames are indistinguishable; forced layout is consistently
+worse deferred. The rig's own spread is wide (a baseline run hit 51 ms),
+so take medians of three, never one run a side.
+
+What the result actually says: while the content is moving there is no
+idle frame anywhere, so per-frame work cannot be rescheduled — only made
+smaller, or moved off the main thread. Deferring also breaks every spec
+that flushes with `nextTick()`, which is a fair warning that the
+same-frame application is load-bearing for correctness, not just habit.
