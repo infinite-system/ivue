@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, type ShallowUnwrapRef } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import type { Kit } from '../../kit/Kit';
@@ -28,7 +28,7 @@ class $ChatShell {
    *  dev-only DOM internal (`__vueParentComponent`) used to be read
    *  instead, and on the built site it is simply not there. */
   get view() {
-    return ref<Chat.Instance | null>(null);
+    return ref<Chat.Exposed | null>(null);
   }
 
   protected get $settings(): ChatSettings.Model {
@@ -57,6 +57,8 @@ export namespace ChatShell {
   export const $Class = Static($ChatShell);
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
+  /** What a parent holds through a template ref: the exposed proxy unwraps refs one level. */
+  export type Exposed = ShallowUnwrapRef<Instance>;
 
   export interface Props {
     dark?: boolean;

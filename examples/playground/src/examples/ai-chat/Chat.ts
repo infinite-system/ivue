@@ -1,4 +1,12 @@
-import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import {
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef,
+  watch,
+  type ShallowUnwrapRef
+} from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import { VirtualScroller } from '../virtual-scroller/VirtualScroller';
@@ -1073,6 +1081,8 @@ export namespace Chat {
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
   export type Model = InstanceType<typeof Class>;
+  /** What a parent holds through a template ref: the exposed proxy unwraps refs one level. */
+  export type Exposed = ShallowUnwrapRef<Instance>;
   export type Role = 'Stats' | 'Scroller' | 'Message' | 'Composer' | 'Index' | 'Sidebar' | 'Peek';
 
   /** what the chat's own leaves receive: their entry and the chat model */

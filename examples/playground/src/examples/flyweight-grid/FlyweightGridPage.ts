@@ -65,7 +65,7 @@ class $FlyweightGridPage {
 
   // --- state ---
   get sheet() {
-    return shallowRef<FlyweightSheet.Instance | null>(null);
+    return shallowRef<FlyweightSheet.Model | null>(null);
   }
   get creationMs() {
     return ref(0);

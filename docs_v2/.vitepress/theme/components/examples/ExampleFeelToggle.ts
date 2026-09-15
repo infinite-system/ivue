@@ -34,7 +34,7 @@ class $ExampleFeelToggle {
 
   /** The shell beneath the strip — a template ref the SFC binds. */
   get shell() {
-    return ref<ChatShell.Instance | null>(null);
+    return ref<ChatShell.Exposed | null>(null);
   }
 
   /** How a flick comes to rest. Judged on the devices: 'exponential' reads
@@ -67,10 +67,7 @@ class $ExampleFeelToggle {
   /** The scroller the strip drives: shell → mounted view → its scroller,
    *  null until the chain has mounted. */
   protected get scroller() {
-    return (this.shell.value?.view?.scroller ?? null) as {
-      lenis?: { tune?: (options: Record<string, unknown>) => void };
-      props?: { scroll?: { touch?: { launch?: number; glide?: string; carry?: number } } };
-    } | null;
+    return this.shell.value?.view?.scroller ?? null;
   }
 
   /** The chain has just resolved (or been torn down): read the shipped feel once it is there. */
