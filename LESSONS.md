@@ -1503,3 +1503,43 @@ idle frame anywhere, so per-frame work cannot be rescheduled — only made
 smaller, or moved off the main thread. Deferring also breaks every spec
 that flushes with `nextTick()`, which is a fair warning that the
 same-frame application is load-bearing for correctness, not just habit.
+
+## The row measure is already free; mounting an UNMEASURED row is the cost
+
+Chasing the forced layout in the mount path turns out to chase nothing.
+Switching the row's `onMounted` rect read off entirely (6x CPU throttle,
+one flick, three runs a side):
+
+| | forced layout in rAF | total layout | total task | late frames |
+| --- | --- | --- | --- | --- |
+| mount read on (today) | 38 ms | ~92 ms | ~1130 ms | 6–7 |
+| mount read off | 0 ms | ~97 ms | ~1113 ms | 5–9 |
+
+The forced layout vanishes and rAF time halves (236 ms -> 110 ms), while
+total layout, total task time and dropped frames do not move. The read
+was never extra work: the DOM changed, so the browser must lay out, and
+reading inside the callback only pulls the same layout earlier. A
+cheaper measurement is not a lever, and neither is CSS containment on
+the frame or on the row (both measured: no effect), nor a bigger render
+pad (`halfPaddingQuantity` 3 -> 10 -> 20 changed nothing, and 20 was
+slightly worse).
+
+What IS the lever, from the same runs — the same gesture over rows whose
+sizes are already known versus rows being measured for the first time:
+
+| gesture | late frames |
+| --- | --- |
+| into rows never measured | 5–9 |
+| back over rows already measured | 1–3 |
+| the native control | 2 |
+
+Re-crossing measured rows is already at native parity. The whole cost is
+the cascade a FIRST measurement triggers — geometry bump, anchor
+restore, re-walk, second patch — not the measuring, and not the mount.
+So the direction is to make rows already-measured before a gesture
+reaches them (an idle pre-measure pass between gestures, where the time
+is free), not to make measuring cheaper.
+
+Useful ratio while sizing that work: 62-89% of mount-time measurements
+during a flick are of rows the window already measured — the window
+churns the same rows in and out.
