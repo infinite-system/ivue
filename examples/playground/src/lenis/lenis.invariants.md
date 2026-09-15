@@ -97,11 +97,11 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 ### The device-pixel grid is met at the write and nowhere else
 
-**Invariant:** If a position is put on the device-pixel grid, then it is put there once, by `snapRendered`, at the moment the transform is written — never on a target, and never by a second writer of the same layer. A resting position always lands on the grid; in motion the `renderSnap` knob alone decides.
+**Invariant:** If a position is put on the device-pixel grid, then it is put there once, by `snapRendered`, at the moment the transform is written — never on a target, and never by a second writer of the same layer. The `renderSnap` knob alone decides, in motion and at rest alike — coming to rest never overrides it.
 
 **Scope:** `Lenis.ts` `snapRendered`, `setScroll`, `scrollTo` (the target it no longer rounds); `VirtualScroller.ts` `snapForRender` (the instance method that defers to the integrator, and the static that remains for a write before one exists).
 
-**Mechanism:** Two things used to round. `scrollTo` rounded every target, which was harmless for a programmatic seek and destructive for a drag: a drag re-targets every frame from the finger's own position, so each sub-pixel of the gesture was discarded before it could reach the layer, and the content walked under the thumb in whole pixels. The scroller then rounded again at its own write, unconditionally, so the knob that exists to turn snapping off could not reach the frames the scroller owned — the reading creep looked smooth only because it is the one caller that passes `snapRender` false. Both were the same mistake in two places: the grid is a property of the RENDERED offset, not of the scroll model, so it belongs at the write, once. Rest is the case the knob does not get to answer — off-grid rest resamples every glyph for as long as the reader sits there, and there is no motion left for the compositor to filter.
+**Mechanism:** Two things used to round. `scrollTo` rounded every target, which was harmless for a programmatic seek and destructive for a drag: a drag re-targets every frame from the finger's own position, so each sub-pixel of the gesture was discarded before it could reach the layer, and the content walked under the thumb in whole pixels. The scroller then rounded again at its own write, unconditionally, so the knob that exists to turn snapping off could not reach the frames the scroller owned — the reading creep looked smooth only because it is the one caller that passes `snapRender` false. Both were the same mistake in two places: the grid is a property of the RENDERED offset, not of the scroll model, so it belongs at the write, once. Coming to rest is the one moment a snap is SEEN, so it does not override the knob either. A layer that slides onto the grid as it stops travels up to half a device pixel with no motion to hide it, and the raster that follows re-snaps every line box from the new phase — reported from an Android phone as a line of text dropping a pixel at the exact moment scrolling ends, and measured here as a 0.31 device-pixel step on the settling frame with nothing else moving. Resting off-grid costs a resampled glyph; resting ONTO the grid costs a visible jump, and the reader is looking straight at it. 'auto' and 'grid' still come to rest on the grid because they were already on it a frame earlier and the last step moves nothing.
 
 **Generates:** A finger's fractional pixel surviving into the transform, on every phone whose touch stream is sub-pixel. A snap knob that means the same thing on every frame. Crisp text wherever the content stops.
 
@@ -109,13 +109,13 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Evidence:** Instrumented in Chrome at dpr 3 over the chat: every glide frame is written fractionally with `renderSnap: 'fractional'` (107362.823, 107350.147, 107337.802 …), from one writer. Before, the same frames were whole pixels whatever the knob said.
 
-**Impossible if true:** A drag that advances the content in whole pixels while the finger advances in thirds of one. A snap setting that changes the glide but not the drag, or the reverse.
+**Impossible if true:** A drag that advances the content in whole pixels while the finger advances in thirds of one. A snap setting that changes the glide but not the drag, or the reverse. A line of text dropping a pixel at the exact moment a scroll ends.
 
 **Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "snap policy"`
 
 **Status:** provisional
 
-**Last refined:** 2026-09-14
+**Last refined:** 2026-09-15
 
 ### A flick under friction stops where its throw runs out
 

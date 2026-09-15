@@ -703,10 +703,15 @@ class $Lenis {
    * policy: whichever writer runs last in the frame decides, and the knob
    * the reader is holding stops meaning anything.
    *
-   * At rest the answer is always the grid: a resting position off it
-   * leaves every glyph resampled for as long as the reader sits there,
-   * and there is no motion left for the compositor to filter. In motion
-   * the knob decides — see `renderSnap` for the trade.
+   * Coming to rest is the one moment a snap is SEEN. A layer that moves
+   * onto the grid as it stops travels up to half a device pixel with no
+   * motion to hide it, and the raster that follows re-snaps every line box
+   * from the new phase — a line of text drops a pixel exactly as the scroll
+   * ends. So rest does not override the knob: 'auto' and 'grid' land on the
+   * grid because they were already on it a frame earlier and the last step
+   * is nothing, and 'fractional' stays where it stopped, which is what the
+   * word means. Resting off-grid costs a resampled glyph; resting ONTO the
+   * grid costs a visible jump, and the reader is looking right at it.
    */
   snapRendered(value: number): number {
     const dpr = window.devicePixelRatio || 1;
@@ -716,7 +721,7 @@ class $Lenis {
     // actually shows, and snapping a step already below a device pixel is
     // what turns it into a stutter. Everything else reads px per ms.
     const onGrid =
-      this.isScrolling === false ||
+      (this.isScrolling === false && snap !== 'fractional') ||
       snap === 'grid' ||
       (snap === 'auto' && Math.abs(this.velocity) * dpr >= this.self.SNAP_ABOVE_DEVICE_PX);
     return onGrid ? Math.round(value * dpr) / dpr : value;
