@@ -266,7 +266,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return {
       wheel: { gain: 1, follow: 0.1, maxPxPerMs: 0 },
       touch: { gain: 1, carry: 35, launch: 1, glide: 'friction', maxPxPerMs: 0 },
-      snap: 'auto'
+      // Live for a feel test: every step written fractional, the way the
+      // reading creep already is. 'auto' is the tuned rule and one word
+      // back. Watch for what the grid was adopted to stop — rows whose
+      // layout tops carry different fractions hopping a pixel against
+      // their neighbours mid-scroll — and for the frame cost, which the
+      // probe reads as much higher (on a rig that is itself suspect).
+      snap: 'fractional'
     };
   }
 

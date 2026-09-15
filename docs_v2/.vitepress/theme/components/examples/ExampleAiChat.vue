@@ -6,6 +6,11 @@
  * title block above, and the chat itself full width beneath it.
  */
 import ChatShell from '../../../../../examples/playground/src/examples/ai-chat/ChatShell.vue';
+import { ExampleFeelToggle } from './ExampleFeelToggle';
+
+// docs chrome: the two feel choices that can only be judged by hand, live
+const feel = new ExampleFeelToggle.Class('.ac-thread .virtual-scroller');
+const { glide, snap } = feel;
 </script>
 
 <template>
@@ -25,6 +30,31 @@ import ChatShell from '../../../../../examples/playground/src/examples/ai-chat/C
         Nothing you type or attach leaves the tab.
       </p>
     </header>
+    <div class="eac-feel">
+      <span class="eac-feel-label">flick rests by</span>
+      <button
+        v-for="option in feel.glideOptions"
+        :key="option"
+        type="button"
+        class="eac-feel-btn"
+        :class="{ on: feel.isGlide(option) }"
+        @click="feel.pickGlide(option)"
+      >
+        {{ option }}
+      </button>
+      <span class="eac-feel-label">each step written</span>
+      <button
+        v-for="option in feel.snapOptions"
+        :key="option"
+        type="button"
+        class="eac-feel-btn"
+        :class="{ on: feel.isSnap(option) }"
+        @click="feel.pickSnap(option)"
+      >
+        {{ option }}
+      </button>
+      <span class="eac-feel-now">{{ glide }} &middot; {{ snap }}</span>
+    </div>
     <div class="eac-frame">
       <ChatShell />
     </div>
@@ -34,6 +64,44 @@ import ChatShell from '../../../../../examples/playground/src/examples/ai-chat/C
 <style scoped>
 .eac {
   margin: 24px 0;
+}
+/* docs chrome: the live feel switches, not part of the example's contract */
+.eac-feel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  background: rgba(148, 163, 184, 0.06);
+  font-size: 12px;
+}
+.eac-feel-label {
+  opacity: 0.6;
+  margin-right: 2px;
+}
+.eac-feel-label:not(:first-child) {
+  margin-left: 10px;
+}
+.eac-feel-btn {
+  padding: 4px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.eac-feel-btn.on {
+  border-color: var(--vp-c-brand-1, #3b82f6);
+  background: var(--vp-c-brand-1, #3b82f6);
+  color: #fff;
+}
+.eac-feel-now {
+  margin-left: auto;
+  opacity: 0.55;
+  font-family: var(--vp-font-family-mono, monospace);
 }
 .eac-head {
   padding: 12px 18px 14px;
