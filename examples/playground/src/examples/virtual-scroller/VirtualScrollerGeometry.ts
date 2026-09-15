@@ -109,9 +109,7 @@ class $VirtualScrollerGeometry {
     const itemCount = this.owner.items.value.length;
     if (itemCount === 0) return 0;
     this.version.value;
-    return (
-      this.aggregates.sum + Math.max(0, itemCount - this.aggregates.count) * this.estimatedItemSize
-    );
+    return this.aggregates.sum + Math.max(0, itemCount - this.aggregates.count) * this.estimatedItemSize;
   }
 
   /** The size map as a plain object: one `toRaw` for a whole window walk,
@@ -240,8 +238,7 @@ class $VirtualScrollerGeometry {
   calibrate() {
     if (this.aggregates.calibratedSize !== null) return;
     const length = toRaw(this.owner.items.value).length;
-    if (this.aggregates.count < this.self.CALIBRATION_ROWS || this.aggregates.count >= length)
-      return;
+    if (this.aggregates.count < this.self.CALIBRATION_ROWS || this.aggregates.count >= length) return;
     this.aggregates.calibratedSize = this.aggregates.sum / this.aggregates.count;
     this.rederive();
   }

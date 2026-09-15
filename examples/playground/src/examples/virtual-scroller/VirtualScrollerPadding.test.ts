@@ -4,13 +4,12 @@ Goal: Size the rows mounted beyond the visible window from the motion itself, so
 [The transform lerps to the target over many frames](virtual-scroller.invariants.md#the-transform-lerps-to-the-target-over-many-frames)
 [The pad covers the lerp gap exactly](virtual-scroller.invariants.md#the-pad-covers-the-lerp-gap-exactly)
 [Lenis is read inside the walk never tracked](virtual-scroller.invariants.md#lenis-is-read-inside-the-walk-never-tracked)
-[A pad is released when the reader moves, never at rest](virtual-scroller.invariants.md#a-pad-is-released-when-the-reader-moves-never-at-rest)
+[A pad never outlives its flick](virtual-scroller.invariants.md#a-pad-never-outlives-its-flick)
 [A hosted capability reaches its owner through an interface](virtual-scroller.invariants.md#a-hosted-capability-reaches-its-owner-through-an-interface)
 // domain-invariant: $VirtualScrollerPadding — If the content moves at a speed, then the rows ahead cover the distance it travels in the lookahead, rounded up and capped, and a crawl counts as still.
 // domain-invariant: $VirtualScrollerPadding — If a pad is split, then the lookahead rows sit on the end the content moves toward and the gap rows on the end it comes from; at rest both ends carry the base.
-// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level — rows ahead or rows behind — raises the held one at once, a lower one is released only on a frame the content is MOVING and only after the settle window, and a reversal turns the direction and keeps the levels.
+// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level — rows ahead or rows behind — raises the held one at once, a lower one never shrinks either while the content moves, rest shrinks both after the settle window, and a reversal turns the direction and keeps the levels.
 Impossible if true: A pad that shrinks on the first frame of a flick's decay.
-Impossible if true: Rows released while the reader sits still, so the only thing that moves on screen is the layout settling under them.
 Impossible if true: Gap rows trimmed while the lerp still travels.
 
 === GENERATOR-DESCRIBED ===
@@ -68,20 +67,20 @@ test('the split puts the lookahead rows ahead of the motion and the gap rows beh
   expect(Logic.split(3, 12, 16, 0)).toEqual({ before: 3, after: 3 });
 });
 
-// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level — rows ahead or rows behind — raises the held one at once, a lower one is released only on a frame the content is MOVING and only after the settle window, and a reversal turns the direction and keeps the levels.
+// domain-invariant: $VirtualScrollerPadding — If a new reading arrives, then a higher level — rows ahead or rows behind — raises the held one at once, a lower one never shrinks either while the content moves, rest shrinks both after the settle window, and a reversal turns the direction and keeps the levels.
 // impossible-if-true: $VirtualScrollerPadding — A pad that shrinks on the first frame of a flick's decay.
 // impossible-if-true: $VirtualScrollerPadding — Gap rows trimmed while the lerp still travels.
-// impossible-if-true: $VirtualScrollerPadding — Rows released while the reader sits still, so the only thing that moves on screen is the layout settling under them.
-// invariant: A pad is released when the reader moves, never at rest (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-test('settle grows at once, holds through the decay, releases only while moving, and keeps its rows through a turn', () => {
+test('settle grows at once, holds through the decay, shrinks at rest after the settle window, and keeps its rows through a turn', () => {
   const start = { ahead: 0, behind: 0, gapPx: 0, direction: 0 as const, since: 0 };
   const grown = Logic.settle(start, 10, 20, 800, 1, 100);
   expect(grown).toEqual({ ahead: 10, behind: 20, gapPx: 800, direction: 1, since: 100 });
-  // Lower readings inside the settle window keep the held level — however
-  // long the decay tail runs — so no burst of unmounts lands mid-glide.
+  // Lower readings while the content still moves keep the held level —
+  // however long the decay tail runs — so no burst of unmounts lands mid-glide.
   // The gap rows are held the same way: the lerp closing its gap trims nothing.
   expect(Logic.settle(grown, 4, 12, 480, 1, 101)).toBe(grown);
   expect(Logic.settle(grown, 4, 2, 80, 1, 100 + Logic.SETTLE_MS - 1)).toBe(grown);
+  expect(Logic.settle(grown, 4, 0, 0, 1, 100 + Logic.SETTLE_MS * 5)).toBe(grown);
+  expect(Logic.settle(grown, 0, 1, 20, 1, 100 + Logic.SETTLE_MS * 5)).toBe(grown);
   // One side growing raises that side and keeps the others' levels.
   expect(Logic.settle(grown, 12, 5, 200, 1, 120)).toEqual({
     ahead: 12,
@@ -90,9 +89,7 @@ test('settle grows at once, holds through the decay, releases only while moving,
     direction: 1,
     since: 120
   });
-  // A still reading inside the window still holds; past the window it
-  // releases to the base. The walk runs on a position change and nothing
-  // forces one at rest, so this lands on the last frame that moved.
+  // Rest inside the window still holds; rest once the window has passed releases everything.
   expect(Logic.settle(grown, 0, 0, 0, 0, 100 + Logic.SETTLE_MS - 1)).toBe(grown);
   expect(Logic.settle(grown, 0, 0, 0, 0, 100 + Logic.SETTLE_MS)).toEqual({
     ahead: 0,
@@ -102,8 +99,7 @@ test('settle grows at once, holds through the decay, releases only while moving,
     since: 100 + Logic.SETTLE_MS
   });
   // A reversal turns the direction and keeps the levels — unmounting the rows held the
-  // old way would land on the very frame the finger reversed; the next moving
-  // frame past the window releases them.
+  // old way would land on the very frame the finger reversed; rest releases them.
   expect(Logic.settle(grown, 2, 3, 120, -1, 150)).toEqual({
     ahead: 10,
     behind: 20,
@@ -115,7 +111,7 @@ test('settle grows at once, holds through the decay, releases only while moving,
 
 // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
 // invariant: Lenis is read inside the walk never tracked (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
-test('pad() holds the gap rows and the lookahead across a decaying tail and through rest, releasing only when the reader moves again', () => {
+test('pad() holds the gap rows and the lookahead across a decaying tail and releases both at rest, reading the owner each call', () => {
   const owner = {
     halfPaddingQuantity: 3,
     scrollVelocity: 40 / 16.7, // px per ms: the 40 px/frame this was tuned at
@@ -129,16 +125,13 @@ test('pad() holds the gap rows and the lookahead across a decaying tail and thro
   owner.scrollVelocity = 8 / 16.7;
   owner.scrollGap = 80;
   expect(padding.pad(100)).toEqual({ before: 23, after: 18 });
-  // Still inside the settle window: both held, nothing unmounts in the tail.
+  // Still moving past the window: both held, nothing unmounts in the tail.
   owner.scrollGap = 0;
-  expect(padding.pad(Logic.SETTLE_MS - 1)).toEqual({ before: 23, after: 18 });
-  // The tail goes still: the release happens HERE, on the last frame the
-  // position changed, and nothing forces another walk afterwards — so it
-  // lands while the layer is still moving, where its layout residual cannot
-  // be seen.
+  expect(padding.pad(100 + Logic.SETTLE_MS)).toEqual({ before: 23, after: 18 });
+  // At rest: both drop to the base, in one walk.
   owner.scrollVelocity = 0;
-  expect(padding.pad(Logic.SETTLE_MS * 5)).toEqual({ before: 3, after: 3 });
-  // A flick back: everything mirrors.
+  expect(padding.pad(200 + Logic.SETTLE_MS)).toEqual({ before: 3, after: 3 });
+  // A flick back, from rest: everything mirrors.
   owner.scrollVelocity = -40 / 16.7;
   owner.scrollGap = -800;
   expect(padding.pad(1000)).toEqual({ before: 18, after: 23 });
@@ -149,4 +142,35 @@ test('pad() holds the gap rows and the lookahead across a decaying tail and thro
   expect(padding.gapStartPx).toBe(0);
   expect(padding.before).toBe(18);
   expect(padding.after).toBe(23);
+  padding.dispose();
+});
+
+// invariant: A pad never outlives its flick (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
+test('a walk that pads beyond the base arms one more walk after the settle window; a base walk arms nothing; dispose cancels', () => {
+  const owner = {
+    halfPaddingQuantity: 3,
+    scrollVelocity: 40 / 16.7,
+    scrollGap: 0,
+    estimatedItemSize: 40
+  };
+  const padding = new Logic(owner);
+  expect(padding.settledVersion.value).toBe(0);
+  padding.pad(0);
+  vi.advanceTimersByTime(Logic.SETTLE_MS + 49);
+  expect(padding.settledVersion.value).toBe(0);
+  vi.advanceTimersByTime(1);
+  expect(padding.settledVersion.value).toBe(1);
+
+  // At rest the walk pads the base only, so no timer is armed.
+  owner.scrollVelocity = 0;
+  padding.pad(10_000);
+  vi.advanceTimersByTime(Logic.SETTLE_MS + 100);
+  expect(padding.settledVersion.value).toBe(1);
+
+  // A flick, then dispose before the window: the bump never comes.
+  owner.scrollVelocity = 40 / 16.7;
+  padding.pad(20_000);
+  padding.dispose();
+  vi.advanceTimersByTime(Logic.SETTLE_MS + 100);
+  expect(padding.settledVersion.value).toBe(1);
 });
