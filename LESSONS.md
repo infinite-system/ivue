@@ -1597,3 +1597,37 @@ that honours that split has not been built. The general shape holds:
 measure a "simplification" on every platform it ships to before calling
 it one, and a mechanism with a comment explaining why it exists is a
 mechanism to measure the removal of, not to delete.
+
+## Environment before code — and on a phone, restart the browser first
+
+An iPhone went from "100%" to "choppy, slow" on the same evening, and
+three bisect rounds later the exact runtime it had called 100% was also
+choppy. Nothing in the code had changed the outcome. Closing Safari and
+reopening it fixed everything.
+
+Two environment facts had shifted underneath the session and neither was
+checked first: the VM had rebooted (`uptime` said 22 minutes where it had
+said 21 days — the "degraded rig" readings just before were a machine
+going down), and the phone had crossed 20% battery and gone on charge.
+Neither turned out to be the cause, but both should have been the FIRST
+questions, and `uptime` takes one second.
+
+Order of operations when a device that was fine goes bad on unchanged
+code:
+
+1. `uptime`, load, and which servers are still listening — did the machine
+   or the tunnel change under you?
+2. Is the device actually loading YOUR build? Put a visible fingerprint in
+   every bisect build (a removed box, an added row) and ask for it.
+3. **Quit and reopen the browser on the device** before any bisect. A
+   day of reloads leaves tabs of earlier builds alive with their own
+   frame loops, and Safari's process state does not reset on reload.
+4. Battery / Low Power Mode / heat.
+5. Only then, the code — and then by bisecting on the device, not by
+   reasoning about which change "must" be it. Two confident guesses in
+   a row here were wrong (the immediate drag, the native comparison box).
+
+The bisect protocol itself worked and is worth keeping: check out the
+known-good runtime files onto the working tree, restart the server,
+confirm the fingerprint on the device, then add changes back one at a
+time. Restore with `git checkout HEAD -- <files>` when done.
