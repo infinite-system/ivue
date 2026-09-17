@@ -306,7 +306,7 @@ Each record:
 
 **Generates:** What this invariant produces/derives downstream (designs, rules, guards). Optional but prized — an invariant that generates nothing is a description.
 
-**Rejected alternatives:** Optional zombie-defense against re-litigation. One line per killed rival: `<alternative> — <why it dies>`. Admit only alternatives that are actually tempting (already proposed once, or obviously going to recur); prune a line when its temptation dies. Not a history — git is the archive.
+**Rejected alternatives:** Optional zombie-defense against re-litigation. One bullet per killed rival: `<alternative> — <why it dies>`, with HOW it was tried beside the verdict (the regime it was judged in, the devices, the confounds present, and where the tried code lives — a commit plus a grep phrase, or, for a trial never committed, the recipe itself in enough detail to rebuild it). A rejection without its trial is a claim, not a verdict, and the next reader may reopen it. Admit only alternatives that are actually tempting (already proposed once, or obviously going to recur); prune a bullet when its temptation dies.
 
 **Open question:** Optional, at most ONE line: the current frontier of doubt — what would refine or narrow this record, so doubt aims there instead of re-breaking the settled. Replace when answered; never append.
 
@@ -320,6 +320,14 @@ Each record:
 
 **Last refined:** YYYY-MM-DD
 ```
+
+**A field is as long as it needs to be.** A field opens on its label in bold at the start
+of a line (`**Mechanism:** …`) and runs until the next label or heading — paragraphs, blank
+lines and bullet lists included. Bold words inside a body, bold-labelled bullets included,
+are body: only the known labels open a field. The one hard rule is that a label appears
+ONCE per record; the checker fails a record that repeats one, so an agent that meant to
+continue a field learns to continue it rather than restart it. Write prose, not a single
+line that goes on and on.
 
 **Invariants are unnumbered.** The name is the identifier: unique within the file, carried
 by section membership (not an ID letter). Reference invariants **by name, never by

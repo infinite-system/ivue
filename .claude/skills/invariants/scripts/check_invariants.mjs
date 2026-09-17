@@ -60,7 +60,12 @@ const CHOSEN = '## Chosen invariants';
 const CHOSEN_ALIAS = '## Designed invariants'; // legacy heading, accepted
 const HEAD_RE = /^### (.*\S)$/;
 const LEGACY_ID_RE = /^([A-Z][A-Z0-9]*)-([RCD])([0-9]{3})(?:\s+—\s+(.*))?$/;
-const FIELD_RE = /^(?:-\s+)?\*\*?([^*:]+):\*\*?\s*(.*)$/;
+// A field opens ONLY on a known label in bold at the start of a line —
+// `**Mechanism:** …`. Anything else, bold-labelled bullets included, is the
+// current field's body: a field spans paragraphs and lists until the next
+// label or heading. A label seen twice in one record is a problem, never a
+// silent overwrite. (The regex is built after the label lists below.)
+let FIELD_RE;
 const REQUIRED = [
   'Invariant',
   'Scope',
@@ -79,6 +84,11 @@ const OPTIONAL = [
   'Open question',
   'Enforcement',
 ];
+FIELD_RE = new RegExp(
+  '^\\*\\*(' +
+    [...REQUIRED, ...OPTIONAL].map((l) => l.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') +
+    '):\\*\\*\\s*(.*)$',
+);
 const STATUSES = new Set(['established', 'provisional']);
 const DATE_RE = /^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/;
 const EXCLUDED_DIRS = new Set(['node_modules', '.git', '.claude']);
@@ -248,6 +258,10 @@ function parseSection(lines, active, start, end, kind = 'domain') {
         const f = FIELD_RE.exec(t);
         if (f) {
           current = f[1].trim();
+          if (current in rec.fields) {
+            rec.duplicateFields = rec.duplicateFields || [];
+            rec.duplicateFields.push({ label: current, line: i + 1 });
+          }
           rec.fields[current] = f[2].trim();
           rec.fieldRanges[current] = { start: i + 1, end: i + 1 };
         } else if (t && current) {
@@ -351,6 +365,8 @@ function validateRecords(
       seenSlugs.set(slug, name);
     }
     const fields = rec.fields;
+    for (const dup of rec.duplicateFields || [])
+      errors.push(`'${name}': ${dup.label} appears twice (line ${dup.line}) — one field, as many lines as it needs`);
     for (const label of REQUIRED) {
       if (!fields[label]) errors.push(`'${name}': missing or empty ${label}`);
     }
