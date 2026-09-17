@@ -13,16 +13,14 @@ defineProps<{ model: ExpressionModel.Instance }>();
       <input class="dv-tags" :value="model.tags" :readonly="!model.canEdit" aria-label="Tags" placeholder="#vue #typescript #javascript" @input="model.onMetaInput('tags', $event)" />
       <input class="dv-canonical" :value="model.canonical" :readonly="!model.canEdit" aria-label="Canonical URL" placeholder="Canonical URL" @input="model.onMetaInput('canonical', $event)" />
     </div>
-    <div class="press-split">
-      <MarkdownEditor
-        v-if="model.canEdit"
-        :model-value="model.bodyDraft.value"
-        placeholder="Write the body. Drop images or video anywhere; paste a YouTube link for a player."
-        min-height="22rem"
-        @update:model-value="model.onBodyChange($event)"
-        @save="model.saveBody()"
-      />
-      <div class="dv-rendered press-rendered" v-html="model.renderedBody"></div>
-    </div>
+    <MarkdownEditor
+      v-if="model.canEdit"
+      :model-value="model.bodyDraft.value"
+      placeholder="Write the body. Drop images or video anywhere; paste a YouTube link for a player."
+      min-height="22rem"
+      @update:model-value="model.onBodyChange($event)"
+      @save="model.saveBody()"
+    />
+    <div v-else class="dv-rendered press-rendered" v-html="model.renderedBody"></div>
   </div>
 </template>

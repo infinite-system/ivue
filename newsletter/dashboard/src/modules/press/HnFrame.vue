@@ -36,7 +36,7 @@ defineProps<{ model: ExpressionModel.Instance }>();
         @update:model-value="model.onFirstCommentChange($event)"
         @save="model.saveBody()"
       />
-      <div class="hn-rendered press-rendered" v-html="model.renderedFirstComment"></div>
+      <div v-else class="hn-rendered press-rendered" v-html="model.renderedFirstComment"></div>
     </div>
   </div>
 </template>

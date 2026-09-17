@@ -72,10 +72,6 @@ class $PieceModel {
     return ref<number | null>(null);
   }
 
-  get split() {
-    return ref(38);
-  }
-
   get postings() {
     return shallowRef<Api.PressPosting[]>([]);
   }

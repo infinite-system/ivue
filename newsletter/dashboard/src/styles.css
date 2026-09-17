@@ -2010,26 +2010,21 @@ input[type='datetime-local'] {
   min-height: 70vh;
 }
 
-.press-splitter {
-  min-height: 70vh;
-}
-
-.press-splitter .q-splitter__separator {
-  background: var(--panel-edge);
-}
-
-.press-left {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 0 16px 24px 0;
-}
-
-.press-right {
+.press-top,
+.press-expressions,
+.press-bottom {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 0 24px 16px;
+}
+
+.press-expressions {
+  margin-top: 18px;
+}
+
+.press-bottom {
+  margin-top: 18px;
+  padding-bottom: 24px;
 }
 
 .press-piece-head {
@@ -2138,7 +2133,7 @@ input[type='datetime-local'] {
 }
 
 .press-base-editor {
-  min-height: 24rem;
+  min-height: 16rem;
   font: 14.5px/1.55 inherit;
   font-family: inherit;
   resize: vertical;
@@ -2382,12 +2377,6 @@ input[type='datetime-local'] {
 }
 
 /* the split editor for markdown kinds */
-.press-split {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-  gap: 12px;
-}
-
 .press-md-editor {
   min-height: 18rem;
   width: 100%;
@@ -2659,7 +2648,7 @@ input[type='datetime-local'] {
   grid-template-columns: 40px minmax(0, 1fr);
   gap: 10px;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid var(--panel-edge-soft);
   background: #16191f;
 }
@@ -3009,7 +2998,7 @@ input[type='datetime-local'] {
 
 .press-editor-surface {
   border: 1px solid var(--panel-edge);
-  border-radius: 8px;
+  border-radius: 0;
   background: var(--bg);
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
@@ -3104,6 +3093,11 @@ input[type='datetime-local'] {
   border-top: 2px dashed var(--panel-edge);
   margin: 14px 0;
   position: relative;
+}
+
+.press-base .press-prose {
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 .press-base .press-prose hr::after {

@@ -66,7 +66,7 @@ const {
       Returned to draft: {{ model.unapprovedBecause }}. Approve the text again once it reads right.
     </p>
     <p v-if="model.isDerived" class="press-notice press-notice--derived">
-      This text is derived from the base — edit the base on the left, or detach it to rewrite by hand.
+      This text is derived from the base — edit the base above, or detach it to rewrite by hand.
     </p>
 
     <div class="press-frame">

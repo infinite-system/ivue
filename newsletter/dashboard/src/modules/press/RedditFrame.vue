@@ -22,17 +22,15 @@ defineProps<{ model: ExpressionModel.Instance }>();
         placeholder="Title"
         @input="model.onMetaInput('title', $event)"
       />
-      <div class="press-split">
-        <MarkdownEditor
-          v-if="model.canEdit"
-          :model-value="model.bodyDraft.value"
-          placeholder="Write the body. Drop images or video anywhere; paste a YouTube link for a player."
-          min-height="22rem"
-          @update:model-value="model.onBodyChange($event)"
-          @save="model.saveBody()"
-        />
-        <div class="rd-rendered press-rendered" v-html="model.renderedBody"></div>
-      </div>
+      <MarkdownEditor
+        v-if="model.canEdit"
+        :model-value="model.bodyDraft.value"
+        placeholder="Write the body. Drop images or video anywhere; paste a YouTube link for a player."
+        min-height="22rem"
+        @update:model-value="model.onBodyChange($event)"
+        @save="model.saveBody()"
+      />
+      <div v-else class="rd-rendered press-rendered" v-html="model.renderedBody"></div>
       <p class="muted rd-actions" aria-hidden="true">💬 Comments · Share · Save</p>
     </div>
   </div>

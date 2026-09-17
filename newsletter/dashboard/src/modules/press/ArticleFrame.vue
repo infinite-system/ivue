@@ -14,16 +14,14 @@ defineProps<{ model: ExpressionModel.Instance }>();
     <img v-if="model.cover" class="ar-cover" :src="model.coverUrl" alt="" />
     <input class="ar-title" :value="model.title" :readonly="!model.canEdit" aria-label="Title" placeholder="Title" @input="model.onMetaInput('title', $event)" />
     <p class="muted ar-byline">{{ model.xName }} · {{ model.platformLabel }}</p>
-    <div class="press-split">
-      <MarkdownEditor
-        v-if="model.canEdit"
-        :model-value="model.bodyDraft.value"
-        placeholder="Write the body. Drop images or video anywhere; paste a YouTube link for a player."
-        min-height="22rem"
-        @update:model-value="model.onBodyChange($event)"
-        @save="model.saveBody()"
-      />
-      <div class="ar-rendered press-rendered" v-html="model.renderedBody"></div>
-    </div>
+    <MarkdownEditor
+      v-if="model.canEdit"
+      :model-value="model.bodyDraft.value"
+      placeholder="Write the body. Drop images or video anywhere; paste a YouTube link for a player."
+      min-height="22rem"
+      @update:model-value="model.onBodyChange($event)"
+      @save="model.saveBody()"
+    />
+    <div v-else class="ar-rendered press-rendered" v-html="model.renderedBody"></div>
   </div>
 </template>
