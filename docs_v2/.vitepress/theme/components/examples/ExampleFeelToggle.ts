@@ -101,7 +101,7 @@ class $ExampleFeelToggle {
     const shipped = this.scroller?.props?.scroll;
     if (shipped?.touch?.glide) this.glide.value = shipped.touch.glide as 'friction' | 'exponential';
     if (typeof shipped?.touch?.carry === 'number') this.carry.value = shipped.touch.carry;
-    const options = (this.scroller?.lenis as { options?: { pixelSnap?: boolean; safariLayerReset?: boolean } } | undefined)?.options;
+    const options = this.scroller?.lenis?.options;
     if (options) {
       this.pixels.value = options.pixelSnap === false ? 'fraction' : 'device';
       this.layerReset.value = options.safariLayerReset === false ? 'off' : 'on';
