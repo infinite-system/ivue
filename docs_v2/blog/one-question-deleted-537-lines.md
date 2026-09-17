@@ -3,7 +3,7 @@ title: 'One question deleted 537 lines'
 description: A virtual scroller that feels like the browser's own on an iPhone and a Galaxy, exact to a fraction of a pixel. Then the 3 days of machinery one question made unnecessary.
 date: 2026-09
 tags: [story, performance, philosophy]
-relatedPosts: [subpixel-perfect-scrolling, a-million-rows-twelve-divs, select-text-across-a-million-rows, measured-not-promised, win-by-reduction]
+relatedPosts: [99-7-and-100-are-worlds-apart, subpixel-perfect-scrolling, a-million-rows-twelve-divs, select-text-across-a-million-rows, measured-not-promised, win-by-reduction]
 ---
 
 <script setup>
@@ -159,7 +159,11 @@ The scaffolding was a monument to the costume.
 
 The same flick on both devices, judged by hand against the browser's own
 scrolling. Positions are written to the fraction and never rounded on the
-way from the model to the layer. 2 knobs stayed, because they turned out
+way from the model to the layer. (2 days later that last clause turned
+out to be half right: the model keeps the fraction, and the write now
+lands on the device-pixel grid. The snap I deleted here had been tested in
+the 1 regime where it cannot show. The story continues in
+[99.7% and 100% are worlds apart](/blog/99-7-and-100-are-worlds-apart).) 2 knobs stayed, because they turned out
 to be about the phones and not about the bug. How far a flick carries:
 the browser's own fling measures at about 16 frames of the finger's
 speed; the scroller ships 35 and offers both. How a flick comes to rest:

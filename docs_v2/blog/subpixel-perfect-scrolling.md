@@ -3,7 +3,7 @@ title: 'Subpixel-perfect scrolling'
 description: What has to be true for a virtual list to feel like the browser's own scroll on an iPhone and an Android, to a fraction of a pixel. 9 conditions, each with its number.
 date: 2026-09
 tags: [performance, architecture, story]
-relatedPosts: [one-question-deleted-537-lines, a-million-rows-twelve-divs, select-text-across-a-million-rows, measured-not-promised]
+relatedPosts: [99-7-and-100-are-worlds-apart, one-question-deleted-537-lines, a-million-rows-twelve-divs, select-text-across-a-million-rows, measured-not-promised]
 ---
 
 <script setup>
@@ -72,6 +72,14 @@ exact moment a scroll ended.
 Now the transform is written to the fraction, every frame, in every
 setting. Measured on the settling frames: `106570.1067` then
 `106570.1036`. No step.
+
+> **Update, 2 days later.** Half of this condition was wrong. The model
+> owns the fraction, and nothing may round before the write. But the write
+> itself now lands on the device-pixel grid, because that is what the
+> browser's own scroll presents, and a fractional write shimmers at the
+> slow tail of a glide. The earlier snap had been judged at speed, where
+> it cannot show. The full account, and what it opens, is in
+> [99.7% and 100% are worlds apart](/blog/99-7-and-100-are-worlds-apart).
 
 ## 2. The recorded height of a row is the height the browser drew
 

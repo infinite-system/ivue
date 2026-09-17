@@ -1734,3 +1734,13 @@ mirror clone does not copy them, which is why a backup's `fsck` is clean.
   out the same night. An experiment surface on the docs feel strip — a
   button per hypothesis, default = shipped — is the cheapest instrument for
   anything only a hand can judge.
+
+## The embed renderer's port probe accepts any server
+
+- `npm run render:embeds` spawns `serve` on 5189 and probes `/` until it
+  answers — but a `serve` left from an earlier session (this time from an
+  agent worktree, two days old) already answered on 5189 with a different
+  build, so the new post was a 404 and the script died on
+  `waitForSelector('.vp-doc')` with no slug in the error. Before running it,
+  `ss -ltnp | grep :5189` and kill by PID; the probe cannot tell a stale
+  server from its own.
