@@ -220,11 +220,11 @@ tier each record is proven at, and how the colocated tests bind to it.
 
 **Scope:** `VirtualScroller.ts` `nudgePaint`, `IS_WEBKIT`; `VirtualScrollerSelection.ts` `autoscrollStep`, the `nudgePaint` member of its `Owner`.
 
-**Renegotiable at:** WebKit's compositing under an active touch — it moves a promoted layer but leaves content mounted during the move unpainted until the touch ends (seen on an iPhone as blank rows past the fold and a vanished scrollbar thumb). The Lenis fork's wheel path carries the same workaround (`IS_SAFARI` in `setScroll`); the autoscroll writes through the scroller, so it needs its own.
+**Renegotiable at:** WebKit's compositing under an active touch — it moves a promoted layer but leaves content mounted during the move unpainted until the touch ends (seen on an iPhone as blank rows past the fold and a vanished scrollbar thumb). The Lenis fork's frame write carried the same workaround (`IS_SAFARI` in `setScroll`) until 2026-09-16; with the transform on the device-pixel grid it is off by default there (`safariLayerReset`), a drag into mounting rows on an iPhone showing none left blank. The autoscroll writes through the scroller and keeps its own nudge until the same check is made under a held selection.
 
 **Mechanism:** The will-change cycle forces the layer to be re-created and re-rasterized; the layout read between the two writes is what makes the demotion take effect before the promotion. Chrome and Firefox keep the permanent `will-change: transform` from the CSS and take the plain write — on Chrome the re-raster snaps text per frame and reads as shimmer, so the nudge is gated to WebKit.
 
-**Evidence:** `VirtualScroller.ts` `nudgePaint`; `src/lenis/lenis.ts` `setScroll` (the Safari branch and its comment). Tests: "the paint nudge cycles will-change on WebKit and is a no-op elsewhere", "holding the pointer inside the edge zone scrolls forward at a crawl, past the frame faster, above it backward, and returning to the interior stops it" (one nudge per write).
+**Evidence:** `VirtualScroller.ts` `nudgePaint`; `src/lenis/Lenis.ts` `setScroll` (the Safari branch, now opt-in, and its comment). Tests: "the paint nudge cycles will-change on WebKit and is a no-op elsewhere", "holding the pointer inside the edge zone scrolls forward at a crawl, past the frame faster, above it backward, and returning to the interior stops it" (one nudge per write).
 
 **Impossible if true:** A row mounted by the autoscroll on iOS that stays blank until the finger lifts. A will-change write on Chrome from the autoscroll.
 

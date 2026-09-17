@@ -165,7 +165,7 @@ class $Lenis {
     touchInertiaMultiplier = 35,
     syncTouchGlide = 'exponential',
     pixelSnap = true,
-    safariLayerReset = true,
+    safariLayerReset = false,
     duration, // in seconds
     easing,
     lerp = 0.1,
@@ -730,9 +730,11 @@ class $Lenis {
     if (this.isHorizontal) {
       (this.options.content as HTMLElement).style.transform = `translateX(${-rendered}px)`;
     } else {
-      if (this.self.IS_SAFARI && this.options.safariLayerReset !== false) {
-        /** Safari mis-renders long translated content unless the layer is
-         *  reset before every write — the original workaround. It is
+      // invariant: The frame write leaves the layer promoted (examples/playground/src/lenis/lenis.invariants.md)
+      if (this.self.IS_SAFARI && this.options.safariLayerReset === true) {
+        /** The original Safari workaround, opt-in since 2026-09-16 (see the
+         *  option): a layer reset before every write, against long translated
+         *  content mis-rendering and rows mounted under a touch staying blank. It is
          *  Safari-ONLY on purpose: the reset demotes (will-change: auto)
          *  and re-promotes the composited layer every frame, forcing the
          *  (often enormous) text layer to re-rasterize per scroll frame —
@@ -1689,10 +1691,11 @@ export namespace Lenis {
      *  creeps as a glide slows, seen on both phones as a shimmer at the slow
      *  tail (iPhone and Galaxy S22 Ultra, 2026-09-16). */
     pixelSnap?: boolean;
-    /** EXPERIMENT — the Safari-only layer reset before every write (will-change
-     *  auto → transform, forcing a re-raster of the text layer each frame). On by
-     *  default: the shipped workaround. Off lets the iPhone glide on a raster
-     *  made once, the way Chrome does. A live A/B for the docs feel strip. */
+    /** The Safari-only layer reset before every write (will-change auto →
+     *  transform, a re-raster of the text layer each frame). OFF by default
+     *  since 2026-09-16: with the write on the device-pixel grid the iPhone
+     *  glides on a raster made once, the way Chrome does, and a drag into
+     *  mounting rows showed none left blank. `true` restores the workaround. */
     safariLayerReset?: boolean;
     /**
      * Scroll duration in seconds

@@ -55,11 +55,11 @@ class $ExampleFeelToggle {
     return ref<'fraction' | 'device'>('device');
   }
 
-  /** EXPERIMENT — the Safari-only layer reset before every write. 'on' is
-   *  the shipped workaround (a re-raster per frame); 'off' glides on one
-   *  raster. Only Safari is affected; on Chrome the two are the same. */
+  /** The Safari-only layer reset before every write. 'off' is the shipped
+   *  scroller (a raster made once, moved whole); 'on' restores the old
+   *  per-frame re-raster. Only Safari is affected; on Chrome the two are the same. */
   get layerReset() {
-    return ref<'on' | 'off'>('on');
+    return ref<'on' | 'off'>('off');
   }
 
   /** Whether the strip has something to drive yet — the chain has mounted. */

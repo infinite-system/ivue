@@ -27,7 +27,8 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [A flick under friction stops where its throw runs out](#a-flick-under-friction-stops-where-its-throw-runs-out) — why a long throw can still have a short tail.
 - [Speed crosses every seam in px per millisecond](#speed-crosses-every-seam-in-px-per-millisecond) — why a 120 Hz phone feels what a 60 Hz one does.
 - [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target) — why a glide always ends, and the scroller can rest.
-- [The layer is written where the model says](#the-layer-is-written-where-the-model-says) — why the finger's own sub-pixel reaches the screen and nothing rounds on the way.
+- [The layer is written where the model says](#the-layer-is-written-where-the-model-says) — why the finger's own sub-pixel reaches the model, and the screen is drawn on its own pixel grid.
+- [The frame write leaves the layer promoted](#the-frame-write-leaves-the-layer-promoted) — why the iPhone moves one raster instead of drawing a new one every frame.
 - [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page) — why a reader at an end is never trapped inside the scroller.
 - [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it) — why a trackpad can scroll a code block sideways.
 
@@ -110,6 +111,26 @@ Chosen invariants stand on reality invariants, never the reverse.
 **Impossible if true:** A written transform whose value times devicePixelRatio is not an integer (to f32 precision). A drag that advances the content in whole CSS pixels while the finger advances in thirds of one. A `Math.round` on the path from the scroll model to the write other than the one at the write.
 
 **Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "device-pixel grid|drag|brakes"` — the write is on the grid, the target is not rounded, the finger's fractional delta reaches the target.
+
+**Status:** provisional
+
+**Last refined:** 2026-09-16
+
+### The frame write leaves the layer promoted
+
+**Invariant:** If Lenis writes the transform on a frame, then it writes the transform and nothing else: the layer's `will-change` is not cycled, so the raster made once is moved whole, on every engine. The Safari per-frame reset (`will-change: auto`, a layout read, `will-change: transform`) is opt-in through `safariLayerReset` and off by default.
+
+**Scope:** `Lenis.ts` `setScroll`, the `IS_SAFARI` branch, the `safariLayerReset` option.
+
+**Mechanism:** The reset demotes and re-promotes the composited layer, which forces the (often enormous) text layer to re-rasterize on every scroll frame; each re-raster snaps the glyphs from the frame's own phase. On Chrome that was already known to read as shimmer and the branch was gated to Safari; on Safari it ran on every frame of every glide, which is a shimmer source of its own and the main-thread cost of a full raster per frame. It had been kept against two observations: long translated content mis-rendering, and rows mounted during a touch staying blank until the finger lifts. With the write on the device-pixel grid (see the record above) neither reproduced on an iPhone with the reset off — a glide over the chat, and a slow drag into mounting rows, showed no blank rows.
+
+**Rejected alternatives:** Keeping the reset on Safari unconditionally (the state until 2026-09-16): the two observations behind it were never re-checked after the render-bias rebasing capped the translate and the write moved to the grid, and the cost was paid on every frame.
+
+**Evidence:** Judged by hand on an iPhone on 2026-09-16 from the docs feel strip, reset on against off, with a slow drag into rows mounting past the fold: none left blank. Test: "the paint nudge cycles will-change on WebKit and is a no-op elsewhere" (the scroller's autoscroll nudge, which stays) shows what the cycle is; `setScroll` writes no `will-change` unless the option is on.
+
+**Impossible if true:** A `will-change` write from `setScroll` with the option unset. A row mounted during a glide on iOS that stays blank until the finger lifts.
+
+**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "device-pixel grid"` — the write is a transform write alone.
 
 **Status:** provisional
 
