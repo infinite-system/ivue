@@ -32,12 +32,16 @@ const {
       <button type="button" :class="{ on: model.isActive('codeBlock') }" title="Code block" @click="model.toggleCodeBlock()">{ }</button>
       <button type="button" title="Rule — a tweet break in the base" @click="model.insertRule()">—</button>
       <span class="press-toolbar-gap"></span>
-      <button type="button" :class="{ on: model.isActive('link') }" title="Link" @click="model.openLink()">🔗</button>
+      <button type="button" :class="{ on: model.isActive('link') }" title="Link" @click="model.openLink()">
+        <svg class="press-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-1 1" /><path d="M9.5 6.5a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l1-1" /></svg>
+      </button>
       <label class="press-toolbar-file" title="Image or video from disk">
-        🖼
+        <svg class="press-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="1.5" /><circle cx="5.5" cy="6.5" r="1.2" /><path d="M14 11l-3.5-3.5L6 12" /></svg>
         <input type="file" :accept="model.acceptedTypes" multiple hidden @change="model.onFilePicked($event)" />
       </label>
-      <button type="button" title="YouTube or video link" @click="model.openEmbed()">▶</button>
+      <button type="button" title="YouTube or video link" @click="model.openEmbed()">
+        <svg class="press-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9l7-4.5z" /></svg>
+      </button>
       <span v-if="model.isUploading" class="press-toolbar-status">{{ model.uploadLabel }}</span>
     </div>
     <editor-content :editor="editor" class="press-editor-surface" :style="{ minHeight: model.minHeight }" />

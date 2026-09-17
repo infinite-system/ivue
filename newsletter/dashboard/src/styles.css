@@ -2983,6 +2983,29 @@ input[type='datetime-local'] {
   color: var(--text);
 }
 
+.press-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.press-toolbar button:has(.press-icon),
+.press-toolbar-file {
+  padding: 0 7px;
+}
+
+/* a <label> — the global form-label margin stretched the whole toolbar row */
+.press-toolbar-file {
+  margin: 0;
+  font-size: inherit;
+  line-height: 1;
+}
+
 .press-toolbar-gap {
   width: 1px;
   height: 18px;
