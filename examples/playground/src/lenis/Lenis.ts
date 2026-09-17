@@ -113,6 +113,12 @@ class $Lenis {
     return lerp > 0 ? 2 / lerp : 0;
   }
 
+  /** The nearest device pixel: `px` rounded to a multiple of 1/devicePixelRatio. */
+  static snapToDevicePixel(px: number): number {
+    const ratio = typeof devicePixelRatio === 'number' && devicePixelRatio > 0 ? devicePixelRatio : 1;
+    return Math.round(px * ratio) / ratio;
+  }
+
   /** A touch on a glide pulls its target this far ahead in TIME: the brake's
    *  length. In ms, not frames — four frames is 67 ms on a 60 Hz display and
    *  33 on a 120 Hz one, so a frame count made the brake twice as abrupt on
@@ -158,6 +164,8 @@ class $Lenis {
     syncTouchLerp = 0.075,
     touchInertiaMultiplier = 35,
     syncTouchGlide = 'exponential',
+    pixelSnap = true,
+    safariLayerReset = true,
     duration, // in seconds
     easing,
     lerp = 0.1,
@@ -219,6 +227,8 @@ class $Lenis {
       syncTouchLerp,
       touchInertiaMultiplier,
       syncTouchGlide,
+      pixelSnap,
+      safariLayerReset,
       duration,
       easing,
       lerp,
@@ -702,22 +712,25 @@ class $Lenis {
 
     scroll -= this.renderOffset;
 
-    // Written where the model says, to the fraction. Nothing between the
-    // scroll model and this transform rounds: not the target (a finger's
-    // sub-pixel reaches the screen), not the write (the compositor
-    // resamples a fractional offset, and that is what a browser's own
-    // scroll does too). A device-pixel snap used to live here in three
-    // flavours — see the contract's rejected alternatives for the history:
-    // the hop it was adopted to stop was the scroller recording row
-    // heights a few hundredths of a pixel off, never the fraction itself.
-    // renderOffset rebasing keeps this value small (≤ ~131k px), where f32
-    // still resolves the fraction.
-    const rendered = scroll;
+    // Written where the model says, on the DEVICE-PIXEL grid. Nothing before
+    // this rounds: not the target (a finger's sub-pixel reaches the model),
+    // not the lerp, not the trail — only the number handed to the layer, and
+    // only to the nearest device pixel, which is where a browser's own scroll
+    // offset lands. A fractional write is resampled by the compositor: every
+    // line blurs by the fraction's phase, and as a glide slows the phase
+    // creeps — read on both phones as a shimmer at the slow tail. A snap was
+    // tried here before and rejected on a flawed trial: its default flavour
+    // snapped only while FAST, where motion blur hides the phase, and every
+    // iPhone run had the per-frame layer reset below in play. The contract's
+    // record carries the history. renderOffset rebasing keeps this value
+    // small (≤ ~131k px), where f32 still resolves the grid.
+    const rendered =
+      this.options.pixelSnap === false ? scroll : this.self.snapToDevicePixel(scroll);
 
     if (this.isHorizontal) {
       (this.options.content as HTMLElement).style.transform = `translateX(${-rendered}px)`;
     } else {
-      if (this.self.IS_SAFARI) {
+      if (this.self.IS_SAFARI && this.options.safariLayerReset !== false) {
         /** Safari mis-renders long translated content unless the layer is
          *  reset before every write — the original workaround. It is
          *  Safari-ONLY on purpose: the reset demotes (will-change: auto)
@@ -1083,6 +1096,8 @@ class $Lenis {
         | 'syncTouchLerp'
         | 'touchInertiaMultiplier'
         | 'syncTouchGlide'
+        | 'pixelSnap'
+        | 'safariLayerReset'
         | 'wheelMaxPxPerMs'
         | 'touchMaxPxPerMs'
       >
@@ -1668,6 +1683,17 @@ export namespace Lenis {
      * @default 'exponential'
      */
     syncTouchGlide?: 'exponential' | 'friction';
+    /** Write the transform on the device-pixel grid (1/devicePixelRatio) — the
+     *  default, and where a browser's own scroll offset lands. `false` writes
+     *  the fraction; the compositor then resamples the raster at a phase that
+     *  creeps as a glide slows, seen on both phones as a shimmer at the slow
+     *  tail (iPhone and Galaxy S22 Ultra, 2026-09-16). */
+    pixelSnap?: boolean;
+    /** EXPERIMENT — the Safari-only layer reset before every write (will-change
+     *  auto → transform, forcing a re-raster of the text layer each frame). On by
+     *  default: the shipped workaround. Off lets the iPhone glide on a raster
+     *  made once, the way Chrome does. A live A/B for the docs feel strip. */
+    safariLayerReset?: boolean;
     /**
      * Scroll duration in seconds
      */

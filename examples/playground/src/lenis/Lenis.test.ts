@@ -19,7 +19,9 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 // domain-invariant: $Lenis — If overscroll is on and a gesture at an end asks for more than the end has, then the scroller takes none of it and scrolls the nearest scrollable ancestor, else the window, by the gesture's own delta; an inward gesture, or overscroll off, is taken as before.
 // domain-invariant: $Lenis — If a finger lands on a glide, then the glide's target is pulled to a few frames of travel ahead under a steep lerp and its momentum is remembered for a flick the same way; the first move takes over where the content is.
 // domain-invariant: $Lenis — If a wheel runs mostly across the scroller's axis, then the scroller leaves it alone — no cancel, no scroll — so whatever scrolls that way under the pointer takes it; a wheel along the axis with a little drift across is the scroller's.
+// domain-invariant: $Lenis — If the scroll model holds a position, then the transform is written at that position minus the render offset, rounded to the nearest device pixel at the write and nowhere earlier; the target keeps its fraction.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
+Impossible if true: A written transform whose value times devicePixelRatio is not an integer. A target rounded by the write.
 Impossible if true: A wheel up over a nested box scrolled down that moves the list instead of the box.
 Impossible if true: A swipe over rows that measured taller mid-drag reading a velocity of zero.
 Impossible if true: A wheel up at the top of the thread that moves nothing.
@@ -542,4 +544,45 @@ test('a wheel mostly across the axis is left alone; one along it with a little d
   lenis.destroy();
   wrapper.remove();
   if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
+});
+
+// domain-invariant: $Lenis — If the scroll model holds a position, then the transform is written at that position minus the render offset, rounded to the nearest device pixel at the write and nowhere earlier; the target keeps its fraction.
+// impossible-if-true: $Lenis — A written transform whose value times devicePixelRatio is not an integer. A target rounded by the write.
+test('the layer is written on the device-pixel grid, the model and the target untouched', () => {
+  class ObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  const hadObserver = 'ResizeObserver' in globalThis;
+  if (!hadObserver)
+    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
+  const wrapper = document.createElement('div');
+  const content = document.createElement('div');
+  wrapper.appendChild(content);
+  document.body.appendChild(wrapper);
+  const ratio = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+  Object.defineProperty(window, 'devicePixelRatio', { value: 3, configurable: true });
+  try {
+    // a 3x screen: the grid is thirds of a CSS px. 100.4 px lands on 301/3.
+    // The model is set directly (the test DOM has no height, so a scrollTo
+    // would clamp to a limit of 0) and written through a zero shift.
+    const lenis = new Lenis.Class({ wrapper, content, autoRaf: false, syncTouch: true });
+    const inner = lenis as unknown as { targetScroll: number; animatedScroll: number };
+    inner.animatedScroll = inner.targetScroll = 100.4;
+    lenis.shiftBy(0);
+    expect(inner.targetScroll).toBe(100.4);
+    expect(inner.animatedScroll).toBe(100.4);
+    expect(content.style.transform).toBe(`translateY(${-(301 / 3)}px)`);
+    // the fractional write, kept only for comparison, hands the layer the model's number
+    lenis.tune({ pixelSnap: false });
+    lenis.shiftBy(0);
+    expect(content.style.transform).toBe('translateY(-100.4px)');
+    lenis.destroy();
+  } finally {
+    if (ratio) Object.defineProperty(window, 'devicePixelRatio', ratio);
+    else delete (window as unknown as { devicePixelRatio?: number }).devicePixelRatio;
+    wrapper.remove();
+    if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
+  }
 });

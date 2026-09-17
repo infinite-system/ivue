@@ -1620,9 +1620,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     this.scrollPosition.value = absolutePosition;
 
     if (inner && translateY) {
-      // Rebased for GPU precision (see renderBias) and written to the
-      // fraction — the model's number, nothing rounded between them.
-      const rendered = position + this.renderBias.value;
+      // Rebased for GPU precision (see renderBias) and written on the
+      // device-pixel grid — the same policy as Lenis's own write of this
+      // layer, so a jump and the frame after it land on the same grid.
+      const rendered = Lenis.Class.snapToDevicePixel(position + this.renderBias.value);
       inner.style.transform = this.transformFor(rendered);
       // Programmatic jumps write the transform directly — lenis must ADOPT
       // the jump, not just be told about it. Adopting kills any in-flight

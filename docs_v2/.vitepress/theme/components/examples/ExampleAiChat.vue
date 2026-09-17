@@ -15,6 +15,8 @@ const {
   // state refs
   glide,
   carry,
+  pixels,
+  layerReset,
   // element refs
   shell
 } = feel;
@@ -61,7 +63,39 @@ const {
           </button>
         </div>
       </div>
-      <span class="eac-feel-now">{{ glide }} &middot; {{ carry }}</span>
+      <div class="eac-feel-group">
+        <span class="eac-feel-label">pixels</span>
+        <div class="eac-feel-options">
+          <button
+            v-for="option in feel.pixelOptions"
+            :key="option"
+            type="button"
+            class="eac-feel-btn"
+            :disabled="!feel.isLive"
+            :class="{ on: feel.isPixels(option) }"
+            @click="feel.pickPixels(option)"
+          >
+            {{ option }}
+          </button>
+        </div>
+      </div>
+      <div class="eac-feel-group">
+        <span class="eac-feel-label">safari layer reset</span>
+        <div class="eac-feel-options">
+          <button
+            v-for="option in feel.layerResetOptions"
+            :key="option"
+            type="button"
+            class="eac-feel-btn"
+            :disabled="!feel.isLive"
+            :class="{ on: feel.isLayerReset(option) }"
+            @click="feel.pickLayerReset(option)"
+          >
+            {{ option }}
+          </button>
+        </div>
+      </div>
+      <span class="eac-feel-now">{{ glide }} &middot; {{ carry }} &middot; {{ pixels }} &middot; reset {{ layerReset }}</span>
     </div>
     <div class="eac-frame">
       <ChatShell ref="shell" />
@@ -136,11 +170,12 @@ const {
   border-radius: 0;
 }
 @media (max-width: 640px) {
-  /* each knob is a label over its buttons, the two side by side with a rule between */
+  /* each knob is a label over its buttons, side by side with a rule between;
+     a knob the row cannot hold drops to a second line instead of leaving the screen */
   .eac-feel {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-items: stretch;
-    gap: 0;
+    gap: 8px 0;
   }
   .eac-feel-group {
     flex-direction: column;

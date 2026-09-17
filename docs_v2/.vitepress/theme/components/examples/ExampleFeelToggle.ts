@@ -48,6 +48,20 @@ class $ExampleFeelToggle {
     return ref(35);
   }
 
+  /** Where the transform is written: on the device-pixel grid (the shipped
+   *  scroller, where a browser's own scroll offset lands) or to the fraction.
+   *  Judged by eye at the slow tail of a glide: the fraction shimmers. */
+  get pixels() {
+    return ref<'fraction' | 'device'>('device');
+  }
+
+  /** EXPERIMENT — the Safari-only layer reset before every write. 'on' is
+   *  the shipped workaround (a re-raster per frame); 'off' glides on one
+   *  raster. Only Safari is affected; on Chrome the two are the same. */
+  get layerReset() {
+    return ref<'on' | 'off'>('on');
+  }
+
   /** Whether the strip has something to drive yet — the chain has mounted. */
   get isLive(): boolean {
     return this.scroller !== null;
@@ -62,6 +76,14 @@ class $ExampleFeelToggle {
    *  travels 310 px where 35 travels 491; 24 and 30 are the steps between. */
   get carryOptions(): number[] {
     return [16, 24, 30, 35];
+  }
+
+  get pixelOptions(): Array<'fraction' | 'device'> {
+    return ['fraction', 'device'];
+  }
+
+  get layerResetOptions(): Array<'on' | 'off'> {
+    return ['on', 'off'];
   }
 
   /** The scroller the strip drives: shell → mounted view → its scroller,
@@ -79,6 +101,11 @@ class $ExampleFeelToggle {
     const shipped = this.scroller?.props?.scroll;
     if (shipped?.touch?.glide) this.glide.value = shipped.touch.glide as 'friction' | 'exponential';
     if (typeof shipped?.touch?.carry === 'number') this.carry.value = shipped.touch.carry;
+    const options = (this.scroller?.lenis as { options?: { pixelSnap?: boolean; safariLayerReset?: boolean } } | undefined)?.options;
+    if (options) {
+      this.pixels.value = options.pixelSnap === false ? 'fraction' : 'device';
+      this.layerReset.value = options.safariLayerReset === false ? 'off' : 'on';
+    }
   }
 
   /** The launch ratio the scroller shipped with — the flick leaves the finger
@@ -107,6 +134,16 @@ class $ExampleFeelToggle {
     });
   }
 
+  pickPixels(value: 'fraction' | 'device') {
+    this.pixels.value = value;
+    this.scroller?.lenis?.tune?.({ pixelSnap: value === 'device' });
+  }
+
+  pickLayerReset(value: 'on' | 'off') {
+    this.layerReset.value = value;
+    this.scroller?.lenis?.tune?.({ safariLayerReset: value === 'on' });
+  }
+
   /** Whether a button is the live one — the template asks by name, never with a comparison. */
   isGlide(value: string) {
     return this.glide.value === value;
@@ -114,6 +151,14 @@ class $ExampleFeelToggle {
 
   isCarry(value: number) {
     return this.carry.value === value;
+  }
+
+  isPixels(value: string) {
+    return this.pixels.value === value;
+  }
+
+  isLayerReset(value: string) {
+    return this.layerReset.value === value;
   }
 }
 

@@ -1713,3 +1713,24 @@ The script and the old-to-new commit map for this rewrite are kept in
 a macOS AppleDouble file from 2026-07-14, not a ref and not related to
 any rewrite; there are 7 `._*` files under `.git`. Git ignores them; a
 mirror clone does not copy them, which is why a backup's `fsck` is clean.
+
+## A rejected alternative is only as dead as the trial that rejected it
+
+- The contract had rejected a device-pixel snap of the scroll transform in
+  three flavours and required the fractional write. The user challenged the
+  record ("maybe it was tried imperfectly?") and the history agreed twice:
+  the default flavour snapped only while FAST — where motion blur hides any
+  phase error — and left the slow tail fractional, the one regime where a
+  snap can show; and every iPhone run had the Safari per-frame layer reset
+  in play, a re-raster per frame that is itself a shimmer source, so the two
+  writes were never compared clean on that device. Re-run as a single live
+  A/B at the slow tail, the snap won on both phones. Before treating a
+  `Rejected alternatives` line as settled, read HOW it was rejected: the
+  regime it was judged in, the confounds present, and whether the default
+  flavour even exercised the idea.
+- Isolate by removing, not by adding. "Is mounting the roughness?" was
+  answered with a window-hysteresis knob that held 200 rows so a glide
+  mounted nothing: no difference, mounting cleared in one tap. The knob came
+  out the same night. An experiment surface on the docs feel strip — a
+  button per hypothesis, default = shipped — is the cheapest instrument for
+  anything only a hand can judge.
