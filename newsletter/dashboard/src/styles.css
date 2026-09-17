@@ -2020,6 +2020,35 @@ input[type='datetime-local'] {
 
 .press-expressions {
   margin-top: 18px;
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.press-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: sticky;
+  top: 12px;
+}
+
+.press-stage {
+  min-width: 0;
+}
+
+.press-rail .press-add {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .press-expressions {
+    grid-template-columns: 1fr;
+  }
+  .press-rail {
+    position: static;
+  }
 }
 
 .press-bottom {
@@ -2068,7 +2097,8 @@ input[type='datetime-local'] {
 .press-save.error { color: var(--danger); }
 
 .press-banner {
-  width: 100%;
+  width: auto;
+  max-width: 360px;
   border-radius: var(--radius-small);
   border: 1px solid var(--panel-edge-soft);
 }
@@ -2165,14 +2195,7 @@ input[type='datetime-local'] {
 }
 
 /* tabs of expressions */
-.press-tabs-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .press-tabs {
-  flex: 1;
   min-width: 0;
   color: var(--text-dim);
 }
@@ -2180,17 +2203,24 @@ input[type='datetime-local'] {
 .press-tab {
   min-height: 40px;
   padding: 0 10px;
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .press-tab .q-tab__content {
   flex-direction: row;
   gap: 8px;
   align-items: center;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .press-tab-label {
   font-weight: 600;
   text-transform: none;
+  white-space: normal;
+  line-height: 1.25;
+  flex: 1;
 }
 
 .press-tab-mode {

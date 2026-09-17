@@ -62,13 +62,14 @@ const {
         </div>
       </div>
 
+      <!-- the expressions: a rail of tabs on the left, the active one on the stage -->
       <div class="press-expressions">
-        <div class="press-tabs-row">
+        <aside class="press-rail">
           <q-tabs
             v-model="activeExpressionId"
+            vertical
             dense
             no-caps
-            align="left"
             class="press-tabs"
             active-color="secondary"
             indicator-color="secondary"
@@ -98,21 +99,23 @@ const {
               </ul>
             </q-menu>
           </button>
+        </aside>
+
+        <div class="press-stage">
+          <p v-if="!model.hasExpressions" class="press-empty muted">
+            No expressions yet. The piece is valid as it is — add one when the
+            argument is ready to go somewhere.
+          </p>
+
+          <ExpressionCard
+            v-else-if="model.activeExpression"
+            :key="model.activeExpression.id"
+            :expression="model.activeExpression"
+            :piece="piece"
+            @changed="model.onExpressionChanged($event)"
+            @removed="model.onExpressionArchived($event)"
+          />
         </div>
-
-        <p v-if="!model.hasExpressions" class="press-empty muted">
-          No expressions yet. The piece is valid as it is — add one when the
-          argument is ready to go somewhere.
-        </p>
-
-        <ExpressionCard
-          v-else-if="model.activeExpression"
-          :key="model.activeExpression.id"
-          :expression="model.activeExpression"
-          :piece="piece"
-          @changed="model.onExpressionChanged($event)"
-          @removed="model.onExpressionArchived($event)"
-        />
       </div>
 
       <div class="press-bottom">
