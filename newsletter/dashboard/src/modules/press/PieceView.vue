@@ -45,12 +45,6 @@ const {
             <button class="ghost" type="button" @click="model.openBaseRevisions()">History</button>
           </div>
           <div class="press-base-body">
-            <ol class="press-gutter" aria-label="Thread shape">
-              <li v-for="entry in model.baseGutter" :key="entry.index" :class="{ over: entry.over }">
-                <span>{{ entry.index }}</span>
-                <span class="press-gutter-count">{{ entry.count }}</span>
-              </li>
-            </ol>
             <MarkdownEditor
               v-model="baseDraft"
               class="press-base-editor"

@@ -86,7 +86,6 @@ describe('PieceModel', () => {
     Object.defineProperty(model, '$app', { value: { pieceId: 1, reportFailure() {} } as never });
     await model.load();
     expect(model.baseDraft.value).toBe('One.\n\n---\n\nTwo.');
-    expect(model.baseGutter.map((entry) => entry.count)).toEqual([4, 4]);
     for (const character of ' more') {
       model.baseDraft.value += character;
       model.onDraftInput();

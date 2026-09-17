@@ -119,14 +119,6 @@ class $PieceModel {
     return PressKinds.Class.segments(this.baseDraft.value);
   }
 
-  /** the thread's shape while the base is written: one count per rule-split segment */
-  get baseGutter(): { index: number; count: number; over: boolean }[] {
-    return this.baseSegments.map((segment, index) => {
-      const count = PressKinds.Class.count(PressKinds.Class.plain(segment));
-      return { index: index + 1, count, over: count > PressKinds.Class.xFold };
-    });
-  }
-
   get derivedCount(): number {
     return this.expressions.filter((expression) => expression.mode === 'derived').length;
   }

@@ -552,10 +552,6 @@ try {
     undefined,
     { timeout: 10_000 },
   );
-  check(
-    'the base gutter shows one count per tweet break',
-    (await page.locator('.press-gutter li').count()) === 3,
-  );
   await page.click('button:has-text("Add expression")');
   await page.click('.press-menu-list button:has-text("X thread")');
   await page.waitForSelector('.x-thread .x-tweet', { timeout: 10_000 });

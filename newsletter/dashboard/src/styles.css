@@ -2130,36 +2130,7 @@ input[type='datetime-local'] {
 }
 
 .press-base-body {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 8px;
-}
-
-.press-gutter {
-  list-style: none;
-  margin: 0;
-  padding: 8px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 3.4rem;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  color: var(--muted-text);
-}
-
-.press-gutter li {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 2px 6px;
-  border-radius: 6px;
-  background: var(--panel-raised);
-}
-
-.press-gutter li.over {
-  color: var(--danger);
-  background: #f8717122;
+  display: block;
 }
 
 .press-base-editor {
@@ -3128,6 +3099,19 @@ input[type='datetime-local'] {
 .press-base .press-prose {
   padding-top: 6px;
   padding-bottom: 6px;
+}
+
+.press-base .press-editor {
+  gap: 4px;
+}
+
+.press-base .press-toolbar {
+  padding: 2px 4px;
+}
+
+.press-base .press-toolbar button,
+.press-base .press-toolbar-file {
+  height: 24px;
 }
 
 .press-base .press-prose hr::after {
