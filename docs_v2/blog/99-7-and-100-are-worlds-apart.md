@@ -245,18 +245,66 @@ own rate, drawing our numbers on native's grid.
 Motion blur on a phone screen is sample-and-hold blur: the eye tracks
 the text and the panel holds each frame still, so the smear is the
 distance moved per displayed frame. Half the frames at the same speed is
-twice the blur, only while moving, gone at rest. That was the last
-fraction, and it was never in the scroller. On the iPhone a reader can
-lift it with one setting. On Android a page cannot change what Chrome
-asks the panel for, and a 1px compositor animation kept running did not
-change it either. That one is a floor with a name, recorded as such.
+twice the blur, only while moving, gone at rest. On the iPhone a reader
+can lift it with one setting. On Android a page cannot change what
+Chrome asks the panel for. So far, a floor.
+
+## The presenter plays the sequence
+
+With the flag off, the iPhone at 120 Hz still showed a faint emphasis on
+the moving text. The log had one more thing in it: every 100 ms, a gap of
+13 then 3. Safari fires the page's callback 5 ms late every twelfth
+frame. The glide moved by speed times that gap, which is the right thing
+to do with an honest clock, and the content was still shown at the wrong
+moment, because the panel presents on its vsync whatever the callback
+did.
+
+I tried the obvious fix first, stepping by an assumed even interval, and
+it made the glide worse. The numbers came out perfectly even and the
+screen did not, which is only possible if the timestamps are true and the
+frames are late. Nothing computed inside a callback can present a frame
+the browser shows at the wrong time.
+
+That is the invariant this whole week was circling. A frame is exact when
+the state it shows was computed for the moment it is shown. The error in
+a frame is speed times the offset between those 2 moments. At rest the
+speed is 0 and no timing fault can show. A constant offset is a constant
+shift and invisible. Judder is speed times the variation of the offset,
+and a glide driven from a callback is a side effect of that callback's
+clock. The only arrangement with no offset at all is the one native uses:
+the presenter plays a sequence made for its own frames.
+
+So the glide moved to the compositor. At release, the integrator's
+remaining curve is sampled once per 120 Hz step, snapped to the device
+grid, one keyframe per distinct value, each held until the next, and
+handed to the layer as one animation. The model keeps running for the
+window and the events. A finger takes the layer back at the value the
+compositor is showing. Rows measuring above the reader rebuild the
+remaining curve from the shifted model. Under a millisecond per flick,
+and cheaper per frame than before, because nothing writes the DOM while
+the compositor holds the layer.
+
+The reading creep followed, as 2-second chunks of constant speed chained
+end to end on the compositor's timeline, linear between fractional
+endpoints rather than snapped, because at 0.11 px per frame the
+compositor's filtering of the fraction is the motion and a snapped write
+would tick a whole pixel every 150 ms on a 1x screen. That was the
+scope boundary on the grid, and the creep's own comment had been holding
+it the whole time.
+
+Both phones, both paths, by hand: the same. On the Galaxy the compositor
+glide reads more stable than the callback-driven one, which suggests
+Chrome votes the panel's full rate for it, the way it does for its own
+fling. On the iPhone the difference is a twelfth of a hitch. It shows.
 
 ## The shape of it
 
 2 posts ago the scroller was 537 lines smaller and I called it native.
 It was 99.7% native, which is a way of saying it was still a different
-thing, measured against the real one. The change that closed the gap was
-2 lines at the write and 1 workaround removed. No new machinery. The
-model kept its fraction. The screen got its grid.
+thing, measured against the real one. The gap closed in 3 moves, each
+one removing a way for the picture to disagree with the number: the
+write went on the device grid, the per-frame re-raster came out, and the
+motion itself moved to the thing that presents it. The model kept its
+fraction. The screen got its grid. The presenter got the sequence.
 
 Almost native is a comparison. Native is a substrate.

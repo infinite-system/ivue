@@ -555,6 +555,44 @@ class $Lenis {
    * rates, which is how a lookahead sized in milliseconds ends up half as
    * long on the phones most likely to be running at 120.
    */
+  /* ---- the compositor seam, read by the scroller and the creep ---- */
+
+  /** Whether a compositor glide owns the layer right now. */
+  get compositorGlideActive(): boolean {
+    return this.compositor.animation !== null;
+  }
+
+  /** Whether the layer can take a compositor sequence at all. */
+  get canComposite(): boolean {
+    const content = this.options.content as HTMLElement | Window;
+    return typeof (content as HTMLElement).animate === 'function';
+  }
+
+  /** The playing sequence and the value it ends on — where a chained chunk starts. */
+  get compositorPlaying(): { animation: Animation; lastValue: number } | null {
+    const { animation, keyframes } = this.compositor;
+    return animation ? { animation, lastValue: keyframes[keyframes.length - 1] } : null;
+  }
+
+  /** The compositor's keyframe step, for a caller building its own sequence. */
+  get keyframeMs(): number {
+    return this.self.KEYFRAME_MS;
+  }
+
+  /** Whether a chunk is already queued to follow the playing one. */
+  get compositorHasChained(): boolean {
+    return this.compositor.chained.length > 0;
+  }
+
+  /** Milliseconds left in the sequence the compositor is playing, or 0. */
+  get compositorRemainingMs(): number {
+    const animation = this.compositor.animation;
+    if (!animation) return 0;
+    const duration = Number(animation.effect?.getTiming().duration ?? 0);
+    return Math.max(0, duration - Number(animation.currentTime ?? 0));
+  }
+
+
   get velocityPerMs() {
     return this.frameMs > 0 ? this.velocity / this.frameMs : 0;
   }
@@ -791,11 +829,6 @@ class $Lenis {
     // wave, it read as a choppy scroll on an iPhone that Chrome never saw.
     if (this.compositor.animation) this.restartCompositorGlide();
     else if (write) this.setScroll(this.scroll);
-  }
-
-  /** Whether a compositor glide owns the layer right now. */
-  get compositorGlideActive(): boolean {
-    return this.compositor.animation !== null;
   }
 
   protected setScroll(scroll: number) {
@@ -1526,17 +1559,12 @@ class $Lenis {
     this.startCompositorSequence(this.self.glideKeyframes(this.animate));
   }
 
-  /** Whether the layer can take a compositor sequence at all. */
-  get canComposite(): boolean {
-    const content = this.options.content as HTMLElement | Window;
-    return typeof (content as HTMLElement).animate === 'function';
-  }
-
   /** Hand any sequence of scroll values — one per KEYFRAME_MS, the first being
    *  where the layer is — to the layer as held, snapped keyframes. Returns the
    *  animation, or null when there is nothing to hand over. With `after`, the
    *  new sequence is scheduled to begin exactly when that animation ends, on the
    *  document timeline, so a chained chunk shows no seam. */
+  // invariant: A glide plays on the compositor as held snapped keyframes (examples/playground/src/lenis/lenis.invariants.md)
   startCompositorSequence(
     values: number[],
     { after = null, linear = false }: { after?: Animation | null; linear?: boolean } = {}
@@ -1568,30 +1596,6 @@ class $Lenis {
     this.compositor.modelDone = false;
     this.compositor.animation = animation;
     return animation;
-  }
-
-  /** The playing sequence and the value it ends on — where a chained chunk starts. */
-  get compositorPlaying(): { animation: Animation; lastValue: number } | null {
-    const { animation, keyframes } = this.compositor;
-    return animation ? { animation, lastValue: keyframes[keyframes.length - 1] } : null;
-  }
-
-  /** The compositor's keyframe step, for a caller building its own sequence. */
-  get keyframeMs(): number {
-    return this.self.KEYFRAME_MS;
-  }
-
-  /** Whether a chunk is already queued to follow the playing one. */
-  get compositorHasChained(): boolean {
-    return this.compositor.chained.length > 0;
-  }
-
-  /** Milliseconds left in the sequence the compositor is playing, or 0. */
-  get compositorRemainingMs(): number {
-    const animation = this.compositor.animation;
-    if (!animation) return 0;
-    const duration = Number(animation.effect?.getTiming().duration ?? 0);
-    return Math.max(0, duration - Number(animation.currentTime ?? 0));
   }
 
   /** Take the layer back from any compositor sequence — a caller's seam, for

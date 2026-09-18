@@ -1777,3 +1777,28 @@ mirror clone does not copy them, which is why a backup's `fsck` is clean.
   prettier must be judged on the display before it is called a fix, and a
   premise about the platform's clock ("jittered, vsync even") is a claim
   to test, not a fact to build on.
+
+## Motion is exact only when the presenter plays a sequence made for its own frames
+
+- The last fraction of scroller quality was not in the numbers. Both
+  phones' frame logs showed a perfect glide; the iPhone at 120 Hz still read
+  a doubled edge because Safari fires the page's callback 5 ms late every
+  100 ms and a state computed in a callback is a side effect of that
+  callback's clock. The generator that fell out: a presented frame's error is
+  speed × the offset between the moment its state was computed for and the
+  moment it is shown. At rest it is zero; a constant offset is invisible;
+  judder is speed × the offset's VARIATION. Nothing inside a callback can
+  present a frame the browser shows at the wrong time. Handing the whole
+  remaining curve to the compositor — held snapped keyframes for a glide, a
+  linear fractional pair for a creep, chained chunks for anything
+  open-ended — is the one arrangement where the state and its moment come
+  from the same clock. Judged by hand on both phones as the end of the road.
+- The device-pixel snap has a speed boundary the creep's own comment held:
+  below one device pixel per frame at constant speed, the fraction IS the
+  motion and a snapped write is a tick. The grid write had been snapping the
+  creep's inline path for a day; a 3x phone cannot show that, a 1x desktop
+  can. Read a comment that says "on purpose" before the code around it
+  changes.
+- Reuse is what made the second conversion cheap: the glide paid for the
+  bookkeeping, the adopt-on-interrupt and the bias guard; the creep added its
+  sequence and chaining. Generalise at the second use, not the first.

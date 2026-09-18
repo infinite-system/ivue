@@ -101,7 +101,9 @@ class $VirtualScrollerAutoplay {
     frame: null as number | null,
     lastTs: null as number | null,
     /** the creep, not a flick, put the playing sequence on the compositor */
-    composited: false
+    composited: false,
+    /** the speed the playing chunk (and any queued one) was built at */
+    chunkMsPerPx: 0
   };
 
   /** The two deferral timers: resuming the creep, and the end-of-content repeat. */
@@ -114,13 +116,6 @@ class $VirtualScrollerAutoplay {
    *  owner to tell the reader's own motion from a settling size wave. */
   get isCreeping(): boolean {
     return this.creep.frame !== null;
-  }
-
-  /** The creep plays on the compositor when the scroller's glide does — the
-   *  same option — as a linear sequence in chained chunks: constant speed by
-   *  construction, fractional, sequenced on the compositor's own clock. */
-  protected usesCompositor(lenis: VirtualScrollerAutoplay.Integrator): boolean {
-    return Boolean(lenis.options?.compositorGlide) && Boolean(lenis.canComposite);
   }
 
   /** Speed as a SETTING: the optional creepMsPerPx prop overrides the tuned
@@ -284,6 +279,13 @@ class $VirtualScrollerAutoplay {
     this.creep.frame = requestAnimationFrame(this.creepStep);
   }
 
+  /** The creep plays on the compositor when the scroller's glide does — the
+   *  same option — as a linear sequence in chained chunks: constant speed by
+   *  construction, fractional, sequenced on the compositor's own clock. */
+  protected usesCompositor(lenis: VirtualScrollerAutoplay.Integrator): boolean {
+    return Boolean(lenis.options?.compositorGlide) && Boolean(lenis.canComposite);
+  }
+
   /** The chunk of creep from `start`: constant speed, one value per keyframe step. */
   protected chunkFrom(start: number, stepMs: number): number[] {
     const count = Math.ceil(this.self.CHUNK_MS / stepMs);
@@ -295,11 +297,19 @@ class $VirtualScrollerAutoplay {
   /** Keep the compositor fed: start a chunk from the model when nothing
    *  plays, chain the next from the playing chunk's last value as it nears
    *  its end. A flick's glide on the layer is left alone until it ends. */
+  // invariant: The creep plays on the compositor as a linear sequence in chained chunks (examples/playground/src/lenis/lenis.invariants.md)
   protected feedCompositor(lenis: VirtualScrollerAutoplay.Integrator) {
     const stepMs = lenis.keyframeMs ?? this.self.FRAME_MS / 2;
+    // a new speed: the chunk playing and the one queued were built at the old
+    // one, so the layer is taken back at the shown value and the next frame
+    // hands over a fresh chunk — the speed changes within a frame, not a chunk
+    if (this.creep.composited && this.creep.chunkMsPerPx !== this.msPerPx) this.releaseCreepCompositor();
     if (!lenis.compositorGlideActive) {
       const started = lenis.startCompositorSequence?.(this.chunkFrom(lenis.targetScroll, stepMs), { linear: true });
-      if (started) this.creep.composited = true;
+      if (started) {
+        this.creep.composited = true;
+        this.creep.chunkMsPerPx = this.msPerPx;
+      }
       return;
     }
     if (!this.creep.composited) return;
@@ -313,7 +323,12 @@ class $VirtualScrollerAutoplay {
   protected releaseCreepCompositor() {
     if (!this.creep.composited) return;
     this.creep.composited = false;
-    this.owner.lenis?.releaseCompositor?.(true);
+    const lenis = this.owner.lenis;
+    if (!lenis) return;
+    lenis.releaseCompositor?.(true);
+    // the adopt moved the rendered position to what the compositor showed;
+    // the creep advances the TARGET, so the next chunk must start from there
+    lenis.targetScroll = lenis.animatedScroll;
   }
 
   /** The auto-repeat chain: back to the top, pause, then read again. */

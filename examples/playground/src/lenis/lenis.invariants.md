@@ -31,6 +31,8 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [The frame write leaves the layer promoted](#the-frame-write-leaves-the-layer-promoted) — why the iPhone moves one raster instead of drawing a new one every frame.
 - [A glide renders at the rate the platform grants a page](#a-glide-renders-at-the-rate-the-platform-grants-a-page) — why a perfect glide still reads softer than a native fling on a 120 Hz phone, and what lifts it.
 - [A frame advances by the reported gap](#a-frame-advances-by-the-reported-gap) — why the integrator trusts the callback's own moment, and why stepping by an assumed interval read as a nudge.
+- [A glide plays on the compositor as held snapped keyframes](#a-glide-plays-on-the-compositor-as-held-snapped-keyframes) — why a flick's glide has no timing error at all: the presenter plays a sequence authored for its own frames.
+- [The creep plays on the compositor as a linear sequence in chained chunks](#the-creep-plays-on-the-compositor-as-a-linear-sequence-in-chained-chunks) — why the reading creep is the same motion with no seam, and stays fractional.
 - [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page) — why a reader at an end is never trapped inside the scroller.
 - [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it) — why a trackpad can scroll a code block sideways.
 
@@ -76,7 +78,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 ### A glide renders at the rate the platform grants a page
 
-**Invariant:** If a glide is driven from JavaScript (a `requestAnimationFrame` loop writing a transform), then it renders at the frame rate the browser grants page animation, not at the rate the browser's own scroll runs at: 60 Hz on a ProMotion iPhone under Safari's default, and 60 Hz on a 120 Hz Android panel once the finger lifts, however smooth the numbers are.
+**Invariant:** If a glide is driven from JavaScript (a `requestAnimationFrame` loop writing a transform), then it renders at the frame rate the browser grants page animation, not at the rate the browser's own scroll runs at: 60 Hz on a ProMotion iPhone under Safari's default, and 60 Hz on a 120 Hz Android panel once the finger lifts, however smooth the numbers are. Since 2026-09-17 the shipped glide and creep are NOT driven that way — they play on the compositor (the two records below) — so this record scopes the `compositorGlide: false` path and any motion still written from a callback.
 
 **Scope:** every frame the fork writes; both phones; independent of the write policy, the heights, the pad and the glide model.
 
@@ -124,7 +126,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 ### The layer is written where the model says
 
-**Invariant:** If the scroll model holds a position, then the transform is written at that position minus the render offset, rounded to the nearest device pixel (a multiple of 1/devicePixelRatio) at the write and nowhere earlier. Nothing between the model and the write rounds — not the target, not the lerp, not the finger's trail — and every writer of the layer (Lenis's frame write, the scroller's jump write) lands on the same grid.
+**Invariant:** If the scroll model holds a position, then the transform is written at that position minus the render offset, rounded to the nearest device pixel (a multiple of 1/devicePixelRatio) at the write and nowhere earlier. Nothing between the model and the write rounds — not the target, not the lerp, not the finger's trail — and every writer of the layer (Lenis's frame write, the scroller's jump write, a glide's compositor keyframes) lands on the same grid. Scope boundary: motion at a constant speed BELOW one device pixel per frame (the reading creep, ~0.11 CSS px per frame) is written fractional, because there the compositor's filtering of the fraction is the motion and a snapped write is a tick every several frames; the creep's compositor sequence is linear between two fractional endpoints for that reason.
 
 **Scope:** `Lenis.ts` `setScroll`, `snapToDevicePixel`, the `pixelSnap` option (default on; `false` restores the fractional write for comparison), `scrollTo` (the target it does not round), `shiftBy`; `VirtualScroller.ts` `setScrollPosition` (its write of the same layer from the rebased offset).
 
@@ -191,6 +193,47 @@ Chosen invariants stand on reality invariants, never the reverse.
 **Impossible if true:** A frame advanced by a time other than the gap its callback reported, within the budget. A glide whose content lags or leads its own callback's moment by design.
 
 **Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "same motion"`
+
+**Status:** provisional
+
+**Last refined:** 2026-09-17
+
+### A glide plays on the compositor as held snapped keyframes
+
+**Invariant:** If a flick releases with inertia and the layer can take a Web Animation, then the glide's whole remaining curve — the integrator's own friction or exponential arithmetic sampled once per 120 Hz step, snapped to the device grid, one keyframe per distinct value, each held to the next — is handed to the layer as one animation, and no inline write reaches the DOM while it plays. The model keeps running for the window and the events. Any new motion (a touch brake, a wheel, a programmatic scroll, an external adopt) takes the layer back at the value the compositor is showing; an anchor shift under the glide rebuilds the remaining curve from the shifted model; the render-bias rebase waits for the glide to end.
+
+**Scope:** `Lenis.ts` `startCompositorGlide`, `startCompositorSequence`, `heldKeyframes`, `glideKeyframes`, `endCompositorGlide`, `compositorShownValue`, `restartCompositorGlide`, `onCompositorSequenceFinish`, the `compositorGlide` option (on); `VirtualScroller.ts` `updateRenderBias` (waits).
+
+**Mechanism:** A presented frame is exact when the state it shows was computed for the moment it is shown; the error in a frame is speed × the offset between the moment its state was computed for and the moment it is presented. A state produced in a callback is a side effect of that callback's clock, and wherever the callback's clock and the panel's diverge — Safari fires a page's callback 5 ms late every 100 ms at 120 Hz — the offset varies, and speed × that variation is judder, read as a doubled edge on moving text. A sequence authored for presentation moments has no such offset by construction: the compositor samples it on its own vsync, the same clock that presents it. Nothing computed inside a callback can present a frame the browser shows at the wrong time; only handing the sequence to the presenter removes the seam. Held keyframes keep every presented frame on the grid (a linear interpolation between snapped keyframes would land on fractions at the compositor's phase); merging equal neighbours costs nothing on screen and cuts an exponential glide's keyframes by 39 %.
+
+**Rejected alternatives:**
+
+- Stepping the JavaScript-timed glide by an assumed panel interval (`c7174f48`, out in `f6a1bcf9`): even steps at uneven moments — see "A frame advances by the reported gap".
+- Interpolated (unheld) keyframes: the compositor would present fractions at its phase and the slow-tail shimmer would return.
+
+**Evidence:** Judged by hand on 2026-09-17 on a Galaxy S22 Ultra and an iPhone 16 Pro Max (60 Hz and 120 Hz), on the chat and the 1M-row example: more stable than the JavaScript-timed glide on both, the reader's own word "perfection". Headless: a flick hands over 140 keyframes (friction) or 309 (exponential, from 509 before merging), the inline transform untouched while it plays, the layer at the model's end value when it finishes; build 0.04–0.13 ms, parse 0.2–0.4 ms per flick. Tests: "the compositor keyframes are the remaining curve of either glide model, from the current value to the target", "held keyframes merge equal snapped neighbours and keep the first and last steps at their offsets".
+
+**Impossible if true:** An inline transform write during a compositor glide. A compositor glide whose last keyframe is not the model's target. A handoff (grab, wheel, shift) that shows a value the compositor was not showing.
+
+**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "compositor keyframes|held keyframes"`; on a device, the feel strip's compositor switch against `off`.
+
+**Status:** provisional
+
+**Last refined:** 2026-09-17
+
+### The creep plays on the compositor as a linear sequence in chained chunks
+
+**Invariant:** If the reading creep runs and the layer can take a Web Animation, then it hands the layer 2-second chunks of constant speed as a linear animation between two fractional endpoints, chains the next chunk onto the playing one at its exact end on the document timeline with 700 ms to go, and writes the model only; every stop — input, a direction change, the end of the content, `stop()` — adopts the value the compositor is showing and releases the layer. A flick's glide already on the layer is left alone until it ends.
+
+**Scope:** `VirtualScrollerAutoplay.ts` `creepStep`, `feedCompositor`, `chunkFrom`, `releaseCreepCompositor`, `CHUNK_MS`, `CHAIN_AT_MS`; `Lenis.ts` `startCompositorSequence` (`linear`, `after`), `compositorPlaying`, `compositorHasChained`, `compositorRemainingMs`, `releaseCompositor`.
+
+**Mechanism:** The same as the glide's: a sequence authored for presentation moments has no timing error. A creep is open-ended, so the compositor takes it in finite pieces; a chained chunk starts on the document timeline where the one before ends and waits in a queue until then, so the boundary is never a frame the page has to hit. The creep is fractional and linear because its speed is below one device pixel per frame (the scope boundary on the grid record).
+
+**Evidence:** Headless on the 1M example, 2026-09-17: 2000 ms chunks, the next queued at a negative current time while the current plays, no inline write while the compositor owns the layer. By hand on both phones: the creep reads as it did or better, at 60 Hz too.
+
+**Impossible if true:** A visible seam at a chunk boundary. A creep frame written inline while a compositor chunk plays. A creep chunk started while a flick's glide owns the layer.
+
+**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller -t "creep"`; on a device, autoplay on the 1M example with the compositor switch on and off.
 
 **Status:** provisional
 
