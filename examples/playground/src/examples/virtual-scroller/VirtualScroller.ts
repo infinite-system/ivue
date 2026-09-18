@@ -157,7 +157,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       /** the scroll handed the compositor a sequence — a flick's glide, a creep
        *  chunk — so a stage can compose its own tracks over the same values,
        *  on the same clock (see lenis/presented-motion.generator.md) */
-      sequence: (sequence: Lenis.Sequence) => true
+      sequence: (sequence: Lenis.Sequence) => true,
+      /** a playing sequence's rate changed in place (the creep's speed), so a
+       *  stage's tracks alongside it take the same rate */
+      sequenceRate: (change: Lenis.SequenceRate) => true
     };
   }
 
@@ -1017,6 +1020,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       allowNestedScroll: true,
       autoRaf: false, // we drive it ourselves
       onSequence: (sequence) => this.onSequence(sequence),
+      onSequenceRate: (change) => this.onSequenceRate(change),
       ...this.lenisMotion
     });
   }
@@ -1025,6 +1029,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  over the scroll hears it as an event, with the animation and the values. */
   onSequence(sequence: Lenis.Sequence) {
     this.emit('sequence', sequence);
+  }
+
+  onSequenceRate(change: Lenis.SequenceRate) {
+    this.emit('sequenceRate', change);
   }
 
   /**

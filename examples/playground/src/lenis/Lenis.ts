@@ -203,6 +203,12 @@ class $Lenis {
    *  scroll layer uses this for itself; a stage uses it for every track it
    *  derives from the same values. Returns null when the element cannot animate
    *  or the list is too short. */
+  /** An animation's playback rate, 1 for a stand-in that has none. */
+  static rateOf(animation: Animation): number {
+    const rate = animation.playbackRate;
+    return typeof rate === 'number' && rate > 0 ? rate : 1;
+  }
+
   static composeSequence(
     element: Element,
     values: readonly number[],
@@ -223,12 +229,18 @@ class $Lenis {
       ? [values[0], values[values.length - 1]].map((value) => ({ [property]: formatOf(value) }))
       : this.heldKeyframes(values, formatOf, property);
     const animation = element.animate(frames, { duration, fill: 'forwards' });
+    // aligned to another sequence, this one runs at that sequence's rate: its
+    // offsets are in the other's own time, and a rate change there (a creep's
+    // speed) is followed by `updatePlaybackRate` on every track alongside
+    const reference = after ?? alongside;
+    const rate = reference ? this.rateOf(reference) : 1;
+    if (rate !== 1) animation.playbackRate = rate;
     if (after && after.startTime !== null) {
       const afterDuration = Number(after.effect?.getTiming().duration ?? 0);
-      animation.startTime = Number(after.startTime) + afterDuration;
+      animation.startTime = Number(after.startTime) + afterDuration / rate;
     } else if (alongside && alongside.startTime !== null) {
       // alongside another sequence, from its start or from a moment into it
-      animation.startTime = Number(alongside.startTime) + offsetMs;
+      animation.startTime = Number(alongside.startTime) + offsetMs / rate;
     }
     return animation;
   }
@@ -282,6 +294,7 @@ class $Lenis {
     safariLayerReset = false,
     compositorGlide = true,
     onSequence,
+    onSequenceRate,
     duration, // in seconds
     easing,
     lerp = 0.1,
@@ -347,6 +360,7 @@ class $Lenis {
       safariLayerReset,
       compositorGlide,
       onSequence,
+      onSequenceRate,
       duration,
       easing,
       lerp,
@@ -503,6 +517,9 @@ class $Lenis {
     /** the sequence's duration on the compositor, ms: a run's own when it
      *  was given one, else the keyframe count times the step */
     durationMs: 0,
+    /** the rate the playing sequence runs at: 1 as built, changed in place
+     *  by `setCompositorRate` (a creep's speed change) */
+    rate: 1,
     /** sequences scheduled to follow the current one, promoted one at a
      *  time as the one before finishes */
     chained: [] as Array<{ animation: Animation; values: number[]; linear: boolean; durationMs: number }>
@@ -636,11 +653,12 @@ class $Lenis {
   }
 
   /** Milliseconds left in the sequence the compositor is playing, or 0. */
+  /** Wall-clock ms the playing sequence has left, at its rate. */
   get compositorRemainingMs(): number {
     const animation = this.compositor.animation;
     if (!animation) return 0;
     const duration = Number(animation.effect?.getTiming().duration ?? 0);
-    return Math.max(0, duration - Number(animation.currentTime ?? 0));
+    return Math.max(0, duration - Number(animation.currentTime ?? 0)) / this.compositor.rate;
   }
 
 
@@ -1657,6 +1675,7 @@ class $Lenis {
     }
     this.compositor.keyframes = values;
     this.compositor.durationMs = duration;
+    this.compositor.rate = 1;
     this.compositor.linear = linear;
     this.compositor.modelDone = false;
     this.compositor.animation = animation;
@@ -1670,6 +1689,25 @@ class $Lenis {
   }
 
   /** The value the compositor is showing now, from its own clock over our keyframes. */
+  /** Change the playing sequence's speed in place, as a multiple of the
+   *  speed it was built at: the run keeps its keyframes and its current
+   *  time and never ends — an animation ending under a text layer is a
+   *  re-raster of that layer. Every sequence queued after it, and every
+   *  track composed alongside it, takes the same rate. */
+  setCompositorRate(rate: number) {
+    const compositor = this.compositor;
+    const animation = compositor.animation;
+    if (!animation || rate <= 0 || rate === compositor.rate) return;
+    compositor.rate = rate;
+    const seamless = (target: Animation) => {
+      if (typeof target.updatePlaybackRate === 'function') target.updatePlaybackRate(rate);
+      else target.playbackRate = rate;
+    };
+    seamless(animation);
+    for (const chained of compositor.chained) seamless(chained.animation);
+    this.options.onSequenceRate?.({ animation, rate });
+  }
+
   protected compositorShownValue(): number {
     const { animation, keyframes, linear, durationMs } = this.compositor;
     const elapsed = Math.max(0, Number(animation?.currentTime ?? 0));
@@ -1738,6 +1776,7 @@ class $Lenis {
     compositor.keyframes = next.values;
     compositor.linear = next.linear;
     compositor.durationMs = next.durationMs;
+    // the next was aligned at the rate in force; it carries it on
     animation.cancel();
   }
 
@@ -1976,6 +2015,12 @@ export namespace Lenis {
   /** A sequence the compositor was handed: the animation, the scroll values
    *  it was built from (one per KEYFRAME_MS), whether it is linear, and the
    *  animation it was chained after, if any. */
+  /** A playing sequence's rate changed in place. */
+  export interface SequenceRate {
+    animation: Animation;
+    rate: number;
+  }
+
   export interface Sequence {
     animation: Animation;
     values: readonly number[];
@@ -2070,6 +2115,9 @@ export namespace Lenis {
      *  from, so a stage can compose its own tracks over the same list, aligned
      *  alongside (or, for a chained chunk, after) the same animation. */
     onSequence?: (sequence: Lenis.Sequence) => void;
+    /** Called when a playing sequence's rate is changed in place — a creep's
+     *  speed change — so tracks composed alongside it take the same rate. */
+    onSequenceRate?: (change: Lenis.SequenceRate) => void;
     /**
      * Scroll duration in seconds
      */
@@ -2169,7 +2217,7 @@ export namespace Lenis {
   /** The options as resolved: every default filled, four left optional. */
   export type ResolvedOptions = OptionalPick<
     Required<Options>,
-    'duration' | 'easing' | 'prevent' | 'virtualScroll' | 'onSequence'
+    'duration' | 'easing' | 'prevent' | 'virtualScroll' | 'onSequence' | 'onSequenceRate'
   >;
   type OptionalPick<T, F extends keyof T> = Omit<T, F> & Partial<Pick<T, F>>;
 }

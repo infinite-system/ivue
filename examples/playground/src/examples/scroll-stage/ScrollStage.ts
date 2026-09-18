@@ -81,6 +81,13 @@ class $ScrollStage {
     return 2000;
   }
 
+  /** The drawing box of a ridge's path: twice as wide as tall, scaled
+   *  uniformly to cover the tile — a tall phone sees the middle of the
+   *  skyline at its true proportion instead of the whole of it squeezed. */
+  static get RIDGE_BOX() {
+    return { width: 2000, height: 1000 };
+  }
+
   /** The two scene slots: a chapter's scene lives in the slot of its parity. */
   static get SLOTS() {
     return 2;
@@ -128,7 +135,7 @@ class $ScrollStage {
   }
 
   /** A chapter's skyline for one ridge: a seeded polyline across the tile,
-   *  as an SVG path in a 1000 × 1000 box. The same chapter always draws the
+   *  as an SVG path in the ridge box. The same chapter always draws the
    *  same ridge, and no two chapters draw the same one. */
   static ridgePath(chapter: number, ridge: ScrollStage.Ridge): string {
     let seed = chapter * 9973 + ridge.points * 7919;
@@ -136,14 +143,15 @@ class $ScrollStage {
       seed = (seed * 1103515245 + 12345) % 2147483648;
       return seed / 2147483648;
     };
+    const { width, height } = this.RIDGE_BOX;
     const steps = ridge.points;
-    let path = `M0 ${Math.round((ridge.base + (next() - 0.5) * ridge.amplitude) * 1000)}`;
+    let path = `M0 ${Math.round((ridge.base + (next() - 0.5) * ridge.amplitude) * height)}`;
     for (let step = 1; step <= steps; step++) {
-      const x = Math.round((step / steps) * 1000);
-      const y = Math.round((ridge.base + (next() - 0.5) * 2 * ridge.amplitude) * 1000);
+      const x = Math.round((step / steps) * width);
+      const y = Math.round((ridge.base + (next() - 0.5) * 2 * ridge.amplitude) * height);
       path += ` L${x} ${y}`;
     }
-    return `${path} L1000 1000 L0 1000 Z`;
+    return `${path} L${width} ${height} L0 ${height} Z`;
   }
 
   /** A chapter's palette: a hue that walks the wheel, the ridges darkening
@@ -506,6 +514,20 @@ class $ScrollStage {
       () => this.onScrollSequenceOver(sequence.animation),
       { once: true }
     );
+  }
+
+  /** The scroll's playing sequence changed its rate in place (the creep's
+   *  speed): every piece in flight over it takes the same rate, seamlessly,
+   *  so it stays where it was and moves as the scroll now moves. Pieces
+   *  composed from here on inherit the rate from the run they align to. */
+  onSequenceRate(change: Lenis.SequenceRate) {
+    const flight = this.tracks.find((track) => track.scroll === change.animation);
+    if (!flight) return;
+    for (const piece of flight.pieces)
+      for (const animation of piece.animations) {
+        if (typeof animation.updatePlaybackRate === 'function') animation.updatePlaybackRate(change.rate);
+        else animation.playbackRate = change.rate;
+      }
   }
 
   /** Every track over a list of values, aligned `atMs` into the scroll

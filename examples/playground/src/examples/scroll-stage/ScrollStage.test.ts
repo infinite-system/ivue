@@ -6,12 +6,14 @@ Goal: A scene per chapter moves WITH the scroll on one clock — composed over t
 // domain-invariant: $ScrollStage — If the scroll hands the compositor a sequence, then every track is composed over the same values alongside the same animation, and no track is written inline while it plays.
 // domain-invariant: $ScrollStage — If a scroll sequence ends, is promoted or is interrupted, then its tracks are cancelled with it, and when nothing plays the tracks are written from the rendered position again.
 // domain-invariant: $ScrollStage — If the scroll plays a linear run, then the stage cuts it into held pieces aligned to the run's own start on the document timeline, two in flight, the next composed as one finishes, and every piece's values lie on the run's line.
+// domain-invariant: $ScrollStage — If the run's rate changes in place, then every piece in flight takes the same rate and a piece composed after inherits it, its offset scaled by it.
 // domain-invariant: $ScrollStage — If a scroll value lies in a chapter, then that chapter's slot draws it at its progress and the other slot draws the next chapter waiting, the two opacities summing to one through the fade, and a ridge's rise is its fraction of the chapter's progress over the tile's overhang and never wraps.
 Impossible if true: A track written inline while the compositor owns the scroll.
 Impossible if true: A ridge risen by more than its fraction of the tile's overhang.
 Impossible if true: Two chapters drawing the same skyline.
 Impossible if true: A track left playing after the scroll animation it was composed over was cancelled with nothing else in flight.
 Impossible if true: A piece of a run whose start is not the run's start plus its offset.
+Impossible if true: A piece moving at a rate other than the run's.
 
 === GENERATOR-DESCRIBED ===
 The stage is a table of formatters over one number, a pair of slots the
@@ -28,6 +30,7 @@ import type { Lenis } from '../../lenis/Lenis';
 /** A Web Animation stand-in: what the stage aligns with and cancels. */
 class FakeAnimation extends EventTarget {
   startTime: number | null = 1000;
+  playbackRate = 1;
   cancelled = false;
   constructor(
     public frames: Keyframe[],
@@ -41,6 +44,9 @@ class FakeAnimation extends EventTarget {
   cancel() {
     this.cancelled = true;
     this.dispatchEvent(new Event('cancel'));
+  }
+  updatePlaybackRate(rate: number) {
+    this.playbackRate = rate;
   }
 }
 
@@ -133,7 +139,7 @@ test('a chapter owns a slot: its ridges move by their fraction of the chapter tr
   expect(ScrollStage.Class.ridgePath(7, far)).toBe(ScrollStage.Class.ridgePath(7, far));
   const paths = new Set([1, 2, 3, 4, 5, 6, 7, 8].map((chapter) => ScrollStage.Class.ridgePath(chapter, far)));
   expect(paths.size).toBe(8);
-  expect(ScrollStage.Class.ridgePath(3, far)).toMatch(/^M0 \d+( L\d+ \d+){9} L1000 1000 L0 1000 Z$/);
+  expect(ScrollStage.Class.ridgePath(3, far)).toMatch(/^M0 \d+( L\d+ \d+){9} L2000 1000 L0 1000 Z$/);
 });
 
 // invariant: A glide plays on the compositor as held snapped keyframes (examples/playground/src/lenis/lenis.invariants.md)
@@ -225,4 +231,29 @@ test("a linear run is cut into held pieces aligned to the run's start, two in fl
   run.cancel();
   await nextTick();
   expect(stage.onCompositor.value).toBe(false);
+});
+
+// domain-invariant: $ScrollStage — If the run's rate changes in place, then every piece in flight takes the same rate and a piece composed after inherits it, its offset scaled by it.
+// impossible-if-true: $ScrollStage — A piece moving at a rate other than the run's.
+test("a rate change on the run reaches every piece in flight, and a later piece inherits the run's rate with its offset scaled", () => {
+  const { stage, animates } = stageWithSlots();
+  const { TRACK_CHUNK_MS } = ScrollStage.Class;
+  const run = new FakeAnimation([], 8000);
+  stage.onSequence({
+    animation: run as unknown as Animation,
+    values: [0, 800],
+    linear: true,
+    after: null,
+    durationMs: 8000
+  } as Lenis.Sequence);
+  expect(animates.length).toBe(26);
+  run.updatePlaybackRate(2);
+  stage.onSequenceRate({ animation: run as unknown as Animation, rate: 2 });
+  expect(animates.every((composed) => composed.animation.playbackRate === 2)).toBe(true);
+  // the first piece finishes: the third is composed at the run's rate, its offset in the run's own time halved on the timeline
+  animates[0].animation.dispatchEvent(new Event('finish'));
+  const third = animates.slice(26);
+  expect(third.length).toBe(13);
+  expect(third.every((composed) => composed.animation.playbackRate === 2)).toBe(true);
+  expect(third.every((composed) => composed.animation.startTime === 1000 + (2 * TRACK_CHUNK_MS) / 2)).toBe(true);
 });

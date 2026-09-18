@@ -21,6 +21,7 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 // domain-invariant: $Lenis — If a wheel runs mostly across the scroller's axis, then the scroller leaves it alone — no cancel, no scroll — so whatever scrolls that way under the pointer takes it; a wheel along the axis with a little drift across is the scroller's.
 // domain-invariant: $Lenis — If the scroll model holds a position, then the transform is written at that position minus the render offset, rounded to the nearest device pixel at the write and nowhere earlier; the target keeps its fraction.
 // domain-invariant: $Lenis — If a consumer writes the layer itself and adopts the position, then the scroll event fires for that write as for any other, so whatever follows the layer follows a thumb drag, a seek and a jump too.
+// domain-invariant: $Lenis — If a sequence is composed alongside or after another, then it runs at that sequence's rate, its offset in that sequence's own time divided by the rate on the timeline; a rate set on the playing sequence in place reaches the sequences queued after it and is announced, and the sequence is never ended for it.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
 // domain-invariant: $Lenis — If a flick's glide plays on the compositor, then its keyframes are the integrator's own remaining curve sampled once per KEYFRAME_MS from the current value, ending exactly on the target for both glide models.
 Impossible if true: A written transform whose value times devicePixelRatio is not an integer. A target rounded by the write.
@@ -33,6 +34,7 @@ Impossible if true: A wheel up at the top of the thread that moves nothing.
 Impossible if true: A reversal that waits for the old glide to run its distance.
 Impossible if true: A trackpad swiping a code block sideways that scrolls the list by its drift.
 Impossible if true: A layer moved by the consumer's own write that a scroll listener never hears of.
+Impossible if true: A track composed alongside a rated sequence that runs at another rate.
 
 === GENERATOR-DESCRIBED ===
 The trail is the one thing the fork adds to touch inertia; the sync
@@ -669,4 +671,80 @@ test('an adopted write is heard: the scroll event fires with the adopted positio
   lenis.adoptExternalScroll(4242);
   expect(heard).toEqual([4242]);
   expect(lenis.targetScroll).toBe(4242);
+});
+
+// domain-invariant: $Lenis — If a sequence is composed alongside or after another, then it runs at that sequence's rate, its offset in that sequence's own time divided by the rate on the timeline; a rate set on the playing sequence in place reaches the sequences queued after it and is announced, and the sequence is never ended for it.
+// impossible-if-true: $Lenis — A track composed alongside a rated sequence that runs at another rate.
+test('a track alongside a rated sequence takes its rate and scales its offset; a rate set in place is announced and ends nothing', () => {
+  class FakeAnimation extends EventTarget {
+    startTime: number | null = 1000;
+    playbackRate = 1;
+    currentTime = 0;
+    cancelled = false;
+    constructor(public duration: number) {
+      super();
+    }
+    get effect() {
+      return { getTiming: () => ({ duration: this.duration }) };
+    }
+    updatePlaybackRate(rate: number) {
+      this.playbackRate = rate;
+    }
+    cancel() {
+      this.cancelled = true;
+    }
+  }
+  const element = document.createElement('div');
+  const composed: FakeAnimation[] = [];
+  (element as unknown as { animate: unknown }).animate = (_frames: Keyframe[], options: KeyframeAnimationOptions) => {
+    const animation = new FakeAnimation(Number(options.duration));
+    animation.startTime = null;
+    composed.push(animation);
+    return animation;
+  };
+  const run = new FakeAnimation(10_000);
+  run.playbackRate = 2;
+  Lenis.Class.composeSequence(element, [0, 1, 2], (value) => `translateY(${value}px)`, {
+    alongside: run as unknown as Animation,
+    offsetMs: 3000
+  });
+  expect(composed[0].playbackRate).toBe(2);
+  expect(composed[0].startTime).toBe(1000 + 1500);
+  Lenis.Class.composeSequence(element, [0, 1], (value) => `translateY(${value}px)`, {
+    after: run as unknown as Animation
+  });
+  expect(composed[1].playbackRate).toBe(2);
+  expect(composed[1].startTime).toBe(1000 + 5000);
+  // a rate set in place on a playing sequence
+  class ObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
+  const wrapper = document.createElement('div');
+  const content = document.createElement('div');
+  wrapper.appendChild(content);
+  document.body.appendChild(wrapper);
+  const announced: Lenis.SequenceRate[] = [];
+  const layer: FakeAnimation[] = [];
+  (content as unknown as { animate: unknown }).animate = (_frames: Keyframe[], options: KeyframeAnimationOptions) => {
+    const animation = new FakeAnimation(Number(options.duration));
+    layer.push(animation);
+    return animation;
+  };
+  const lenis = new Lenis.Class({
+    wrapper,
+    content,
+    autoRaf: false,
+    onSequenceRate: (change) => announced.push(change)
+  });
+  lenis.virtualLimit = () => 100_000;
+  const started = lenis.startCompositorSequence([0, 5000], { linear: true, durationMs: 50_000 });
+  expect(started).toBe(layer[0] as unknown as Animation);
+  lenis.setCompositorRate(2);
+  expect(layer[0].playbackRate).toBe(2);
+  expect(layer[0].cancelled).toBe(false);
+  expect(announced).toEqual([{ animation: layer[0], rate: 2 }]);
+  expect(lenis.compositorRemainingMs).toBe(25_000);
 });

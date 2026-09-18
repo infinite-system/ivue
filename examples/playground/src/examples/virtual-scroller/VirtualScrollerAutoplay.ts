@@ -107,7 +107,9 @@ class $VirtualScrollerAutoplay {
     /** the creep, not a flick, put the playing sequence on the compositor */
     composited: false,
     /** the speed the playing chunk (and any queued one) was built at */
-    chunkMsPerPx: 0
+    chunkMsPerPx: 0,
+    /** the rate the run plays at now, as a multiple of the speed it was built at */
+    rate: 1
   };
 
   /** The two deferral timers: resuming the creep, and the end-of-content repeat. */
@@ -304,10 +306,17 @@ class $VirtualScrollerAutoplay {
    *  nears its end. A flick's glide on the layer is left alone until it ends. */
   // invariant: The creep plays on the compositor as one linear run (examples/playground/src/lenis/lenis.invariants.md)
   protected feedCompositor(lenis: VirtualScrollerAutoplay.Integrator) {
-    // a new speed: the run playing was built at the old one, so the layer is
-    // taken back at the shown value and the next frame hands over a fresh
-    // run — the speed changes within a frame
-    if (this.creep.composited && this.creep.chunkMsPerPx !== this.msPerPx) this.releaseCreepCompositor();
+    // a new speed: the run keeps playing at a new rate — the multiple of the
+    // speed it was built at — with its keyframes and its current time; it is
+    // never ended for a speed change, because an animation ending under the
+    // text layer re-rasters it (a 1 px shift on Chrome)
+    const rate = this.creep.chunkMsPerPx / this.msPerPx;
+    if (this.creep.composited && lenis.compositorGlideActive && rate !== this.creep.rate) {
+      if (lenis.setCompositorRate) {
+        lenis.setCompositorRate(rate);
+        this.creep.rate = rate;
+      } else this.releaseCreepCompositor();
+    }
     if (!lenis.compositorGlideActive) {
       const run = this.runFrom(lenis.targetScroll, lenis);
       if (run.durationMs <= 0) return;
@@ -315,6 +324,7 @@ class $VirtualScrollerAutoplay {
       if (started) {
         this.creep.composited = true;
         this.creep.chunkMsPerPx = this.msPerPx;
+        this.creep.rate = 1;
       }
       return;
     }
@@ -393,6 +403,8 @@ export namespace VirtualScrollerAutoplay {
     readonly compositorPlaying?: { animation: Animation; lastValue: number } | null;
     /** the end of the scrollable range — a run is built to it */
     readonly limit?: number;
+    /** change the playing run's speed in place, as a multiple of the speed it was built at */
+    setCompositorRate?(rate: number): void;
     startCompositorSequence?(
       values: number[],
       options?: { after?: Animation | null; linear?: boolean; durationMs?: number | null }

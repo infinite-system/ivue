@@ -148,10 +148,11 @@ class $ScrollFlight extends ScrollStage.$Class {
       seed = (seed * 1103515245 + 12345) % 2147483648;
       return seed / 2147483648;
     };
+    const { width, height } = this.RIDGE_BOX;
     const points: Array<[number, number]> = [];
     for (let step = 0; step <= ridge.points; step++) {
-      const x = Math.round((step / ridge.points) * 1000);
-      const y = Math.round((ridge.base + (next() - 0.5) * 2 * ridge.amplitude) * 1000);
+      const x = Math.round((step / ridge.points) * width);
+      const y = Math.round((ridge.base + (next() - 0.5) * 2 * ridge.amplitude) * height);
       points.push([x, y]);
     }
     let path = `M0 ${points[0][1]}`;
@@ -162,7 +163,7 @@ class $ScrollFlight extends ScrollStage.$Class {
     }
     const [lx, ly] = points[points.length - 1];
     path += ` L${lx} ${ly}`;
-    return `${path} L1000 1000 L0 1000 Z`;
+    return `${path} L${width} ${height} L0 ${height} Z`;
   }
 
   /** A chapter's palette: a time of day that cycles every four chapters

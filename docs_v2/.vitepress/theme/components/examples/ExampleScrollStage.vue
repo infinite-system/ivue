@@ -55,16 +55,16 @@ const {
           <div class="ess-sun-pivot" data-track="sun">
             <div class="ess-sun"></div>
           </div>
-          <svg class="ess-ridge" data-track="far" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+          <svg class="ess-ridge" data-track="far" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMax slice">
             <path d="" />
           </svg>
-          <svg class="ess-ridge" data-track="mid" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+          <svg class="ess-ridge" data-track="mid" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMax slice">
             <path d="" />
           </svg>
-          <svg class="ess-ridge" data-track="near" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+          <svg class="ess-ridge" data-track="near" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMax slice">
             <path d="" />
           </svg>
-          <svg class="ess-ridge" data-track="ground" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+          <svg class="ess-ridge" data-track="ground" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMax slice">
             <path d="" />
           </svg>
         </div>
@@ -82,7 +82,10 @@ const {
         :padding-quantity="stage.paddingQuantity"
         :creep-ms-per-px="stage.creepMsPerPx"
         scrollbar
+        auto-play
+        :auto-play-delay="800"
         @sequence="stage.onSequence($event)"
+        @sequence-rate="stage.onSequenceRate($event)"
       >
         <template #item="{ item }">
           <div class="ess-row" :class="{ heading: item.heading }">{{ item.body }}</div>

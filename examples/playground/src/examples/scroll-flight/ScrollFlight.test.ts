@@ -109,7 +109,7 @@ test('chapters cycle birds, plane, both; a crossing is parked and clear where it
 test('the skyline is smooth and seeded, and the palette pales the ridges into the sky the farther back they stand, a time of day per chapter', () => {
   const far = ScrollFlight.Class.RIDGES[0];
   const path = ScrollFlight.Class.ridgePath(3, far);
-  expect(path).toMatch(/^M0 \d+( Q\d+ \d+ \d+ \d+){6} L1000 \d+ L1000 1000 L0 1000 Z$/);
+  expect(path).toMatch(/^M0 \d+( Q\d+ \d+ \d+ \d+){6} L2000 \d+ L2000 1000 L0 1000 Z$/);
   expect(ScrollFlight.Class.ridgePath(3, far)).toBe(path);
   expect(ScrollFlight.Class.ridgePath(4, far)).not.toBe(path);
   expect([1, 2, 3, 4, 5].map((chapter) => ScrollFlight.Class.palette(chapter).time)).toEqual([

@@ -7,7 +7,9 @@ Goal: Drift the content forward at a reading pace that never reads as judder, an
 // domain-invariant: $VirtualScrollerAutoplay — If a forward glide has decayed to cruise speed while play defers, then the creep adopts the animated position there and continues, rather than waiting for the lerp to reach zero.
 // domain-invariant: $VirtualScrollerAutoplay — If the creep reaches the end with autoRepeat on, then it stops and the repeat chain resets to the top after the hold.
 // domain-invariant: $VirtualScrollerAutoplay — If the creep speed is unset, then the cadence is the tuned default, and the drag factor is one; a faster setting raises the factor proportionally.
+// domain-invariant: $VirtualScrollerAutoplay — If the creep's speed changes while its run plays on the compositor, then the run's rate is changed in place — the multiple of the speed it was built at — and the run is never released or ended for it.
 Impossible if true: A creep frame that writes while the reader's own input is live.
+Impossible if true: A creep run ended by a speed change.
 Impossible if true: A glide decaying below cruise speed before the creep takes it over.
 
 === GENERATOR-DESCRIBED ===
@@ -216,4 +218,48 @@ test('start arms the creep after its delay and stop parks both loops', () => {
   model.stop();
   expect(model.isPlaying.value).toBe(false);
   expect(owner.cancelFrames).toHaveBeenCalled();
+});
+
+// domain-invariant: $VirtualScrollerAutoplay — If the creep's speed changes while its run plays on the compositor, then the run's rate is changed in place — the multiple of the speed it was built at — and the run is never released or ended for it.
+// impossible-if-true: $VirtualScrollerAutoplay — A creep run ended by a speed change.
+test('a speed change rates the playing run in place: the multiple of the speed it was built at, no release, no fresh run', () => {
+  const started: Array<{ values: number[]; durationMs: number | null | undefined }> = [];
+  const rates: number[] = [];
+  const { model, owner, lenis } = autoplay();
+  // the compositor seam on the fake: the flag the stub raises is the one the model reads
+  const composited = Object.assign(lenis, {
+    options: { compositorGlide: true },
+    canComposite: true,
+    keyframeMs: 1000 / 120,
+    compositorGlideActive: false,
+    compositorHasChained: false,
+    compositorRemainingMs: 100_000,
+    compositorPlaying: null as { animation: Animation; lastValue: number } | null,
+    limit: 3_000, // under the ten-minute cap at the cadence, so the run ends at the content's end
+    startCompositorSequence: vi.fn((values: number[], options?: { durationMs?: number | null }) => {
+      started.push({ values, durationMs: options?.durationMs });
+      composited.compositorGlideActive = true;
+      return {} as Animation;
+    }),
+    setCompositorRate: vi.fn((rate: number) => rates.push(rate)),
+    releaseCompositor: vi.fn()
+  });
+  model.play();
+  step(0);
+  // one run to the end, its duration the distance at the cadence
+  expect(started.length).toBe(1);
+  expect(started[0].values[0]).toBeCloseTo(Logic.FRAME_MS / Logic.CREEP_MS_PER_PX, 6);
+  expect(started[0].values[1]).toBe(3_000);
+  expect(started[0].durationMs).toBeCloseTo((3_000 - started[0].values[0]) * Logic.CREEP_MS_PER_PX, 3);
+  // the speed doubles: the run is rated 2, nothing released, nothing restarted
+  owner.creepMsPerPxSetting = Logic.CREEP_MS_PER_PX / 2;
+  step(Logic.FRAME_MS);
+  expect(rates).toEqual([2]);
+  expect(composited.releaseCompositor).not.toHaveBeenCalled();
+  expect(started.length).toBe(1);
+  // and back to the built speed: rate 1, still the same run
+  owner.creepMsPerPxSetting = Logic.CREEP_MS_PER_PX;
+  step(Logic.FRAME_MS * 2);
+  expect(rates).toEqual([2, 1]);
+  expect(started.length).toBe(1);
 });

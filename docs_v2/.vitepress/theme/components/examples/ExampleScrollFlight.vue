@@ -60,10 +60,10 @@ const {
           </div>
           <div class="esf-cloud esf-cloud-a" data-track="cloud-a"></div>
           <div class="esf-cloud esf-cloud-b" data-track="cloud-b"></div>
-          <svg class="esf-ridge" data-track="far" viewBox="0 0 1000 1000" preserveAspectRatio="none"><path d="" /></svg>
-          <svg class="esf-ridge" data-track="mid" viewBox="0 0 1000 1000" preserveAspectRatio="none"><path d="" /></svg>
-          <svg class="esf-ridge" data-track="near" viewBox="0 0 1000 1000" preserveAspectRatio="none"><path d="" /></svg>
-          <svg class="esf-ridge" data-track="ground" viewBox="0 0 1000 1000" preserveAspectRatio="none"><path d="" /></svg>
+          <svg class="esf-ridge" data-track="far" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMax slice"><path d="" /></svg>
+          <svg class="esf-ridge" data-track="mid" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMax slice"><path d="" /></svg>
+          <svg class="esf-ridge" data-track="near" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMax slice"><path d="" /></svg>
+          <svg class="esf-ridge" data-track="ground" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMax slice"><path d="" /></svg>
         </div>
 
         <!-- the flock: its place in the sky is a track; its wings are the GPU's -->
@@ -106,7 +106,10 @@ const {
         :padding-quantity="flight.paddingQuantity"
         :creep-ms-per-px="flight.creepMsPerPx"
         scrollbar
+        auto-play
+        :auto-play-delay="800"
         @sequence="flight.onSequence($event)"
+        @sequence-rate="flight.onSequenceRate($event)"
       >
         <template #item="{ item }">
           <article class="esf-row" :class="{ heading: item.heading }">
