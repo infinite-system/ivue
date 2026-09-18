@@ -1802,3 +1802,14 @@ mirror clone does not copy them, which is why a backup's `fsck` is clean.
 - Reuse is what made the second conversion cheap: the glide paid for the
   bookkeeping, the adopt-on-interrupt and the bias guard; the creep added its
   sequence and chaining. Generalise at the second use, not the first.
+
+## vitest filters are playground-relative, and only from the repo root (2026-09-18)
+
+The root vitest config sets `examples/playground` as its root: a filter
+written as `examples/playground/src/...` finds no files, and a filter
+written as `src/...` from INSIDE the playground directory runs the
+playground's own config, which has no DOM — every spec that touches
+`document` fails with "document is not defined". The one working form
+is `cd <repo root> && npx vitest run src/<path>`. A Bash cwd that
+drifted into the playground produced the second failure once this
+session without any file changing.

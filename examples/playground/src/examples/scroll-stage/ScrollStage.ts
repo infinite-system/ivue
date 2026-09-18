@@ -173,6 +173,7 @@ class $ScrollStage {
   /** Which chapter each slot's scene currently draws — 0 until written. */
   protected readonly slotChapters: number[] = [0, 0];
 
+
   // STATE
   get items() {
     return shallowRef<ScrollStage.Row[]>(this.self.buildItems());
@@ -186,6 +187,13 @@ class $ScrollStage {
   /** Whether the stage's tracks are playing on the compositor right now. */
   get onCompositor() {
     return ref(false);
+  }
+
+  /** The track table, built once per stage element: the layers do not
+   *  change under a mounted stage, and a query per layer per frame is a
+   *  cost the callback path would pay for nothing. */
+  protected get trackCache() {
+    return shallowRef<{ stage: HTMLElement; tracks: ScrollStage.Track[] } | null>(null);
   }
 
   // ELEMENT REFS
@@ -228,7 +236,7 @@ class $ScrollStage {
   }
 
   get trackCountLabel(): string {
-    return String(this.self.SLOTS * (this.self.RIDGES.length + 2) + 1);
+    return String(this.trackList().length);
   }
 
   /** The whole scrollable extent — the progress bar's denominator. */
@@ -305,11 +313,19 @@ class $ScrollStage {
     return `scaleX(${Math.min(1, Math.max(0, value / this.extent)).toFixed(4)})`;
   }
 
-  /** Every track on the stage: the element it drives, the property, and
-   *  its formatter — the whole contract between a scene and the scroll. */
+  /** Every track on the stage, from the table built for this stage element. */
   trackList(): ScrollStage.Track[] {
     const stage = this.stage.value;
     if (!stage) return [];
+    if (this.trackCache.value?.stage !== stage)
+      this.trackCache.value = { stage, tracks: this.buildTracks(stage) };
+    return this.trackCache.value.tracks;
+  }
+
+  /** The track table: the element each track drives, the property, and its
+   *  formatter — the whole contract between a scene and the scroll. A
+   *  subclass adds its layers by extending this list. */
+  protected buildTracks(stage: HTMLElement): ScrollStage.Track[] {
     const tracks: ScrollStage.Track[] = [];
     for (let slot = 0; slot < this.self.SLOTS; slot++) {
       const root = stage.querySelector<HTMLElement>(`[data-slot="${slot}"]`);
