@@ -426,6 +426,67 @@ describe('Static $-cached getters', () => {
     expect(settle()).toBe(70); // inherited method binds to the child, detached
   });
 
+  it('the anchored class\'s own value is one slot: the getter runs once through it, and a computed undefined is still a hit', () => {
+    let runs = 0;
+    class $Probe {
+      static get $nothing() {
+        runs++;
+        return undefined;
+      }
+    }
+    const Probe = Static($Probe);
+    expect(Probe.$nothing).toBeUndefined();
+    expect(Probe.$nothing).toBeUndefined();
+    expect(runs).toBe(1);
+  });
+
+  it('a class wrapped AFTER its parent was read still derives through its own overrides', () => {
+    class $Base {
+      static get scale() {
+        return 1;
+      }
+      static get $metrics() {
+        return { unit: this.scale * 8 };
+      }
+    }
+    const Base = Static($Base);
+    expect(Base.$metrics.unit).toBe(8); // the parent's value is in its accessor's slot
+    class $Wide extends Base {
+      static override get scale() {
+        return 3;
+      }
+    }
+    const Wide = Static($Wide); // wrapped after the read: the walk still finds the accessor
+    expect(Wide.$metrics.unit).toBe(24);
+    expect(Wide.$metrics).toBe(Wide.$metrics);
+    expect(Base.$metrics.unit).toBe(8);
+  });
+
+  it('super.$x from an anchored child\'s own override reaches the parent\'s getter for the child, and never clobbers the child\'s accessor', () => {
+    class $Base {
+      static get label() {
+        return 'base';
+      }
+      static get $tag() {
+        return { text: `<${this.label}>` };
+      }
+    }
+    const Base = Static($Base);
+    class $Loud extends Base {
+      static override get label() {
+        return 'LOUD';
+      }
+      static override get $tag() {
+        return { text: super.$tag.text + '!' };
+      }
+    }
+    const Loud = Static($Loud);
+    expect(Loud.$tag.text).toBe('<LOUD>!');
+    expect(Loud.$tag).toBe(Loud.$tag);
+    expect(Base.$tag.text).toBe('<base>');
+    expect(Loud.$tag.text).toBe('<LOUD>!'); // the child's own accessor survived the super read
+  });
+
   // invariant: A prototype level is transformed at most once (ivue.invariants.md)
   it('re-wrapping a subclass never resurrects a parent-bound method through the bind cache', () => {
     // The double-wrap pattern the manual prescribes: a Static parent, a raw

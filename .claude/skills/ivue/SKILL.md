@@ -544,7 +544,11 @@ constant, a defaults map merged from a peer, a store, an engine — stays
 a getter, because at definition time that class can still be
 `undefined`. That is why every `$`-cached store and engine is a getter
 and stays one, and the gate's `cross_module_class_reads_happen_inside_bodies`
-check is the enforcement. The same for a static that probes the
+check is the enforcement. A `$` getter is the form for a value whose IDENTITY
+must be stable — a store, an engine, a memo table, a composed kit —
+computed once per receiver at first read; it is not the form for the
+contract, whose defaults must be fresh per read (an object default
+shared across instances is the bug Vue's factory rule exists to stop). The same for a static that probes the
 ENVIRONMENT — `typeof CSS !== 'undefined' && 'highlights' in CSS`, a
 `window` measurement, a feature flag: a field freezes the answer at
 module load, before a test installs the API or on a server that has
