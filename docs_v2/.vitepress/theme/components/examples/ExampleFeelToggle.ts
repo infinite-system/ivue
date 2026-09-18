@@ -28,6 +28,11 @@ class $ExampleFeelToggle {
     return 4000;
   }
 
+  /** Frames kept either side of the motion in the report. */
+  static get SPAN_MARGIN_FRAMES() {
+    return 8;
+  }
+
   /** How long the copy button says "copied". */
   static get COPIED_MS() {
     return 1500;
@@ -266,12 +271,12 @@ class $ExampleFeelToggle {
    *  position (Lenis's animated scroll, what the frame drew), its move, and the
    *  model's target — so a glide can be read frame by frame off the phone. */
   buildReport(): string {
-    const trace = this.meter.trace;
+    const trace = this.motionSpan(this.meter.trace);
     const head = [
       `ua: ${navigator.userAgent}`,
       `dpr: ${devicePixelRatio} · viewport: ${innerWidth}×${innerHeight}`,
       `knobs: ${this.glide.value} · carry ${this.carry.value} · pixels ${this.pixels.value} · reset ${this.layerReset.value}`,
-      `rate: ${this.frameRate.value} fps · worst gap ${this.worstGapMs.value} ms · frames: ${trace.length}`,
+      `rate: ${this.frameRate.value} fps · worst gap ${this.worstGapMs.value} ms · frames in the moving span: ${trace.length}`,
       't(ms)  gap(ms)  rendered  move  target'
     ];
     const first = trace[0]?.at ?? 0;
@@ -287,6 +292,23 @@ class $ExampleFeelToggle {
   /** Copy the report: the clipboard API on a secure page, the legacy copy
    *  command on a plain-http LAN page (the phones reach the dev server that
    *  way), and when both refuse, the report opens on the strip to select by hand. */
+  /** The frames that moved, with a margin either side — at 120 Hz the 4-second
+   *  window is 480 lines and a glide sits near its start, so a partial paste
+   *  loses exactly the part that matters. A window with no motion is returned whole. */
+  protected motionSpan(trace: Array<{ at: number; position: number; target: number }>) {
+    const margin = this.self.SPAN_MARGIN_FRAMES;
+    let first = -1;
+    let last = -1;
+    for (let index = 1; index < trace.length; index++) {
+      if (trace[index].position !== trace[index - 1].position) {
+        if (first < 0) first = index;
+        last = index;
+      }
+    }
+    if (first < 0) return trace;
+    return trace.slice(Math.max(0, first - margin), Math.min(trace.length, last + margin + 1));
+  }
+
   async copyReport() {
     const report = this.buildReport();
     const copied = (await this.writeClipboard(report)) || this.copyThroughCommand(report);
