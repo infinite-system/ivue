@@ -277,7 +277,7 @@ class $ExampleFeelToggle {
       `dpr: ${devicePixelRatio} · viewport: ${innerWidth}×${innerHeight}`,
       `knobs: ${this.glide.value} · carry ${this.carry.value} · pixels ${this.pixels.value} · reset ${this.layerReset.value}`,
       `rate: ${this.frameRate.value} fps · worst gap ${this.worstGapMs.value} ms · frames in the moving span: ${trace.length}`,
-      't(ms)  gap(ms)  rendered  move  target   (the meter reads before the scroller steps: a move belongs to the previous line's gap)'
+      't(ms)  gap(ms)  rendered  move  target   (the meter reads before the scroller steps: a move belongs to the gap on the line above)'
     ];
     const first = trace[0]?.at ?? 0;
     const lines = trace.map((frame, index) => {
