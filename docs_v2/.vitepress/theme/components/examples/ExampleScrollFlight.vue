@@ -684,20 +684,18 @@ const {
 /* THE INTERLUDES — media pinned in the frame while its row's span crosses it */
 .esf-media {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(72%, 900px);
-  height: min(64%, 560px);
+  /* centred by its insets — no `translate` property: a layer carrying the
+     individual translate property under a composited `transform` animation
+     can fall off the compositor onto the main thread on Android Chrome, and a
+     main-thread animation is a choppy one. (2026-09-18, the second diagnostic:
+     the rounded clip and shadow are still off from the first.) */
+  left: 14%;
+  right: 14%;
+  top: 18%;
+  bottom: 18%;
   margin: 0;
-  /* centered by the individual translate property, so the track's transform composes over it */
-  translate: -50% -50%;
   opacity: 0;
   will-change: transform, opacity;
-  /* DIAGNOSTIC 2026-09-18: no rounded clip, no shadow. The fade stayed choppy on
-     the Galaxy and not on the iPhone after the ride was made fractional and the
-     scale removed; the main thread commits every frame of the creep, and on
-     Android a rounded overflow clip on a composited layer is a mask Chrome can
-     re-raster on a commit. If this cures it, the clip was the cause. */
   background: #0b1020;
 }
 .esf-media-image,
@@ -850,8 +848,10 @@ const {
     height: 84svh;
   }
   .esf-media {
-    width: 92%;
-    height: 48%;
+    left: 4%;
+    right: 4%;
+    top: 26%;
+    bottom: 26%;
   }
   .esf-interlude {
     height: 112svh;
