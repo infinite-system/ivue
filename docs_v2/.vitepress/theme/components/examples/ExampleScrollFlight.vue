@@ -693,11 +693,11 @@ const {
   translate: -50% -50%;
   opacity: 0;
   will-change: transform, opacity;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow:
-    0 30px 80px -20px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.08);
+  /* DIAGNOSTIC 2026-09-18: no rounded clip, no shadow. The fade stayed choppy on
+     the Galaxy and not on the iPhone after the ride was made fractional and the
+     scale removed; the main thread commits every frame of the creep, and on
+     Android a rounded overflow clip on a composited layer is a mask Chrome can
+     re-raster on a commit. If this cures it, the clip was the cause. */
   background: #0b1020;
 }
 .esf-media-image,
