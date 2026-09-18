@@ -33,11 +33,6 @@ class $ExampleFeelToggle {
     return 1500;
   }
 
-  /** The one cast per class: instance code reads its own statics here. */
-  protected get self() {
-    return this.constructor as typeof $ExampleFeelToggle;
-  }
-
   constructor() {
     // the shell mounts, then its view mounts a beat later; the moment the
     // scroller is reachable, read the settings it shipped with
@@ -52,6 +47,22 @@ class $ExampleFeelToggle {
     onMounted(() => this.startFrameMeter());
     onBeforeUnmount(() => this.stopFrameMeter());
   }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $ExampleFeelToggle;
+  }
+
+  /** Bookkeeping the meter keeps between frames — plain, never rendered:
+   *  the last second of frame stamps for the rate, and the last seconds
+   *  of (time, position) for the report. */
+  protected readonly meter = {
+    handle: 0,
+    stamps: [] as number[],
+    lastAt: 0,
+    worstGap: 0,
+    trace: [] as Array<{ at: number; position: number; target: number }>
+  };
 
   /** The shell beneath the strip — a template ref the SFC binds. */
   get shell() {
@@ -217,17 +228,6 @@ class $ExampleFeelToggle {
   }
 
   /* ---- the frame meter and the report ---- */
-
-  /** Bookkeeping the meter keeps between frames — plain, never rendered:
-   *  the last second of frame stamps for the rate, and the last seconds
-   *  of (time, position) for the report. */
-  protected readonly meter = {
-    handle: 0,
-    stamps: [] as number[],
-    lastAt: 0,
-    worstGap: 0,
-    trace: [] as Array<{ at: number; position: number; target: number }>
-  };
 
   protected startFrameMeter() {
     this.meter.handle = requestAnimationFrame((time) => this.onFrame(time));
