@@ -16,6 +16,7 @@ Impossible if true: A track left playing after the scroll animation it was compo
 Impossible if true: A piece of a run whose start is not the run's start plus its offset.
 Impossible if true: A piece moving at a rate other than the run's.
 Impossible if true: An interlude's media shown while its span is outside the frame.
+Impossible if true: A media track that changes the raster's scale from one keyframe to the next.
 
 === GENERATOR-DESCRIBED ===
 The stage is a table of formatters over one number, a pair of slots the
@@ -322,13 +323,14 @@ test("an interlude is pulled in as its span enters the frame, held while it cove
   expect(figure(1).querySelector('img')!.getAttribute('src')).toBe('/a.png');
   expect(figure(0).querySelector('img')!.getAttribute('src')).toBe('/b.png');
   expect(figure(1).querySelector('[data-caption]')!.textContent).toBe('A');
-  // its tracks: opacity is the presence, the transform settles from a zoom
+  // its tracks: opacity is the presence; the transform is a translation only — a scale
+  // on a raster the size of a picture is a re-raster per keyframe
   expect(stage.mediaOpacity(1, 9 * ASSUMED_ROW_PX + 30)).toBe('1.000');
   expect(stage.mediaOpacity(1, 0)).toBe('0.000');
-  expect(stage.mediaTransform(1, 9 * ASSUMED_ROW_PX + 30)).toBe('translateY(0.00px) scale(1.0000)');
+  expect(stage.mediaTransform(1, 9 * ASSUMED_ROW_PX + 30)).toBe('translateY(0.00px)');
   // riding with its span, fractional: a snapped ride ticks at reading speed
-  expect(stage.mediaTransform(1, 9 * ASSUMED_ROW_PX - 0.25)).toMatch(/^translateY\(\d+\.\d\dpx\) scale\(1\.0\d\d\d\)$/);
-  expect(stage.mediaTransform(1, 0)).toContain('scale(1.0600)');
+  expect(stage.mediaTransform(1, 9 * ASSUMED_ROW_PX - 0.25)).toMatch(/^translateY\(\d+\.\d\dpx\)$/);
+  expect(stage.mediaTransform(1, 0)).toMatch(/^translateY\(\d+\.\d\dpx\)$/);
   // past the second interlude: the third takes slot 1, the fourth slot 0
   stage.prepareScenes(20 * ASSUMED_ROW_PX);
   expect(figure(1).querySelector('img')!.getAttribute('src')).toBe('/a.png');

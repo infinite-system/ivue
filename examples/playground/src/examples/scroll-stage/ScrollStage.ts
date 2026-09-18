@@ -471,12 +471,14 @@ class $ScrollStage {
 
   /** A media slot's transform: the media rides in with its span — it sits
    *  where the empty span is, so the rows never cross it — and settles at
-   *  the frame's centre as it comes fully in, from a slight zoom; it leaves
-   *  the same way, with the span. */
+   *  the frame's centre as it comes fully in; it leaves the same way, with
+   *  the span. A translation only: a change of scale on a raster the size
+   *  of a picture is a re-raster, and one per held keyframe is a dropped
+   *  frame — a translation just moves the raster. */
   mediaTransform(slot: number, value: number): string {
     const ordinal = this.mediaOrdinals[slot];
     const span = ordinal ? this.interludeSpan(ordinal) : null;
-    if (!span) return 'translateY(0px) scale(1.06)';
+    if (!span) return 'translateY(0px)';
     const center = (span.start + span.end) / 2 - (value + this.frameSpan / 2);
     const presence = this.interludePresence(ordinal, value);
     // eased: the media stays with its span until it is nearly in, then settles.
@@ -486,8 +488,7 @@ class $ScrollStage {
     // without a shimmer.
     const settle = presence * presence * presence;
     const ride = (center * (1 - settle)).toFixed(2);
-    const zoom = (1.06 - presence * 0.06).toFixed(4);
-    return `translateY(${ride}px) scale(${zoom})`;
+    return `translateY(${ride}px)`;
   }
 
   progressTransform(value: number): string {

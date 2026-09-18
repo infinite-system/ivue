@@ -1851,4 +1851,9 @@ sequence are prepared for where the sequence BEGINS, never its end: a
 run to the end of the list drew chapter 5 into chapter 1's slot. And
 the media's ride is fractional: snapped to the device grid it ticked at
 reading speed (under a pixel per frame — the grid record's boundary)
-and read as a choppy fade on both phones; a picture is not text.
+and read as a choppy fade on both phones; a picture is not text. Still
+choppy after that: the track also set a new SCALE on every held
+keyframe, and a change of scale on a raster the size of a picture is a
+re-raster — one per frame, with the shadow — where a translation only
+moves the raster. A held track over a large layer translates and fades;
+it never scales.
