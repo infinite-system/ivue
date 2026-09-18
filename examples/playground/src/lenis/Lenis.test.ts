@@ -21,9 +21,7 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 // domain-invariant: $Lenis — If a wheel runs mostly across the scroller's axis, then the scroller leaves it alone — no cancel, no scroll — so whatever scrolls that way under the pointer takes it; a wheel along the axis with a little drift across is the scroller's.
 // domain-invariant: $Lenis — If the scroll model holds a position, then the transform is written at that position minus the render offset, rounded to the nearest device pixel at the write and nowhere earlier; the target keeps its fraction.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
-// domain-invariant: $Lenis — If a frame's reported gap is within the frame budget, then the frame advances by whole panel intervals — the mean of the recent gaps, times the gap rounded past the step threshold — never by the reported gap itself.
 Impossible if true: A written transform whose value times devicePixelRatio is not an integer. A target rounded by the write.
-Impossible if true: Two consecutive frames at a steady speed advancing by 1.7× and 0.36× of the interval because the clock reported 13 then 3.
 Impossible if true: A wheel up over a nested box scrolled down that moves the list instead of the box.
 Impossible if true: A swipe over rows that measured taller mid-drag reading a velocity of zero.
 Impossible if true: A wheel up at the top of the thread that moves nothing.
@@ -186,7 +184,6 @@ test('the same motion reports the same speed at 60 Hz and at 120', () => {
     velocity: number;
     frameMs: number;
     time: number;
-    recentGaps: number[];
     animate: { advance: (dt: number) => void };
     options: Record<string, unknown>;
     self: typeof Lenis.Class;
@@ -196,23 +193,20 @@ test('the same motion reports the same speed at 60 Hz and at 120', () => {
   lenis.animate = { advance: () => undefined };
   lenis.options = {};
   lenis.frameMs = Lenis.Class.FRAME_MS;
-  lenis.recentGaps = [];
 
   // the same motion twice: 10 px in a 16.6 ms frame, 5 px in the 8.3 ms
-  // frame a 120 Hz display gives it. Three frames at each rate: the
-  // interval is read off a window of gaps, and a rate switch is followed
-  // once three gaps agree with one another and not with the window.
+  // frame a 120 Hz display gives it
   // a non-zero clock: the first raf of all has no previous frame to measure
   lenis.time = 100;
-  for (const stamp of [116.6, 133.2, 149.8]) lenis.raf(stamp);
+  lenis.raf(116.6);
   lenis.velocity = 10;
   const at60 = lenis.velocityPerMs;
-  for (const stamp of [158.1, 166.4, 174.7]) lenis.raf(stamp);
+  lenis.raf(124.9);
   lenis.velocity = 5;
   const at120 = lenis.velocityPerMs;
   // the claim is that the two AGREE — the same motion, the same number,
   // whatever the display does
-  expect(at120).toBeCloseTo(at60, 2);
+  expect(at120).toBeCloseTo(at60, 6);
   expect(at60).toBeCloseTo(0.6, 2);
 
   // a suspended tab is not a frame time: the tuned value stands in
@@ -591,47 +585,4 @@ test('the layer is written on the device-pixel grid, the model and the target un
     wrapper.remove();
     if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
   }
-});
-
-// domain-invariant: $Lenis — If a frame's reported gap is within the frame budget, then the frame advances by whole panel intervals — the mean of the recent gaps, times the gap rounded past the step threshold — never by the reported gap itself.
-// impossible-if-true: $Lenis — Two consecutive frames at a steady speed advancing by 1.7× and 0.36× of the interval because the clock reported 13 then 3.
-test('a glide steps by the panel interval: a jittered 120 Hz clock advances evenly, a dropped frame counts double', () => {
-  const { frameStep, intervalOf } = Lenis.Class;
-  // the interval is the mean: Safari's 8, 9, 8, 13, 3 average to the true 8.33
-  expect(intervalOf([8, 9, 8, 13, 3])).toBeCloseTo(8.2, 1);
-  expect(intervalOf([])).toBe(Lenis.Class.FRAME_MS);
-  // a jittered pair is one frame each; a real dropped frame is two; at 60 Hz the same
-  expect(frameStep(13, 8.33)).toBeCloseTo(8.33, 2);
-  expect(frameStep(3, 8.33)).toBeCloseTo(8.33, 2);
-  expect(frameStep(16.7, 8.33)).toBeCloseTo(16.66, 2);
-  expect(frameStep(17, 16.7)).toBeCloseTo(16.7, 2);
-  expect(frameStep(33, 16.7)).toBeCloseTo(33.4, 2);
-  // through raf: a jittered 120 Hz sequence advances the integrator by the interval every frame
-  class ObserverStub {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-  const hadObserver = 'ResizeObserver' in globalThis;
-  if (!hadObserver)
-    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
-  const wrapper = document.createElement('div');
-  const content = document.createElement('div');
-  wrapper.appendChild(content);
-  document.body.appendChild(wrapper);
-  const lenis = new Lenis.Class({ wrapper, content, autoRaf: false, syncTouch: true });
-  const animate = (lenis as unknown as { animate: { advance: (seconds: number) => void } }).animate;
-  const advances: number[] = [];
-  animate.advance = (seconds) => advances.push(seconds * 1000);
-  const stamps = [1000, 1008, 1017, 1025, 1038, 1041, 1050, 1058, 1067, 1075, 1088, 1091, 1100, 1108, 1117, 1125];
-  for (const stamp of stamps) lenis.raf(stamp);
-  // after the window has samples, every advance is within a fraction of the 8.33 ms interval
-  const settled = advances.slice(6);
-  for (const advance of settled) expect(Math.abs(advance - 8.33)).toBeLessThan(0.6);
-  // and the sum of the steps tracks real time: no drift from the jitter
-  const stepped = advances.slice(1).reduce((sum, advance) => sum + advance, 0);
-  expect(Math.abs(stepped - (stamps[stamps.length - 1] - stamps[0]))).toBeLessThan(4);
-  lenis.destroy();
-  wrapper.remove();
-  if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
 });

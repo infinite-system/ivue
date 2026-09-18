@@ -85,66 +85,6 @@ class $Lenis {
     return 100;
   }
 
-  /** How many recent frame gaps the panel's interval is averaged over. Short,
-   *  so a 60 ↔ 120 Hz switch (Android under a finger) is followed within a
-   *  tenth of a second; long enough that a jittered pair averages out. */
-  static get GAP_WINDOW() {
-    return 12;
-  }
-
-  /** A reported gap counts as a second frame only past this fraction of an
-   *  interval: Safari reports 13 then 3 ms for two 8.33 ms frames, and 13 must
-   *  read as one frame while a real dropped frame — 16.7, exactly two — reads as two. */
-  static get FRAME_STEP_THRESHOLD() {
-    return 0.65;
-  }
-
-  /** The panel's frame interval: the mean of the recent gaps. Unbiased under
-   *  a jittered clock, where the median is not — 8, 9, 8, 13, 3 average to the true 8.33. */
-  static intervalOf(gaps: readonly number[]): number {
-    if (!gaps.length) return this.FRAME_MS;
-    let sum = 0;
-    for (const gap of gaps) sum += gap;
-    return sum / gaps.length;
-  }
-
-  /** Within this of one another, consecutive gaps agree; a run of them that
-   *  disagrees with the interval by more is a rate switch, not jitter. */
-  static get RATE_SWITCH_TOLERANCE() {
-    return 0.3;
-  }
-
-  /** Push a gap onto the window and trim it. A jittered pair (13 then 3) never
-   *  agrees with itself, so it only averages in; three gaps that agree with
-   *  one another and not with the window are a rate switch (60 ↔ 120 Hz on
-   *  Android under a finger), and the window restarts from them so the
-   *  interval follows within three frames instead of twelve. */
-  static recordGap(gaps: number[], gap: number): number[] {
-    gaps.push(gap);
-    if (gaps.length > this.GAP_WINDOW) gaps.shift();
-    if (gaps.length > 3) {
-      const last = gaps.slice(-3);
-      const lastMean = this.intervalOf(last);
-      const tolerance = this.RATE_SWITCH_TOLERANCE;
-      const agree = last.every((value) => Math.abs(value - lastMean) <= lastMean * tolerance);
-      const interval = this.intervalOf(gaps);
-      if (agree && Math.abs(lastMean - interval) > interval * tolerance) gaps.splice(0, gaps.length - 3);
-    }
-    return gaps;
-  }
-
-  /** The time a frame advances by: whole intervals, never the reported gap.
-   *  Safari hands a page rAF timestamps rounded to the millisecond and jittered
-   *  on purpose, while the panel presents on its vsync regardless; a glide
-   *  stepped by the reported gap moves 1.7× on a "13" and 0.36× on a "3" at even
-   *  intervals, which is judder — read on an iPhone at 120 Hz as a doubled
-   *  edge on the moving text. Native steps by the display link; so does this. */
-  // invariant: A glide steps by the panel interval (examples/playground/src/lenis/lenis.invariants.md)
-  static frameStep(reportedGap: number, interval: number): number {
-    if (interval <= 0) return reportedGap;
-    const frames = Math.max(1, Math.floor(reportedGap / interval + (1 - this.FRAME_STEP_THRESHOLD)));
-    return frames * interval;
-  }
 
   /** Within this many px of an end the content counts as at it. */
   static get LIMIT_TOLERANCE_PX() {
@@ -433,8 +373,6 @@ class $Lenis {
 
   /** The wall time the last animation frame actually took, in ms. */
   frameMs = this.self.FRAME_MS;
-  /** The recent frame gaps the interval is averaged over. */
-  protected readonly recentGaps: number[] = [];
   /**
    * The direction of the scroll
    */
@@ -1272,19 +1210,16 @@ class $Lenis {
    */
   // invariant: A glide renders at the rate the platform grants a page (examples/playground/src/lenis/lenis.invariants.md)
   raf(time: number) {
-    const self = this.self;
-    const reportedGap = time - (this.time || time);
+    // invariant: A frame advances by the reported gap (examples/playground/src/lenis/lenis.invariants.md)
+    const deltaTime = time - (this.time || time);
     this.time = time;
-    // The frame advances by whole panel intervals, never by the reported gap:
-    // the interval is the mean of the recent gaps (so speed can be expressed per
-    // millisecond), the frame count is the gap rounded past the threshold. A
-    // suspended tab or a first frame is not a frame time and passes through.
-    // invariant: A glide steps by the panel interval (examples/playground/src/lenis/lenis.invariants.md)
-    let deltaTime = reportedGap;
-    if (reportedGap > 0 && reportedGap < self.MAX_FRAME_MS) {
-      this.frameMs = self.intervalOf(self.recordGap(this.recentGaps, reportedGap));
-      deltaTime = self.frameStep(reportedGap, this.frameMs);
-    }
+    // The REAL frame time — the reported gap, never a stepped interval. Safari
+    // at 120 Hz reports 13 then 3 ms and those are true: the callback fired
+    // late and the next on time, and the content must be where that moment
+    // says. Stepping by whole intervals put it 4–8 ms off its own frame and
+    // read as a nudge (see the contract's rejected alternative). A suspended
+    // tab or a first frame is not a frame time; the tuned 60 Hz value stands in.
+    if (deltaTime > 0 && deltaTime < this.self.MAX_FRAME_MS) this.frameMs = deltaTime;
 
     this.animate.advance(deltaTime * 0.001);
 

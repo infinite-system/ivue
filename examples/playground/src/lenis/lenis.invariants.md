@@ -30,7 +30,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [The layer is written where the model says](#the-layer-is-written-where-the-model-says) — why the finger's own sub-pixel reaches the model, and the screen is drawn on its own pixel grid.
 - [The frame write leaves the layer promoted](#the-frame-write-leaves-the-layer-promoted) — why the iPhone moves one raster instead of drawing a new one every frame.
 - [A glide renders at the rate the platform grants a page](#a-glide-renders-at-the-rate-the-platform-grants-a-page) — why a perfect glide still reads softer than a native fling on a 120 Hz phone, and what lifts it.
-- [A glide steps by the panel interval](#a-glide-steps-by-the-panel-interval) — why a jittered clock cannot judder the glide, and why the moving text stopped reading bold on an iPhone at 120 Hz.
+- [A frame advances by the reported gap](#a-frame-advances-by-the-reported-gap) — why the integrator trusts the callback's own moment, and why stepping by an assumed interval read as a nudge.
 - [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page) — why a reader at an end is never trapped inside the scroller.
 - [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it) — why a trackpad can scroll a code block sideways.
 
@@ -174,25 +174,23 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 **Last refined:** 2026-09-16
 
-### A glide steps by the panel interval
+### A frame advances by the reported gap
 
-**Invariant:** If a frame's reported gap is within the frame budget, then the integrator advances by whole panel intervals — the interval being the mean of the recent gaps, the count being the gap rounded past a 0.65 threshold — and never by the reported gap itself. A first frame or a suspension passes through unstepped.
+**Invariant:** If a frame's reported gap is within the frame budget, then the integrator advances by exactly that gap — the time the callback actually fired after the previous one — never by an assumed panel interval. A first frame or a suspension passes through unchanged.
 
-**Scope:** `Lenis.ts` `raf`, `frameStep`, `intervalOf`, `recordGap`, `GAP_WINDOW`, `FRAME_STEP_THRESHOLD`, `RATE_SWITCH_TOLERANCE`; `frameMs` (now the stepped interval, so `velocityPerMs` stays per millisecond of real time).
+**Scope:** `Lenis.ts` `raf`, `frameMs` (the real gap, so `velocityPerMs` is per millisecond of real time).
 
-**Mechanism:** The panel presents on its vsync whatever the page's clock says. Safari hands a page `requestAnimationFrame` timestamps rounded to the millisecond and jittered on purpose — at 120 Hz a steady 8.33 ms is reported as 8, 9, 8, 13, 3 — and a glide that moves by speed × reported gap moves 1.7× on the 13 and 0.36× on the 3, at even intervals. Uneven steps at even intervals is judder, and at that amplitude judder reads as a doubled, emphasised edge on the moving text rather than a stutter. At 60 Hz the same rounding is 2 percent and invisible, which is why it appeared only when the cap was lifted. Native steps its fling on the display link's true timestamps; stepping by the interval is that. The mean is the unbiased estimate under symmetric jitter (a median of integers sits at 8 or 9, never 8.33); the 0.65 threshold makes 13 read as one frame and 16.7, a real dropped frame, as two; the switch detector keeps a 60 ↔ 120 Hz change (Android under a finger) from being averaged for twelve frames — and the switch that matters, 120 → 60 at the lift, is exact even before detection, since 16.7 is two 8.33 intervals.
+**Mechanism:** The content has to be where the moment the frame was computed for says it is. Safari at 120 Hz reports gaps of 13 then 3 ms, and those are true: the callback fired late and the next one on time. Moving by the true gap puts each frame's content at its own moment; the residual unevenness is Safari's frame pacing, not the integrator's, and no policy inside a callback can present a frame the browser did not. On Android and at 60 Hz the gaps are even and the distinction never arises.
 
 **Rejected alternatives:**
 
-- Stepping by the reported gap (the state until 2026-09-17): correct only when the clock is honest; judder on Safari at 120 Hz, read on an iPhone 16 Pro Max as emphasis on scrolled text.
-- A median interval: biased to an integer under Safari's rounding, and it flips between 8 and 9 as the window turns, 12 percent unevenness.
-- Rounding each gap to the nearest frame count (threshold 0.5): a 13/3 pair becomes 2 + 1 = 3 frames for 2 real ones, drift and a 2:1 step.
+- Stepping by whole panel intervals — the mean of a 12-gap window, the count rounded past a 0.65 threshold, a switch detector (`frameStep`, `intervalOf`, `recordGap`, in `c7174f48`, out the same night): built on the premise that Safari's timestamps are jittered and the vsync even. The log after the change showed the moves perfectly even through the 13/3 pairs (7.21, 7.13, 7.04 px …) and the reader saw MORE nudging on the iPhone 16 Pro Max at 120 Hz, which is only consistent with honest timestamps: even steps at uneven moments put content 4–8 ms off its own frame. The premise was wrong; the log that "convicted" it (moves following gaps) was describing correct behaviour.
 
-**Evidence:** Frame log copied from an iPhone 16 Pro Max at 120 Hz on 2026-09-17: gaps 13, 3, 9 repeating every 100 ms with Lenis's moves (one frame behind the meter's read) of 50.9, 10.8 and 32.3, 7.3 against a 30 px baseline. Tests: "a glide steps by the panel interval: a jittered 120 Hz clock advances evenly, a dropped frame counts double" (statics and a jittered sequence through `raf`, drift under 4 ms over 16 frames), "the same motion reports the same speed at 60 Hz and at 120" (the switch is followed within three frames).
+**Evidence:** Two frame logs from an iPhone 16 Pro Max at 120 Hz on 2026-09-17: before, moves proportional to the reported gaps (50.9 px after a 13, 10.8 after a 3, on a 30 px baseline); after the stepping, moves even and the glide judged worse by eye. Test: "the same motion reports the same speed at 60 Hz and at 120".
 
-**Impossible if true:** Two consecutive frames at a steady speed advancing by 1.7× and 0.36× of the interval because the clock reported 13 then 3. A glide whose stepped time drifts from real time by more than a frame over a second under symmetric jitter.
+**Impossible if true:** A frame advanced by a time other than the gap its callback reported, within the budget. A glide whose content lags or leads its own callback's moment by design.
 
-**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "panel interval|same motion"`
+**Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "same motion"`
 
 **Status:** provisional
 

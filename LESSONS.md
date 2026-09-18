@@ -1761,3 +1761,19 @@ mirror clone does not copy them, which is why a backup's `fsck` is clean.
   jump and told nothing. And `navigator.clipboard` does not exist on a
   plain-http LAN page; the copy button needs the legacy command and a
   textarea fallback or it silently does nothing on Android.
+
+## A log that looks convicting can be describing correct behaviour
+
+- On an iPhone at 120 Hz the frame log showed moves proportional to the
+  reported gaps — 1.7× after a "13", 0.36× after a "3" — and I read it as
+  a jittered clock juddering the glide, built interval stepping, and the
+  moves came out perfectly even. The reader saw MORE nudging. The
+  timestamps were honest: the callback really fired late and the next on
+  time, and content moved by the true gap was exactly where its frame
+  wanted it. Even steps at uneven moments put it 4–8 ms off. Reverted the
+  same night, recorded as a rejected alternative with both logs.
+- The rule that would have caught it: the log shows what the page
+  computed, never what the panel presented. A "fix" that makes the numbers
+  prettier must be judged on the display before it is called a fix, and a
+  premise about the platform's clock ("jittered, vsync even") is a claim
+  to test, not a fact to build on.
