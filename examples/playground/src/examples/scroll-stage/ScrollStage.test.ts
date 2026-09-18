@@ -325,7 +325,9 @@ test("an interlude is pulled in as its span enters the frame, held while it cove
   // its tracks: opacity is the presence, the transform settles from a zoom
   expect(stage.mediaOpacity(1, 9 * ASSUMED_ROW_PX + 30)).toBe('1.000');
   expect(stage.mediaOpacity(1, 0)).toBe('0.000');
-  expect(stage.mediaTransform(1, 9 * ASSUMED_ROW_PX + 30)).toContain('scale(1.0000)');
+  expect(stage.mediaTransform(1, 9 * ASSUMED_ROW_PX + 30)).toBe('translateY(0.00px) scale(1.0000)');
+  // riding with its span, fractional: a snapped ride ticks at reading speed
+  expect(stage.mediaTransform(1, 9 * ASSUMED_ROW_PX - 0.25)).toMatch(/^translateY\(\d+\.\d\dpx\) scale\(1\.0\d\d\d\)$/);
   expect(stage.mediaTransform(1, 0)).toContain('scale(1.0600)');
   // past the second interlude: the third takes slot 1, the fourth slot 0
   stage.prepareScenes(20 * ASSUMED_ROW_PX);

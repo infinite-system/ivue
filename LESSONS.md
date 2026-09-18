@@ -1848,4 +1848,7 @@ span's own height held the picture full while the next chapter's heading
 arrived; measured against the frame and keyed to the next row's entry it
 is gone before the paragraph is readable. Scenes for a compositor
 sequence are prepared for where the sequence BEGINS, never its end: a
-run to the end of the list drew chapter 5 into chapter 1's slot.
+run to the end of the list drew chapter 5 into chapter 1's slot. And
+the media's ride is fractional: snapped to the device grid it ticked at
+reading speed (under a pixel per frame — the grid record's boundary)
+and read as a choppy fade on both phones; a picture is not text.

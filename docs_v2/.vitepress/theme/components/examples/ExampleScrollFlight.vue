@@ -764,6 +764,8 @@ const {
   margin: 0;
   font-size: 19px;
   line-height: 1.65;
+  text-align: center;
+  text-wrap: pretty;
 }
 .esf-row.heading {
   margin-top: 140px;

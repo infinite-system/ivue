@@ -479,9 +479,13 @@ class $ScrollStage {
     if (!span) return 'translateY(0px) scale(1.06)';
     const center = (span.start + span.end) / 2 - (value + this.frameSpan / 2);
     const presence = this.interludePresence(ordinal, value);
-    // eased: the media stays with its span until it is nearly in, then settles
+    // eased: the media stays with its span until it is nearly in, then settles.
+    // The ride is FRACTIONAL: at reading speed it moves under a device pixel
+    // per frame, where a snapped write is a tick every few frames (the grid
+    // record's scope boundary), and a picture is not text — it resamples
+    // without a shimmer.
     const settle = presence * presence * presence;
-    const ride = Lenis.Class.snapToDevicePixel(center * (1 - settle));
+    const ride = (center * (1 - settle)).toFixed(2);
     const zoom = (1.06 - presence * 0.06).toFixed(4);
     return `translateY(${ride}px) scale(${zoom})`;
   }
