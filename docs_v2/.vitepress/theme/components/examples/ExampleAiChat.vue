@@ -96,6 +96,12 @@ const {
         </div>
       </div>
       <span class="eac-feel-now">{{ glide }} &middot; {{ carry }} &middot; {{ pixels }} &middot; reset {{ layerReset }}</span>
+      <span class="eac-feel-meter">
+        {{ feel.frameLabel }}
+        <button type="button" class="eac-feel-btn eac-feel-copy" :disabled="!feel.isLive" @click="feel.copyReport()">
+          {{ feel.copyLabel }}
+        </button>
+      </span>
     </div>
     <div class="eac-frame">
       <ChatShell ref="shell" />
@@ -150,6 +156,16 @@ const {
   margin-left: auto;
   opacity: 0.55;
   font-family: var(--vp-font-family-mono, monospace);
+}
+.eac-feel-meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-basis: 100%;
+  font-family: var(--vp-font-family-mono, monospace);
+  font-size: 11px;
+  opacity: 0.7;
+  min-height: 1em;
 }
 .eac-frame {
   height: min(78vh, 820px);

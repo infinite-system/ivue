@@ -1,6 +1,7 @@
-import { ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { ChatShell } from '../../../../../examples/playground/src/examples/ai-chat/ChatShell';
 import { Reactive } from '../../../../../examples/playground/src/ivue';
+import { Static } from '../../../../../lib/Static';
 
 /**
  * Docs chrome, not a scroller feature: a strip of buttons that re-tunes the
@@ -22,6 +23,21 @@ import { Reactive } from '../../../../../examples/playground/src/ivue';
  * built site every button highlighted and none of them tuned anything.
  */
 class $ExampleFeelToggle {
+  /** How many ms of frames the report holds. */
+  static get TRACE_MS() {
+    return 4000;
+  }
+
+  /** How long the copy button says "copied". */
+  static get COPIED_MS() {
+    return 1500;
+  }
+
+  /** The one cast per class: instance code reads its own statics here. */
+  protected get self() {
+    return this.constructor as typeof $ExampleFeelToggle;
+  }
+
   constructor() {
     // the shell mounts, then its view mounts a beat later; the moment the
     // scroller is reachable, read the settings it shipped with
@@ -30,6 +46,11 @@ class $ExampleFeelToggle {
       (scroller) => this.onScrollerReady(scroller),
       { immediate: true }
     );
+      // the frame meter: what rate the page actually renders at, read off
+    // requestAnimationFrame itself — the number a glide's smoothness is
+    // bounded by, and the one a phone never tells you
+    onMounted(() => this.startFrameMeter());
+    onBeforeUnmount(() => this.stopFrameMeter());
   }
 
   /** The shell beneath the strip — a template ref the SFC binds. */
@@ -62,6 +83,21 @@ class $ExampleFeelToggle {
     return ref<'on' | 'off'>('off');
   }
 
+  /** The report was just copied — the button says so for a moment. */
+  get copied() {
+    return ref(false);
+  }
+
+  /** Frames rendered in the last second — the page's real refresh rate. */
+  get frameRate() {
+    return ref(0);
+  }
+
+  /** The longest gap between two frames in the last second, in ms. */
+  get worstGapMs() {
+    return ref(0);
+  }
+
   /** Whether the strip has something to drive yet — the chain has mounted. */
   get isLive(): boolean {
     return this.scroller !== null;
@@ -84,6 +120,16 @@ class $ExampleFeelToggle {
 
   get layerResetOptions(): Array<'on' | 'off'> {
     return ['on', 'off'];
+  }
+
+  get copyLabel(): string {
+    return this.copied.value ? 'copied' : 'copy log';
+  }
+
+  /** The meter's line on the strip: rate and worst gap, or nothing until a second has passed. */
+  get frameLabel(): string {
+    if (!this.frameRate.value) return '';
+    return `${this.frameRate.value} fps · worst gap ${this.worstGapMs.value} ms`;
   }
 
   /** The scroller the strip drives: shell → mounted view → its scroller,
@@ -160,10 +206,81 @@ class $ExampleFeelToggle {
   isLayerReset(value: string) {
     return this.layerReset.value === value;
   }
+
+  /* ---- the frame meter and the report ---- */
+
+  /** Bookkeeping the meter keeps between frames — plain, never rendered:
+   *  the last second of frame stamps for the rate, and the last seconds
+   *  of (time, position) for the report. */
+  protected readonly meter = {
+    handle: 0,
+    stamps: [] as number[],
+    lastAt: 0,
+    worstGap: 0,
+    trace: [] as Array<{ at: number; position: number }>
+  };
+
+  protected startFrameMeter() {
+    this.meter.handle = requestAnimationFrame((time) => this.onFrame(time));
+  }
+
+  protected stopFrameMeter() {
+    cancelAnimationFrame(this.meter.handle);
+  }
+
+  /** One frame: keep a second of stamps and a few seconds of positions; publish the rate once a second. */
+  protected onFrame(time: number) {
+    const meter = this.meter;
+    const self = this.self;
+    if (meter.lastAt) meter.worstGap = Math.max(meter.worstGap, time - meter.lastAt);
+    meter.lastAt = time;
+    meter.stamps.push(time);
+    while (time - meter.stamps[0] > 1000) meter.stamps.shift();
+    meter.trace.push({ at: time, position: this.scroller?.scrollPosition ?? 0 });
+    while (time - meter.trace[0].at > self.TRACE_MS) meter.trace.shift();
+    if (time - meter.stamps[0] >= 950 && Math.round(time) % 4 === 0) {
+      this.frameRate.value = meter.stamps.length;
+      this.worstGapMs.value = Math.round(meter.worstGap);
+      meter.worstGap = 0;
+    }
+    meter.handle = requestAnimationFrame((next) => this.onFrame(next));
+  }
+
+  /** The report as text: the device, the knobs, the rate, then one line per
+   *  frame of the last seconds — time, gap to the previous frame, position,
+   *  and the move — so a glide can be read frame by frame off the phone. */
+  buildReport(): string {
+    const trace = this.meter.trace;
+    const head = [
+      `ua: ${navigator.userAgent}`,
+      `dpr: ${devicePixelRatio} · viewport: ${innerWidth}×${innerHeight}`,
+      `knobs: ${this.glide.value} · carry ${this.carry.value} · pixels ${this.pixels.value} · reset ${this.layerReset.value}`,
+      `rate: ${this.frameRate.value} fps · worst gap ${this.worstGapMs.value} ms · frames: ${trace.length}`,
+      't(ms)  gap(ms)  position  move'
+    ];
+    const first = trace[0]?.at ?? 0;
+    const lines = trace.map((frame, index) => {
+      const previous = trace[index - 1];
+      const gap = previous ? (frame.at - previous.at).toFixed(1) : '-';
+      const move = previous ? (frame.position - previous.position).toFixed(3) : '-';
+      return `${(frame.at - first).toFixed(1)}\t${gap}\t${frame.position.toFixed(3)}\t${move}`;
+    });
+    return [...head, ...lines].join('\n');
+  }
+
+  async copyReport() {
+    await navigator.clipboard.writeText(this.buildReport());
+    this.copied.value = true;
+    setTimeout(() => this.onCopiedShown(), this.self.COPIED_MS);
+  }
+
+  protected onCopiedShown() {
+    this.copied.value = false;
+  }
 }
 
 export namespace ExampleFeelToggle {
-  export const $Class = $ExampleFeelToggle;
+  export const $Class = Static($ExampleFeelToggle); // anchor — it declares statics
   export let Class = Reactive($Class);
   export type Instance = typeof Class.Instance;
 }
