@@ -27,14 +27,12 @@ class $ContactField extends ChooseField.$Class {
      contact-shaped label/description priorities — plus one prop of its
      own, `compact`. Every line here is a DIFFERENCE from the base. */
 
-  static override get propsTypes() {
-    return definePropTypes({
+  static override readonly propsTypes = definePropTypes({
       ...super.propsTypes,
 
       /** Compact display mode: smaller avatar, name only, denser rows. */
       compact: { type: Boolean as PropType<boolean> }
     });
-  }
 
   static override get propsDefaults(): ExtractPropDefaultTypes<typeof $ContactField.propsTypes> {
     return {

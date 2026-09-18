@@ -24,19 +24,13 @@ import { Static } from '../../../../../lib/Static';
  */
 class $ExampleFeelToggle {
   /** How many ms of frames the report holds. */
-  static get TRACE_MS() {
-    return 4000;
-  }
+  static readonly TRACE_MS = 4000;
 
   /** Frames kept either side of the motion in the report. */
-  static get SPAN_MARGIN_FRAMES() {
-    return 8;
-  }
+  static readonly SPAN_MARGIN_FRAMES = 8;
 
   /** How long the copy button says "copied". */
-  static get COPIED_MS() {
-    return 1500;
-  }
+  static readonly COPIED_MS = 1500;
 
   constructor() {
     // the shell mounts, then its view mounts a beat later; the moment the

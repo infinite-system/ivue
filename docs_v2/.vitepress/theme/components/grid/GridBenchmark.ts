@@ -31,38 +31,28 @@ import { useGridArm } from '../../../../../examples/playground/src/examples/benc
 class $GridBenchmark {
   /* Knobs — STATIC */
 
-  static get ARMS(): GridBenchmark.ArmSpec[] {
-    return [
+  static readonly ARMS: GridBenchmark.ArmSpec[] = [
       { key: 'composable', tag: 'Arm A', label: 'Composable', accent: 'sky' },
       { key: 'ivue', tag: 'Arm B', label: 'ivue', accent: 'indigo' },
       { key: 'pojo', tag: 'Arm C', label: 'POJO floor', accent: 'slate' }
     ];
-  }
 
   /** Measured heap figures from demo/grid/RESULTS.md (median of 3 runs,
    *  headless Chromium, gc-forced reads). NOT computed live in the reader's
    *  browser — accurate heap deltas need `--js-flags=--expose-gc`, which a
    *  normal page load does not have. Quoted verbatim, keyed by the exact
    *  row count each button builds (ROWS → 100k, ROWS_MILLION → 1M). */
-  static get MEASURED_HEAP(): Record<number, Record<GridBenchmark.ArmKey, string>> {
-    return {
+  static readonly MEASURED_HEAP: Record<number, Record<GridBenchmark.ArmKey, string>> = {
       [ROWS]: { composable: '77.3 MB', ivue: '5.7 MB', pojo: '4.5 MB' },
       [ROWS_MILLION]: { composable: '757.7 MB', ivue: '41.7 MB', pojo: '40.5 MB' }
     };
-  }
 
   /** The playground's grid constants, read through the class — derived, so lowerCamel. */
-  static get columnCount() {
-    return COLS;
-  }
+  static readonly columnCount = COLS;
 
-  static get rowsHundredThousand() {
-    return ROWS;
-  }
+  static readonly rowsHundredThousand = ROWS;
 
-  static get rowsMillion() {
-    return ROWS_MILLION;
-  }
+  static readonly rowsMillion = ROWS_MILLION;
 
   /** The one cast per class: instance code reads its own statics here. */
   protected get self() {

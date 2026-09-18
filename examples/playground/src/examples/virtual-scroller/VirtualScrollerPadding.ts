@@ -46,37 +46,25 @@ class $VirtualScrollerPadding {
 
   /** How far ahead in time the pad covers: the distance the content
    *  travels in this many ms is the distance the pad spans. */
-  static get LOOKAHEAD_MS() {
-    return 250;
-  }
+  static readonly LOOKAHEAD_MS = 250;
 
   /** The most rows a pad ever adds ahead — a wild flick mounts this many, not hundreds. */
-  static get MAX_ROWS_AHEAD() {
-    return 60;
-  }
+  static readonly MAX_ROWS_AHEAD = 60;
 
   /** The most rows the lerp gap ever adds behind — a jump beyond this shows canvas for a frame. */
-  static get MAX_ROWS_GAP() {
-    return 160;
-  }
+  static readonly MAX_ROWS_GAP = 160;
 
   /** How long the velocity must stay below the held pad before the pad shrinks. */
-  static get SETTLE_MS() {
-    return 300;
-  }
+  static readonly SETTLE_MS = 300;
 
   /** Below this speed the content counts as still, in px per MILLISECOND —
    *  the 0.5 px per frame this was tuned at, over a 60 Hz frame. Stated per
    *  ms because a per-frame threshold means a different real speed on every
    *  refresh rate, and Android runs at 90 and 120 where iOS mostly runs 60. */
-  static get STILL_PX_PER_MS() {
-    return 0.5 / 16.7;
-  }
+  static readonly STILL_PX_PER_MS = 0.5 / 16.7;
 
   /** Below this lerp gap (px) the content counts as landed — the lerp's own settle band. */
-  static get STILL_GAP_PX() {
-    return 0.5;
-  }
+  static readonly STILL_GAP_PX = 0.5;
 
 
   /* Pure decisions — the spec covers these */

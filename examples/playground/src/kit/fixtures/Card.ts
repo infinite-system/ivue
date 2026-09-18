@@ -31,17 +31,13 @@ class $Card extends KitContainer.$Class<Card.Roles> {
     };
   }
 
-  static get propsTypes() {
-    return definePropTypes({
+  static readonly propsTypes = definePropTypes({
       title: { type: String as PropType<string>, required: true },
       items: { type: Array as PropType<string[]> },
       kit: { type: Object as PropType<Kit.Entry<typeof Card>> }
     });
-  }
 
-  static get propsDefaults(): ExtractPropDefaultTypes<typeof $Card.propsTypes> {
-    return { items: [], kit: undefined };
-  }
+  static readonly propsDefaults: ExtractPropDefaultTypes<typeof $Card.propsTypes> = { items: [], kit: undefined };
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);

@@ -41,29 +41,19 @@ import type { Lenis } from '../../lenis/Lenis';
 class $VirtualScrollerAutoplay {
   /** Reading-creep speed: ms of wall time per px of content — the original
    *  cadence (1px per 150ms tick ≈ 6.7px/s), now integrated per FRAME. */
-  static get CREEP_MS_PER_PX() {
-    return 150;
-  }
+  static readonly CREEP_MS_PER_PX = 150;
 
   /** The frame budget Δt falls back to: a first frame, or a resumed tab. */
-  static get FRAME_MS() {
-    return 16.7;
-  }
+  static readonly FRAME_MS = 16.7;
 
   /** Past this a gap is a rAF suspension, not a slow frame. */
-  static get SUSPENDED_MS() {
-    return 250;
-  }
+  static readonly SUSPENDED_MS = 250;
 
   /** How often play() re-checks while the reader still owns the scroll. */
-  static get DEFER_MS() {
-    return 3;
-  }
+  static readonly DEFER_MS = 3;
 
   /** How close to the end still counts as the end. */
-  static get END_SLACK_PX() {
-    return 10;
-  }
+  static readonly END_SLACK_PX = 10;
 
   /** How long the end is held before the auto-repeat chain resets to the top. */
   /** The most creep the compositor is handed as ONE run. A creep runs to
@@ -72,18 +62,12 @@ class $VirtualScrollerAutoplay {
    *  shift of the whole layer at every 2 s chunk boundary on the Galaxy,
    *  2026-09-18); this only bounds the numbers a very long list would put
    *  into one animation — ten minutes at reading speed. */
-  static get RUN_MS() {
-    return 600_000;
-  }
+  static readonly RUN_MS = 600_000;
 
   /** With this much of the playing run left, the next one is chained. */
-  static get CHAIN_AT_MS() {
-    return 700;
-  }
+  static readonly CHAIN_AT_MS = 700;
 
-  static get REPEAT_HOLD_MS() {
-    return 10_000;
-  }
+  static readonly REPEAT_HOLD_MS = 10_000;
 
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   constructor(public owner: VirtualScrollerAutoplay.Owner) {}

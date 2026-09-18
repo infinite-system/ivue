@@ -11,24 +11,16 @@ import { Static } from '../../Static';
 
 class $BirdFlock {
   /** Birds in the flock. */
-  static get COUNT() {
-    return 15;
-  }
+  static readonly COUNT: number = 15;
 
   /** Wingbeats per second — a mid-sized bird's cruise. */
-  static get FLAP_HZ() {
-    return 2.4;
-  }
+  static readonly FLAP_HZ: number = 2.4;
 
   /** The wing's span in clip-space units of the canvas's height. */
-  static get SPAN() {
-    return 0.11;
-  }
+  static readonly SPAN: number = 0.11;
 
   /** How far a startled bird bursts, in clip units, and how fast it regroups. */
-  static get STARTLE() {
-    return { burst: 0.42, riseMs: 140, settleMs: 900, flapBoost: 1.6 };
-  }
+  static readonly STARTLE = { burst: 0.42, riseMs: 140, settleMs: 900, flapBoost: 1.6 };
 
   /** A startle's grip on the flock at a time since it: 0 before, a burst
    *  that peaks within the rise and decays over the settle. Pure. */
@@ -38,8 +30,7 @@ class $BirdFlock {
     return (1 - Math.exp(-sinceMs / riseMs)) * Math.exp(-sinceMs / settleMs);
   }
 
-  static get VERTEX_SHADER() {
-    return `
+  static readonly VERTEX_SHADER = `
       attribute vec2 position;
       attribute float shade;
       varying float vShade;
@@ -47,17 +38,14 @@ class $BirdFlock {
         vShade = shade;
         gl_Position = vec4(position, 0.0, 1.0);
       }`;
-  }
 
-  static get FRAGMENT_SHADER() {
-    return `
+  static readonly FRAGMENT_SHADER = `
       precision mediump float;
       uniform vec4 color;
       varying float vShade;
       void main() {
         gl_FragColor = vec4(color.rgb * vShade, color.a);
       }`;
-  }
 
   /** The formation: a loose V, each bird with its place, its own wingbeat
    *  phase, its size and its shade (the far birds smaller and paler). Seeded,

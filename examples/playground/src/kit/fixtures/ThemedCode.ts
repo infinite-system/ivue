@@ -13,27 +13,21 @@ import { Code } from './Code';
 // may pass, and a `select` event the child may emit. The base view knows
 // neither; `Kit.Class.vue` pairs this class with a view that declares both.
 class $ThemedCode extends Code.$Class {
-  static override get propsTypes() {
-    return definePropTypes({
+  static override readonly propsTypes = definePropTypes({
       ...super.propsTypes,
       theme: { type: String as PropType<'mono' | 'paper'> }
     });
-  }
 
-  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $ThemedCode.propsTypes> {
-    return { ...super.propsDefaults, theme: 'mono' };
-  }
+  static override readonly propsDefaults: ExtractPropDefaultTypes<typeof $ThemedCode.propsTypes> = { ...super.propsDefaults, theme: 'mono' };
 
   static override get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
-  static override get emits() {
-    return {
+  static override readonly emits = {
       ...super.emits,
       select: (code: string) => typeof code === 'string'
     };
-  }
 
   /** The widened contract, redeclared for the type only: `declare` emits no field and runs nothing,
    *  and a props bag with one more field or an emit that takes one more event assigns to the base's,

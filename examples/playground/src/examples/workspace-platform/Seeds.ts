@@ -6,8 +6,7 @@ import type { ActivityEntry, MemberSeed, ProjectSeed, TaskSeed } from './types';
  *  getter to ship a different dataset. Each getter builds a fresh array,
  *  so no consumer can mutate another's copy. */
 class $Seeds {
-  static get members(): MemberSeed[] {
-    return [
+  static readonly members: MemberSeed[] = [
       {
         id: 'maya',
         name: 'Maya Chen',
@@ -54,19 +53,15 @@ class $Seeds {
         online: true
       }
     ];
-  }
 
-  static get projects(): ProjectSeed[] {
-    return [
+  static readonly projects: ProjectSeed[] = [
       { id: 'launch', name: 'Product launch', icon: '✦', color: '#7c3aed' },
       { id: 'website', name: 'Website refresh', icon: '◈', color: '#0284c7' },
       { id: 'mobile', name: 'Mobile app', icon: '◇', color: '#059669' },
       { id: 'growth', name: 'Growth experiments', icon: '↗', color: '#db2777' }
     ];
-  }
 
-  static get tasks(): TaskSeed[] {
-    return [
+  static readonly tasks: TaskSeed[] = [
       {
         id: 'OR-241',
         projectId: 'launch',
@@ -266,10 +261,8 @@ class $Seeds {
         tags: ['analytics']
       }
     ];
-  }
 
-  static get activities(): Omit<ActivityEntry, 'id'>[] {
-    return [
+  static readonly activities: Omit<ActivityEntry, 'id'>[] = [
       {
         actorId: 'leo',
         icon: '→',
@@ -295,7 +288,6 @@ class $Seeds {
         createdAt: '3 hr'
       }
     ];
-  }
 }
 
 export namespace Seeds {

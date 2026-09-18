@@ -20,57 +20,39 @@ class $ScrollStage {
   static readonly ITEM_COUNT: number = 720;
 
   /** Rows per chapter: a heading, then the lines. */
-  static get CHAPTER_ROWS() {
-    return 12;
-  }
+  static readonly CHAPTER_ROWS: number = 12;
 
   /** Rows the scroller keeps mounted around the window, half each side. */
-  static get PADDING_QUANTITY() {
-    return 8;
-  }
+  static readonly PADDING_QUANTITY: number = 8;
 
   /** The row height the scroller assumes before a row has been measured —
    *  the stage's fallback for a chapter's span before geometry knows it. */
-  static get ASSUMED_ROW_PX() {
-    return 64;
-  }
+  static readonly ASSUMED_ROW_PX: number = 64;
 
   /** The last fraction of a chapter over which its scene fades into the next. */
-  static get FADE_FRACTION() {
-    return 0.22;
-  }
+  static readonly FADE_FRACTION: number = 0.22;
 
   /** How high the sun's arc peaks, in hundredths of the stage's height. */
-  static get SUN_APEX_CQH() {
-    return 82;
-  }
+  static readonly SUN_APEX_CQH: number = 82;
 
   /** The band of the stage the sun crosses, in hundredths of its width: the
    *  open half right of the rows, so the sun is never behind the text. */
-  static get SUN_BAND_START_CQW() {
-    return 48;
-  }
+  static readonly SUN_BAND_START_CQW: number = 48;
 
-  static get SUN_BAND_CQW() {
-    return 52;
-  }
+  static readonly SUN_BAND_CQW: number = 52;
 
   /** The ridges of a scene, back to front: each moves at its fraction of the
    *  chapter's travel and has its own shape. Adding a ridge is one line. */
-  static get RIDGES(): ScrollStage.Ridge[] {
-    return [
+  static readonly RIDGES: ScrollStage.Ridge[] = [
       { key: 'far', factor: 0.12, base: 0.5, amplitude: 0.22, points: 9 },
       { key: 'mid', factor: 0.28, base: 0.62, amplitude: 0.16, points: 11 },
       { key: 'near', factor: 0.5, base: 0.74, amplitude: 0.1, points: 13 },
       { key: 'ground', factor: 0.8, base: 0.88, amplitude: 0.04, points: 7 }
     ];
-  }
 
   /** The creep's starting speed, px per second: a scene reads faster than
    *  a chat, so it starts above the scroller's tuned reading cadence. */
-  static get DEFAULT_SPEED_PX_PER_S() {
-    return 14;
-  }
+  static readonly DEFAULT_SPEED_PX_PER_S: number = 14;
 
   /** How much of a linear run the stage's tracks take at a time. The scroll
    *  layer plays a creep as ONE run (it carries text, and a text layer
@@ -78,9 +60,7 @@ class $ScrollStage {
    *  of this length, each aligned to the run's own start on the document
    *  timeline, two in flight, and cut short at a chapter boundary so nothing
    *  steps inside a piece. */
-  static get TRACK_CHUNK_MS() {
-    return 2000;
-  }
+  static readonly TRACK_CHUNK_MS: number = 2000;
 
   /** How often a piece samples its tracks, in the run's own time. A stage
    *  track is a smooth function of the value between chapter boundaries and
@@ -90,60 +70,43 @@ class $ScrollStage {
    *  reason — and a decoration layer is not written on the grid, so it has
    *  no reason to be held. Eight samples a piece are a polyline no eye can
    *  tell from the curve, and a fraction of the keyframes. */
-  static get TRACK_SAMPLE_MS() {
-    return 250;
-  }
+  static readonly TRACK_SAMPLE_MS: number = 250;
 
   /** A glide's tracks interpolate every this-many of its own samples. */
-  static get GLIDE_SUBSAMPLE() {
-    return 4;
-  }
+  static readonly GLIDE_SUBSAMPLE: number = 4;
 
   /** The drawing box of a ridge's path: twice as wide as tall, scaled
    *  uniformly to cover the tile — a tall phone sees the middle of the
    *  skyline at its true proportion instead of the whole of it squeezed. */
-  static get RIDGE_BOX() {
-    return { width: 2000, height: 1000 };
-  }
+  static readonly RIDGE_BOX = { width: 2000, height: 1000 };
 
   /** The interludes: media the list makes room for. A row that carries one
    *  is an empty span of the list, and while that span crosses the frame the
    *  stage shows the media pinned behind it — pulled in as the span enters,
    *  held while it is in view, gone as it leaves — a picture, or a video on
    *  its own clock. None in the base; a subclass fills the table. */
-  static get INTERLUDES(): ScrollStage.Interlude[] {
-    return [];
-  }
+  static readonly INTERLUDES: ScrollStage.Interlude[] = [];
 
   /** The two media slots: an interlude lives in the slot of its ordinal's parity. */
-  static get MEDIA_SLOTS() {
-    return 2;
-  }
+  static readonly MEDIA_SLOTS: number = 2;
 
   /** The part of the frame over which an interlude's media fades: in, as
    *  the last of the span's leading edge crosses that much of the frame —
    *  so the media is full once the empty span fills the frame — and out,
    *  from the moment the next row enters, gone by the time it has taken
    *  that much of the frame. Between the two the media holds. */
-  static get INTERLUDE_FADE_FRACTION() {
-    return 0.6;
-  }
+  static readonly INTERLUDE_FADE_FRACTION: number = 0.6;
 
   /** The two scene slots: a chapter's scene lives in the slot of its parity. */
-  static get SLOTS() {
-    return 2;
-  }
+  static readonly SLOTS: number = 2;
 
   /** How far a ridge can rise over a chapter, in the stage's own height: the
    *  tile's overhang below the frame, so a full chapter's rise never shows
    *  the tile's edge whatever the chapter's span in pixels. */
-  static get RIDGE_RISE_CQH() {
-    return 40;
-  }
+  static readonly RIDGE_RISE_CQH: number = 40;
 
   /** The lines of a chapter, one short sentence per row. */
-  static get LINES() {
-    return [
+  static readonly LINES = [
       'This chapter has its own sky.',
       'The ridges move at 4 fractions of its travel.',
       'The sun crosses once.',
@@ -156,7 +119,6 @@ class $ScrollStage {
       'The skyline is seeded per chapter.',
       'No two chapters draw the same one.'
     ];
-  }
 
   /** The rows: a heading then short lines, so the scroll has content. */
   static buildItems(): ScrollStage.Row[] {
@@ -250,24 +212,6 @@ class $ScrollStage {
     textLocal: new Map<number, ScrollStage.Local>(),
     textEnd: new Map<number, number>(),
     span: new Map<number, { start: number; end: number } | null>()
-  };
-
-  /** The constants the formatters read, hoisted once per instance: a
-   *  formatter runs for every sample of every track, and a static getter
-   *  read through `self` on each call — some allocating a fresh table —
-   *  was a measurable share of a piece's cost. A subclass's overrides are
-   *  honoured: they resolve through `self` at construction. */
-  protected readonly constants = {
-    slots: this.self.SLOTS,
-    mediaSlots: this.self.MEDIA_SLOTS,
-    chapterRows: this.self.CHAPTER_ROWS,
-    assumedRowPx: this.self.ASSUMED_ROW_PX,
-    ridgeRiseCqh: this.self.RIDGE_RISE_CQH,
-    sunApexCqh: this.self.SUN_APEX_CQH,
-    sunBandStartCqw: this.self.SUN_BAND_START_CQW,
-    sunBandCqw: this.self.SUN_BAND_CQW,
-    fadeFraction: this.self.FADE_FRACTION,
-    interludeFadeFraction: this.self.INTERLUDE_FADE_FRACTION
   };
 
   /** The interlude rows, derived once per list. */
@@ -394,7 +338,7 @@ class $ScrollStage {
 
   chapterAt(value: number): number {
     const at = this.scroller.value?.getIndexAtPosition(Math.max(0, value));
-    const fallback = Math.floor(Math.max(0, value) / this.constants.assumedRowPx);
+    const fallback = Math.floor(Math.max(0, value) / this.self.ASSUMED_ROW_PX);
     const index = Math.min(at?.index ?? fallback, this.items.value.length - 1);
     return this.items.value[index]?.chapter ?? 1;
   }
@@ -402,8 +346,8 @@ class $ScrollStage {
   /** Where a chapter's first row sits: the scroller's anchored position when
    *  geometry knows it, the assumed row height before. */
   chapterStart(chapter: number): number {
-    const firstIndex = (chapter - 1) * this.constants.chapterRows;
-    return this.scroller.value?.getAnchoredPosition(firstIndex) ?? firstIndex * this.constants.assumedRowPx;
+    const firstIndex = (chapter - 1) * this.self.CHAPTER_ROWS;
+    return this.scroller.value?.getAnchoredPosition(firstIndex) ?? firstIndex * this.self.ASSUMED_ROW_PX;
   }
 
   chapterSpan(chapter: number): number {
@@ -423,11 +367,11 @@ class $ScrollStage {
 
   protected textEndOf(chapter: number): number {
     const items = this.items.value;
-    const first = (chapter - 1) * this.constants.chapterRows;
-    const last = Math.min(items.length, first + this.constants.chapterRows);
+    const first = (chapter - 1) * this.self.CHAPTER_ROWS;
+    const last = Math.min(items.length, first + this.self.CHAPTER_ROWS);
     for (let index = first; index < last; index++) {
       if (!items[index]?.interlude) continue;
-      return this.scroller.value?.getAnchoredPosition(index) ?? index * this.constants.assumedRowPx;
+      return this.scroller.value?.getAnchoredPosition(index) ?? index * this.self.ASSUMED_ROW_PX;
     }
     return this.chapterStart(chapter + 1);
   }
@@ -475,8 +419,8 @@ class $ScrollStage {
     let span: { start: number; end: number } | null = null;
     if (row) {
       const scroller = this.scroller.value;
-      const start = scroller?.getAnchoredPosition(row.index) ?? row.index * this.constants.assumedRowPx;
-      const next = scroller?.getAnchoredPosition(row.index + 1) ?? start + this.constants.assumedRowPx;
+      const start = scroller?.getAnchoredPosition(row.index) ?? row.index * this.self.ASSUMED_ROW_PX;
+      const next = scroller?.getAnchoredPosition(row.index + 1) ?? start + this.self.ASSUMED_ROW_PX;
       span = { start, end: Math.max(start + 1, next) };
     }
     this.memo.span.set(ordinal, span);
@@ -491,7 +435,7 @@ class $ScrollStage {
     const span = this.interludeSpan(ordinal);
     if (!span) return 0;
     const frame = this.frameSpan;
-    const fade = frame * this.constants.interludeFadeFraction;
+    const fade = frame * this.self.INTERLUDE_FADE_FRACTION;
     const threshold = frame - fade;
     // how much of the span has entered from the bottom; how much is still ahead of the top
     const entered = value + frame - span.start;
@@ -518,7 +462,7 @@ class $ScrollStage {
    *  parity matches, else the next one, waiting under the fade. */
   roleOf(slot: number, value: number): ScrollStage.Role {
     const local = this.localOf(value);
-    if (local.chapter % this.constants.slots === slot) return { ...local, current: true };
+    if (local.chapter % this.self.SLOTS === slot) return { ...local, current: true };
     return { chapter: local.chapter + 1, progress: 0, travel: 0, current: false };
   }
 
@@ -526,15 +470,9 @@ class $ScrollStage {
    *  fraction while the next fades in. */
   opacityOf(slot: number, value: number): string {
     const local = this.localOf(value);
-    const fade = this.fadeAt(local.progress);
-    const current = local.chapter % this.constants.slots === slot;
+    const fade = this.self.fadeAt(local.progress);
+    const current = local.chapter % this.self.SLOTS === slot;
     return (current ? 1 - fade : fade).toFixed(3);
-  }
-
-  /** The static fade, through the hoisted fraction. */
-  protected fadeAt(progress: number): number {
-    const fadeStart = 1 - this.constants.fadeFraction;
-    return Math.min(1, Math.max(0, (progress - fadeStart) / this.constants.fadeFraction));
   }
 
   /** A ridge's transform in a slot: its fraction of the chapter's progress
@@ -542,15 +480,15 @@ class $ScrollStage {
    *  never wraps and never shows its edge. */
   ridgeTransform(slot: number, ridge: ScrollStage.Ridge, value: number): string {
     const role = this.roleOf(slot, value);
-    const rise = (role.progress * ridge.factor * this.constants.ridgeRiseCqh).toFixed(3);
+    const rise = (role.progress * ridge.factor * this.self.RIDGE_RISE_CQH).toFixed(3);
     return `translateY(-${rise}cqh)`;
   }
 
   /** The sun in a slot: across the open band on an arc, once per chapter. */
   sunTransform(slot: number, value: number): string {
     const role = this.roleOf(slot, value);
-    const x = (this.constants.sunBandStartCqw + role.progress * this.constants.sunBandCqw).toFixed(3);
-    const y = (-Math.sin(role.progress * Math.PI) * this.constants.sunApexCqh).toFixed(3);
+    const x = (this.self.SUN_BAND_START_CQW + role.progress * this.self.SUN_BAND_CQW).toFixed(3);
+    const y = (-Math.sin(role.progress * Math.PI) * this.self.SUN_APEX_CQH).toFixed(3);
     return `translate(${x}cqw, ${y}cqh)`;
   }
 
@@ -677,7 +615,7 @@ class $ScrollStage {
   prepareScenes(value: number) {
     const chapter = this.chapterAt(value);
     for (const target of [chapter, chapter + 1]) {
-      const slot = target % this.constants.slots;
+      const slot = target % this.self.SLOTS;
       if (this.slotChapters[slot] === target) continue;
       this.slotChapters[slot] = target;
       this.drawScene(slot, target);
@@ -694,7 +632,7 @@ class $ScrollStage {
     const ordinal = this.interludeAt(value);
     for (const target of [ordinal, ordinal + 1]) {
       if (target > rows.length) continue;
-      const slot = target % this.constants.mediaSlots;
+      const slot = target % this.self.MEDIA_SLOTS;
       if (this.mediaOrdinals[slot] === target) continue;
       this.mediaOrdinals[slot] = target;
       this.drawInterlude(slot, rows[target - 1].interlude);

@@ -26,9 +26,7 @@ class $ProjectStore {
     return this.$shared;
   }
 
-  static get STORAGE_KEY() {
-    return 'ivue-example-project-store';
-  }
+  static readonly STORAGE_KEY = 'ivue-example-project-store';
 
   // Outliving instance: the store outlives every component, so watchers
   // registered here use $watch/$watchEffect (the instance's own scope).

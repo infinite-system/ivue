@@ -52,8 +52,7 @@ export class $MediaField extends Field.$Class {
   }
 
   /** Params Defaults */
-  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $MediaField.propsTypes> {
-    return {
+  static override readonly propsDefaults: ExtractPropDefaultTypes<typeof $MediaField.propsTypes> = {
       ...super.propsDefaults,
       multiple: false,
       accept: '.pdf, image/*',
@@ -67,7 +66,6 @@ export class $MediaField extends Field.$Class {
       canRenameCaption: true,
       canRemove: true
     };
-  }
 
   /** Re-declared so `MediaField.Props` carries the params above. */
   static override get props() {
@@ -79,21 +77,17 @@ export class $MediaField extends Field.$Class {
    * behavior the class owns; an SFC only binds it under the local name
    * Vue's directive resolution requires.
    */
-  static get focusDirective() {
-    return {
+  static readonly focusDirective = {
       mounted: (element: HTMLInputElement) => element.focus()
     };
-  }
 
   /** Emits */
-  static get emits() {
-    return {
+  static readonly emits = {
       'update:modelValue': (value: MediaField.Model) => true,
       uploaded: (rows: MediaField.Item[]) => true,
       removed: (row: MediaField.Item) => true,
       error: (message: string) => true
     };
-  }
 
   constructor(
     public props: MediaField.Props,

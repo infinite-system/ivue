@@ -408,7 +408,7 @@ class $CheckStandard {
                 this.a_class_file_holds_only_imports_class_namespace_and_types,
                 unit,
                 this.lineOf(unit, statement),
-                'behavior or data outside the class seam — move it into the class (static get / method) or its namespace'
+                'behavior or data outside the class seam — move it into the class (a static readonly field for data, a static get for a computation, a method for behavior) or its namespace'
               )
             );
           }
@@ -443,7 +443,7 @@ class $CheckStandard {
                 this.the_namespace_holds_identity_and_types_only,
                 unit,
                 this.lineOf(unit, statement),
-                `\`${names.join(', ')}\` is runtime data in namespace ${classFile.publicName} — a parallel world the class mechanics cannot reach (not inherited, not overridable, not swapped with Class); move it onto the class as a static getter`
+                `\`${names.join(', ')}\` is runtime data in namespace ${classFile.publicName} — a parallel world the class mechanics cannot reach (not inherited, not overridable, not swapped with Class); move it onto the class as a static readonly field`
               )
             );
             continue;

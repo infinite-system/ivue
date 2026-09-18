@@ -21,16 +21,12 @@ class $Panel extends KitContainer.$Class<Panel.Roles> {
     };
   }
 
-  static get propsTypes() {
-    return definePropTypes({
+  static readonly propsTypes = definePropTypes({
       titles: { type: Array as PropType<string[]> },
       kit: { type: Object as PropType<Kit.Entry<typeof Panel>> }
     });
-  }
 
-  static get propsDefaults(): ExtractPropDefaultTypes<typeof $Panel.propsTypes> {
-    return { titles: [], kit: undefined };
-  }
+  static readonly propsDefaults: ExtractPropDefaultTypes<typeof $Panel.propsTypes> = { titles: [], kit: undefined };
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);

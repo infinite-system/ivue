@@ -32,14 +32,10 @@ class $Lenis {
     /^((?!chrome|chromium|android).)*safari/i.test(navigator.userAgent);
 
   /** How far back a flick's velocity is read off the finger's path. */
-  static get FLICK_WINDOW_MS() {
-    return 100;
-  }
+  static readonly FLICK_WINDOW_MS = 100;
 
   /** Lenis measures velocity in px per animation frame; a frame is ~16.7 ms. */
-  static get FRAME_MS() {
-    return 16.7;
-  }
+  static readonly FRAME_MS = 16.7;
 
   /** The duration-based animation's easing when none is given. */
   static defaultEasing(t: number) {
@@ -81,15 +77,11 @@ class $Lenis {
   }
 
   /** Past this a gap between frames is a suspension, not a frame time. */
-  static get MAX_FRAME_MS() {
-    return 100;
-  }
+  static readonly MAX_FRAME_MS = 100;
 
 
   /** Within this many px of an end the content counts as at it. */
-  static get LIMIT_TOLERANCE_PX() {
-    return 0.5;
-  }
+  static readonly LIMIT_TOLERANCE_PX = 0.5;
 
   /**
    * Constant deceleration, as an easing. A flick that leaves at v and
@@ -122,15 +114,11 @@ class $Lenis {
 
   /** The compositor glide's keyframe step: one per 120 Hz frame. A 60 Hz panel
    *  samples every other one; a 120 Hz panel every one. */
-  static get KEYFRAME_MS() {
-    return 1000 / 120;
-  }
+  static readonly KEYFRAME_MS = 1000 / 120;
 
   /** The most keyframes a compositor glide is handed — 6 s at 120 Hz; an
    *  exponential tail past that is below the settle band anyway. */
-  static get MAX_KEYFRAMES() {
-    return 720;
-  }
+  static readonly MAX_KEYFRAMES = 720;
 
   /** The glide's remaining curve as absolute scroll values, one per KEYFRAME_MS
    *  from the integrator's current state: the friction curve is evaluated from
@@ -253,14 +241,10 @@ class $Lenis {
    *  length. In ms, not frames — four frames is 67 ms on a 60 Hz display and
    *  33 on a 120 Hz one, so a frame count made the brake twice as abrupt on
    *  exactly the hardware most likely to be running at 120. */
-  static get TOUCH_BRAKE_MS() {
-    return 4 * 16.7;
-  }
+  static readonly TOUCH_BRAKE_MS = 4 * 16.7;
 
   /** The brake's lerp — steep, so the content settles under the finger within a few frames. */
-  static get TOUCH_BRAKE_LERP() {
-    return 0.35;
-  }
+  static readonly TOUCH_BRAKE_LERP = 0.35;
 
   /**
    * A gesture that asks for more than an end has: back at the start, on

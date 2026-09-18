@@ -6,15 +6,11 @@ import { Static } from '../../Static';
 class $BenchmarkWinner {
   /* Contract — STATIC */
 
-  static get propsTypes() {
-    return definePropTypes({
+  static readonly propsTypes = definePropTypes({
       placement: { type: String as PropType<BenchmarkWinner.Placement> }
     });
-  }
 
-  static get propsDefaults() {
-    return { placement: 'before' as BenchmarkWinner.Placement };
-  }
+  static readonly propsDefaults = { placement: 'before' as BenchmarkWinner.Placement };
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);

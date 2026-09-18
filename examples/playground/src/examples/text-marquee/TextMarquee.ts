@@ -30,8 +30,7 @@ class $TextMarquee {
      member. The namespace below holds identity and TYPES only. */
 
   /** 1 — the TYPES: a defineComponent-style object, no defaults inside. */
-  static get propsTypes() {
-    return definePropTypes({
+  static readonly propsTypes = definePropTypes({
       /** The full text — newlines and all; the marquee one-lines it. */
       text: { type: String as PropType<string>, required: true },
       /** Glide speed. The default is a comfortable reading glide. */
@@ -40,16 +39,13 @@ class $TextMarquee {
        *  smaller chunks = finer virtualization granularity. */
       targetChars: { type: Number as PropType<number> }
     });
-  }
 
   /** 2 — the DEFAULTS: plain values, typed against the types object
    *  (`text` is required — filtered out of the check automatically). */
-  static get propsDefaults(): ExtractPropDefaultTypes<typeof $TextMarquee.propsTypes> {
-    return {
+  static readonly propsDefaults: ExtractPropDefaultTypes<typeof $TextMarquee.propsTypes> = {
       pxPerSecond: 50,
       targetChars: 400
     };
-  }
 
   /** 3 — the MERGE: a standard Vue props object, ready for defineProps.
    *  Reads through the receiver, so a subclass's `props` is its own
@@ -60,14 +56,10 @@ class $TextMarquee {
 
   /** Smallest width the scroller assumes for an unmeasured chunk. A live
    *  knob (no `$`): a subclass or test double overrides it. */
-  static get minimumChunkWidth() {
-    return 60;
-  }
+  static readonly minimumChunkWidth = 60;
 
   /** Average character width before the real font is measured on mount. */
-  static get preMeasureCharWidth() {
-    return 7.5;
-  }
+  static readonly preMeasureCharWidth = 7.5;
 
   constructor(public props: TextMarquee.Props) {
     onMounted(() => this.measureFont());

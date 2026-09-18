@@ -25,19 +25,15 @@ class $Code {
     });
   }
 
-  static get propsDefaults(): ExtractPropDefaultTypes<typeof $Code.propsTypes> {
-    return { lang: 'text', cap: null, kit: undefined };
-  }
+  static readonly propsDefaults: ExtractPropDefaultTypes<typeof $Code.propsTypes> = { lang: 'text', cap: null, kit: undefined };
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
-  static get emits() {
-    return {
+  static readonly emits = {
       copy: (code: string) => typeof code === 'string'
     };
-  }
 
   constructor(
     public props: Code.Props,

@@ -17,14 +17,11 @@ class $ScrollFlight extends ScrollStage.$Class {
   static override readonly ITEM_COUNT: number = 360;
 
   /** A heading, the paragraphs of the chapter, then an interlude. */
-  static override get CHAPTER_ROWS() {
-    return 6;
-  }
+  static override readonly CHAPTER_ROWS: number = 6;
 
   /** The interludes, one closing each chapter in turn: the site's own
    *  illustrations, pulled in as their span crosses the frame. */
-  static override get INTERLUDES(): ScrollStage.Interlude[] {
-    return [
+  static override readonly INTERLUDES: ScrollStage.Interlude[] = [
       { kind: 'image', src: '/blog/art/three-years-to-reduce-art-1.png', caption: 'Three years to reduce' },
       { kind: 'image', src: '/blog/art/discovered-not-invented-art-1.png', caption: 'Discovered, not invented' },
       { kind: 'video', src: '/video/ivue-objects.mp4', caption: 'The object graph, on film — a video on its own clock' },
@@ -36,114 +33,78 @@ class $ScrollFlight extends ScrollStage.$Class {
       { kind: 'image', src: '/blog/art/uniformity-is-a-measuring-device-art-1.png', caption: 'Uniformity is a measuring device' },
       { kind: 'image', src: '/blog/art/agents-built-an-editor-art-1.png', caption: 'Agents built an editor' }
     ];
-  }
 
   /** Paragraph rows are tall: the fallback span before geometry knows it. */
-  static override get ASSUMED_ROW_PX() {
-    return 150;
-  }
+  static override readonly ASSUMED_ROW_PX: number = 150;
 
   /** The worlds, one per chapter in turn. */
-  static get THEMES(): ScrollFlight.Theme[] {
-    return ['mountains', 'beach', 'rainforest'];
-  }
+  static readonly THEMES: ScrollFlight.Theme[] = ['mountains', 'beach', 'rainforest'];
 
   /** The mountain ridges: smooth, tall, the far ones lifted into the haze. */
-  static override get RIDGES(): ScrollStage.Ridge[] {
-    return [
+  static override readonly RIDGES: ScrollStage.Ridge[] = [
       { key: 'far', factor: 0.1, base: 0.44, amplitude: 0.2, points: 7 },
       { key: 'mid', factor: 0.24, base: 0.58, amplitude: 0.15, points: 9 },
       { key: 'near', factor: 0.45, base: 0.72, amplitude: 0.11, points: 11 },
       { key: 'ground', factor: 0.75, base: 0.9, amplitude: 0.04, points: 6 }
     ];
-  }
 
   /** The ridges that carry snow: the two farthest, highest ones. */
-  static get SNOW_RIDGES() {
-    return ['far', 'mid'];
-  }
+  static readonly SNOW_RIDGES = ['far', 'mid'];
 
   /** How deep the snow band runs under a skyline, in box units. */
-  static get SNOW_DEPTH() {
-    return 70;
-  }
+  static readonly SNOW_DEPTH: number = 70;
 
   /** The beach's one ridge: an island on the horizon. */
-  static get ISLAND(): ScrollStage.Ridge {
-    return { key: 'island', factor: 0.06, base: 0.6, amplitude: 0.05, points: 4 };
-  }
+  static readonly ISLAND: ScrollStage.Ridge = { key: 'island', factor: 0.06, base: 0.6, amplitude: 0.05, points: 4 };
 
   /** The palms' parallax across the beach, in hundredths of the width. */
-  static get PALM_DRIFT_CQW() {
-    return 7;
-  }
+  static readonly PALM_DRIFT_CQW: number = 7;
 
   /** The rain forest's canopies, back to front: rounded crowns. */
-  static get CANOPIES(): ScrollStage.Ridge[] {
-    return [
+  static readonly CANOPIES: ScrollStage.Ridge[] = [
       { key: 'canopy-far', factor: 0.1, base: 0.5, amplitude: 0.06, points: 9 },
       { key: 'canopy-mid', factor: 0.26, base: 0.62, amplitude: 0.07, points: 8 },
       { key: 'canopy-near', factor: 0.5, base: 0.76, amplitude: 0.08, points: 6 }
     ];
-  }
 
   /** The clouds of a scene: each drifts across by its own fraction of the
    *  chapter's progress, in hundredths of the stage's width. */
-  static get CLOUDS(): ScrollFlight.Cloud[] {
-    return [
+  static readonly CLOUDS: ScrollFlight.Cloud[] = [
       { key: 'cloud-a', drift: 22, lift: 3 },
       { key: 'cloud-b', drift: -14, lift: 5 }
     ];
-  }
 
   /** The jet flies INTO the screen: it enters near the camera, low left, and
    *  climbs away toward the far ridge, shrinking as the perspective takes it.
    *  Positions in the stage's units, depth in px against the stage's
    *  perspective, the yaw turning its nose into the screen. */
-  static get JET_PATH() {
-    return { fromX: 6, toX: 64, fromY: 80, toY: 28, fromZ: 520, toZ: -1500, yaw: -52, pitch: -8, bank: 52, roll: 10 };
-  }
+  static readonly JET_PATH = { fromX: 6, toX: 64, fromY: 80, toY: 28, fromZ: 520, toZ: -1500, yaw: -52, pitch: -8, bank: 52, roll: 10 };
 
   /** The seaplane flies OUT of the screen: it appears over the sea near the
    *  horizon and comes low over the beach toward the camera, growing, and
    *  leaves past the frame's left edge at its largest. */
-  static get SEAPLANE_PATH() {
-    return { fromX: 80, toX: -34, fromY: 44, toY: 74, fromZ: -1400, toZ: 560, yaw: 142, pitch: 3, bank: -48, roll: -8 };
-  }
+  static readonly SEAPLANE_PATH = { fromX: 80, toX: -34, fromY: 44, toY: 74, fromZ: -1400, toZ: 560, yaw: 142, pitch: 3, bank: -48, roll: -8 };
 
-  static get PLANE_PARKED() {
-    return 'translate3d(-80cqw, 40cqh, -1500px)';
-  }
+  static readonly PLANE_PARKED: string = 'translate3d(-80cqw, 40cqh, -1500px)';
 
-  static get FLOCK_PARKED() {
-    return 'translate(130cqw, 12cqh)';
-  }
+  static readonly FLOCK_PARKED: string = 'translate(130cqw, 12cqh)';
 
   /** The frame meter's window: the worst gap and the long frames in it. */
-  static get METER_WINDOW_MS() {
-    return 3000;
-  }
+  static readonly METER_WINDOW_MS: number = 3000;
 
   /** A frame gap this long is a dropped frame at 60 Hz. */
-  static get LONG_FRAME_MS() {
-    return 24;
-  }
+  static readonly LONG_FRAME_MS: number = 24;
 
   /** The fraction of a chapter over which a crossing comes in. */
-  static get ENTRY_FRACTION() {
-    return 0.12;
-  }
+  static readonly ENTRY_FRACTION: number = 0.12;
 
-  static get TITLES() {
-    return {
+  static readonly TITLES = {
       mountains: ['The valley wakes', 'Above the cloud line', 'A jet through the pass', 'Night over the range'],
       beach: ['The seaplane comes in', 'Palms in the east wind', 'Low over the water', 'The last light on the reef'],
       rainforest: ['Rain on the canopy', 'The birds come back', 'Mist in the trees', 'The forest at night']
     } as Record<ScrollFlight.Theme, string[]>;
-  }
 
-  static get PARAGRAPHS() {
-    return {
+  static readonly PARAGRAPHS = {
       mountains: [
         'The first light finds the far ridge before it finds the valley. For a while the mountains are the only thing awake, a line of pale rock over a floor still dark, and then the light comes down the slopes the way water would, filling each fold in turn.',
         'Above the cloud line the air is thin and very clear. The peaks stand out of the white like islands, and the shadows they throw across it are so sharp you could cut along them. Nothing up here is in a hurry. The wind does the moving.',
@@ -163,7 +124,6 @@ class $ScrollFlight extends ScrollStage.$Class {
         'The forest at night is louder than by day. The rain comes back after dark, softer, and under it the frogs and the insects and something larger moving slowly on the ground, and above it, once, the whole canopy lit by lightning with no thunder.'
       ]
     } as Record<ScrollFlight.Theme, string[]>;
-  }
 
   /** The world a chapter is in. */
   static themeOf(chapter: number): ScrollFlight.Theme {
@@ -348,18 +308,6 @@ class $ScrollFlight extends ScrollStage.$Class {
     return this.constructor as typeof $ScrollFlight;
   }
 
-  /** The flight's constants, hoisted once per instance for the formatters —
-   *  the paths in particular are tables a static getter builds afresh. */
-  protected readonly flightConstants = {
-    jetPath: this.self.JET_PATH,
-    seaplanePath: this.self.SEAPLANE_PATH,
-    planeParked: this.self.PLANE_PARKED,
-    flockParked: this.self.FLOCK_PARKED,
-    entryFraction: this.self.ENTRY_FRACTION,
-    palmDriftCqw: this.self.PALM_DRIFT_CQW,
-    themes: this.self.THEMES
-  };
-
   // STATE
   /** The flock renderer, once its canvas is mounted. */
   protected get flock() {
@@ -419,7 +367,7 @@ class $ScrollFlight extends ScrollStage.$Class {
   /** The palms lean across the beach as the chapter goes by. */
   palmsTransform(slot: number, value: number): string {
     const role = this.roleOf(slot, value);
-    return `translateX(${(-role.progress * this.flightConstants.palmDriftCqw).toFixed(3)}cqw)`;
+    return `translateX(${(-role.progress * this.self.PALM_DRIFT_CQW).toFixed(3)}cqw)`;
   }
 
   /** A plane along a 3D path at a chapter's progress: a straight line in x, y
@@ -440,33 +388,16 @@ class $ScrollFlight extends ScrollStage.$Class {
    *  Parked elsewhere. */
   jetTransform(value: number): string {
     const local = this.textLocalOf(value);
-    if (!this.hasJet(local.chapter)) return this.flightConstants.planeParked;
-    return this.planeAlong(this.flightConstants.jetPath, local.progress);
+    if (!this.self.hasJet(local.chapter)) return this.self.PLANE_PARKED;
+    return this.planeAlong(this.self.JET_PATH, local.progress);
   }
 
   /** The seaplane: out of the distance, over the beach, over the chapter's
    *  text. Parked elsewhere. */
   seaplaneTransform(value: number): string {
     const local = this.textLocalOf(value);
-    if (!this.hasSeaplane(local.chapter)) return this.flightConstants.planeParked;
-    return this.planeAlong(this.flightConstants.seaplanePath, local.progress);
-  }
-
-  /** The world of a chapter and what crosses it, through the hoisted cycle. */
-  protected themeOf(chapter: number): ScrollFlight.Theme {
-    return this.flightConstants.themes[(chapter - 1) % this.flightConstants.themes.length];
-  }
-
-  protected hasJet(chapter: number): boolean {
-    return this.themeOf(chapter) === 'mountains';
-  }
-
-  protected hasSeaplane(chapter: number): boolean {
-    return this.themeOf(chapter) === 'beach';
-  }
-
-  protected hasBirds(chapter: number): boolean {
-    return this.themeOf(chapter) !== 'mountains';
+    if (!this.self.hasSeaplane(local.chapter)) return this.self.PLANE_PARKED;
+    return this.planeAlong(this.self.SEAPLANE_PATH, local.progress);
   }
 
   /** How present a crossing is: in over the entry fraction of the chapter's
@@ -475,22 +406,22 @@ class $ScrollFlight extends ScrollStage.$Class {
   crossingOpacity(value: number, present: boolean): string {
     if (!present) return '0.000';
     const local = this.textLocalOf(value);
-    const entry = Math.min(1, local.progress / this.flightConstants.entryFraction);
-    return (entry * (1 - this.fadeAt(local.progress))).toFixed(3);
+    const entry = Math.min(1, local.progress / this.self.ENTRY_FRACTION);
+    return (entry * (1 - this.self.fadeAt(local.progress))).toFixed(3);
   }
 
   jetOpacity(value: number): string {
-    return this.crossingOpacity(value, this.hasJet(this.textLocalOf(value).chapter));
+    return this.crossingOpacity(value, this.self.hasJet(this.textLocalOf(value).chapter));
   }
 
   seaplaneOpacity(value: number): string {
-    return this.crossingOpacity(value, this.hasSeaplane(this.textLocalOf(value).chapter));
+    return this.crossingOpacity(value, this.self.hasSeaplane(this.textLocalOf(value).chapter));
   }
 
   /** The flock's crossing: right to left over the chapter's text, lifting a little. */
   flockTransform(value: number): string {
     const local = this.textLocalOf(value);
-    if (!this.hasBirds(local.chapter)) return this.flightConstants.flockParked;
+    if (!this.self.hasBirds(local.chapter)) return this.self.FLOCK_PARKED;
     const progress = local.progress;
     const x = (104 - progress * 132).toFixed(3);
     const y = (16 - Math.sin(progress * Math.PI) * 7 + progress * 6).toFixed(3);
@@ -498,7 +429,7 @@ class $ScrollFlight extends ScrollStage.$Class {
   }
 
   flockOpacity(value: number): string {
-    return this.crossingOpacity(value, this.hasBirds(this.textLocalOf(value).chapter));
+    return this.crossingOpacity(value, this.self.hasBirds(this.textLocalOf(value).chapter));
   }
 
   /** The stage's tracks, then the flight's: per slot the clouds, the island,

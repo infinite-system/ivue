@@ -151,8 +151,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
-  static get emits() {
-    return {
+  static readonly emits = {
       itemsChanged: (args: VirtualScroller.ItemsChangeEmitArgs) => true,
       /** the scroll handed the compositor a sequence — a flick's glide, a creep
        *  chunk — so a stage can compose its own tracks over the same values,
@@ -162,7 +161,6 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
        *  stage's tracks alongside it take the same rate */
       sequenceRate: (change: Lenis.SequenceRate) => true
     };
-  }
 
   /** How much tail actually gets RENDERED below the window — a safety
    *  margin of a few viewports, not the whole remaining post. The layer
@@ -252,12 +250,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    * branch already runs. The shipped pair is the long throw with the
    * definite stop: carry 35, launch 1, friction.
    */
-  static get SCROLL_KNOBS(): VirtualScroller.ScrollKnobs {
-    return {
+  static readonly SCROLL_KNOBS: VirtualScroller.ScrollKnobs = {
       wheel: { gain: 1, follow: 0.1, maxPxPerMs: 0 },
       touch: { gain: 1, carry: 35, launch: 1, glide: 'friction', maxPxPerMs: 0 }
     };
-  }
 
   /** The tuned selection cadences — the selection class's own profiles. */
   static get SELECTION_KNOBS(): VirtualScroller.SelectionKnobs {

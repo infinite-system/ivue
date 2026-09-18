@@ -38,27 +38,25 @@ class $Code {
     });
   }
 
-  static get propsDefaults(): ExtractPropDefaultTypes<typeof $Code.propsTypes> {
-    return {
+  static readonly propsDefaults: ExtractPropDefaultTypes<typeof $Code.propsTypes> = {
       lang: 'text',
       theme: 'github-light',
       lineNumbers: false,
       maxLines: null,
       kit: undefined
     };
-  }
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
-  static get emits() {
-    return {
+  static readonly emits = {
       copy: (code: string) => typeof code === 'string'
     };
-  }
 
-  /** the colour engine — a live static, so a subclass overrides it with one getter */
+  /** the colour engine — a GETTER, not a field: it reads another class, and
+   *  a field would read it at module evaluation, where an import cycle can
+   *  still leave it undefined; a subclass overrides it with one getter */
   static get engine(): Code.Engine {
     return Shiki.Class;
   }

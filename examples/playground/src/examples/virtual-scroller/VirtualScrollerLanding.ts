@@ -45,24 +45,16 @@ import type { VirtualScrollerGeometry } from './VirtualScrollerGeometry';
 
 class $VirtualScrollerLanding {
   /** How long the position must hold still before a converge loop lets go. */
-  static get QUIET_MS() {
-    return 600;
-  }
+  static readonly QUIET_MS = 600;
 
   /** How long after the last input step mode waits before it snaps. */
-  static get SNAP_MS() {
-    return 160;
-  }
+  static readonly SNAP_MS = 160;
 
   /** How often the snap re-checks while an input or a lerp is still live. */
-  static get SNAP_RETRY_MS() {
-    return 90;
-  }
+  static readonly SNAP_RETRY_MS = 90;
 
   /** Past this much drift the position is no longer the landing's. */
-  static get TAKEOVER_PX() {
-    return 1;
-  }
+  static readonly TAKEOVER_PX = 1;
 
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   constructor(public owner: VirtualScrollerLanding.Owner) {}

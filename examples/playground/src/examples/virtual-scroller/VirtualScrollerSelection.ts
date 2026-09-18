@@ -34,39 +34,31 @@ class $VirtualScrollerSelection {
   /* Knobs */
 
   /** The row element every position resolves through. */
-  static get ROW_SELECTOR() {
-    return '.virtual-scroller__item';
-  }
+  static readonly ROW_SELECTOR = '.virtual-scroller__item';
 
   /** The CSS Custom Highlight registered while a finger drags — a paint
    *  with no native selection behind it, so iOS never enters its own
    *  selection handling under the touch. Styled by `::highlight(...)`. */
-  static get TOUCH_HIGHLIGHT_NAME() {
-    return 'virtual-scroller-selection';
-  }
+  static readonly TOUCH_HIGHLIGHT_NAME = 'virtual-scroller-selection';
 
   /** Whether this browser can paint a range without selecting it. */
+  /** A getter: it probes the ENVIRONMENT, which a field would freeze at
+   *  module load — before a test installs the API, or on a server. */
   static get supportsCssHighlight(): boolean {
     return typeof CSS !== 'undefined' && 'highlights' in CSS && typeof Highlight === 'function';
   }
 
   /** How close a finger may land to a native selection's end and still be
    *  taken for a grab of its handle (iOS draws the handles there). */
-  static get HANDLE_REACH_PX() {
-    return 28;
-  }
+  static readonly HANDLE_REACH_PX = 28;
 
   /** A native handle drag reaches this class only as selectionchange
    *  events; when they stop for this long the handle has come to rest and
    *  the edge autoscroll it drove stops with it. */
-  static get HANDLE_SETTLE_MS() {
-    return 300;
-  }
+  static readonly HANDLE_SETTLE_MS = 300;
 
   /** Elements a mousedown must leave alone — they own their own gesture. */
-  static get INTERACTIVE_SELECTOR() {
-    return 'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""], .virtual-scroller__track';
-  }
+  static readonly INTERACTIVE_SELECTOR = 'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""], .virtual-scroller__track';
 
   /**
    * Drag autoscroll for a POINTER. A pointer is small and can leave the
@@ -74,9 +66,7 @@ class $VirtualScrollerSelection {
    * rising past the edge: a crawl at the zone's inner boundary, full
    * speed AUTOSCROLL_MOUSE.reachPx beyond the edge.
    */
-  static get AUTOSCROLL_MOUSE(): VirtualScrollerSelection.AutoscrollProfile {
-    return { zonePx: 32, restPx: 0, reachPx: 160, minPxPerMs: 0.15, maxPxPerMs: 2, rampMs: 0 };
-  }
+  static readonly AUTOSCROLL_MOUSE: VirtualScrollerSelection.AutoscrollProfile = { zonePx: 32, restPx: 0, reachPx: 160, minPxPerMs: 0.15, maxPxPerMs: 2, rampMs: 0 };
 
   /**
    * Drag autoscroll for a FINGER. A finger is wide and cannot rest on the
@@ -84,9 +74,7 @@ class $VirtualScrollerSelection {
    * is deep, already moving at its inner boundary, and full speed is
    * reached restPx BEFORE the edge and held from there on.
    */
-  static get AUTOSCROLL_TOUCH(): VirtualScrollerSelection.AutoscrollProfile {
-    return { zonePx: 96, restPx: 24, reachPx: 0, minPxPerMs: 0.06, maxPxPerMs: 0.9, rampMs: 0 };
-  }
+  static readonly AUTOSCROLL_TOUCH: VirtualScrollerSelection.AutoscrollProfile = { zonePx: 96, restPx: 24, reachPx: 0, minPxPerMs: 0.06, maxPxPerMs: 0.9, rampMs: 0 };
 
   /* Geometry — viewport point ↔ row ↔ logical position */
 
@@ -339,9 +327,7 @@ class $VirtualScrollerSelection {
   }
 
   /** How long the chip reads "Copied" after a copy. */
-  static get COPIED_MS() {
-    return 1200;
-  }
+  static readonly COPIED_MS = 1200;
 
   /** The clipboard without the clipboard API: select the text in an
    *  off-screen textarea and ask the document to copy — what a page on

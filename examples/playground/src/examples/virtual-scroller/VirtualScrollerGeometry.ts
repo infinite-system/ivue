@@ -38,9 +38,7 @@ import { Static } from '../../Static';
 
 class $VirtualScrollerGeometry {
   /** measured rows the estimate calibrates on — the first screen's worth, so it lands before a gesture */
-  static get CALIBRATION_ROWS() {
-    return 5;
-  }
+  static readonly CALIBRATION_ROWS = 5;
 
   // invariant: A hosted capability reaches its owner through an interface (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   constructor(public owner: VirtualScrollerGeometry.Owner) {}

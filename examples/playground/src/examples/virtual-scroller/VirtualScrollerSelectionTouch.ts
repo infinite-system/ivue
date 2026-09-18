@@ -33,59 +33,37 @@ class $VirtualScrollerSelectionTouch {
   /* Knobs */
 
   /** How long a finger must hold still before movement selects. */
-  static get LONG_PRESS_MS() {
-    return 450;
-  }
+  static readonly LONG_PRESS_MS = 450;
 
   /** Movement (px) during the hold that turns the gesture back into a scroll. */
-  static get SLOP_PX() {
-    return 8;
-  }
+  static readonly SLOP_PX = 8;
 
   /** Two taps this close in time and place select the word under them —
    *  the touch form of the double click. */
-  static get DOUBLE_TAP_MS() {
-    return 300;
-  }
+  static readonly DOUBLE_TAP_MS = 300;
 
-  static get DOUBLE_TAP_SLOP_PX() {
-    return 24;
-  }
+  static readonly DOUBLE_TAP_SLOP_PX = 24;
 
   /** For how long after a touch the browser's synthesized mouse events
    *  are still that touch's, and not a mouse. */
-  static get MOUSE_AFTER_TOUCH_MS() {
-    return 700;
-  }
+  static readonly MOUSE_AFTER_TOUCH_MS = 700;
 
   /** How far beside the selection's end its handle sits — left of the
    *  start, right of the end, and a little below — so the knob never
    *  covers the text it marks. */
-  static get HANDLE_OFFSET_PX() {
-    return 12;
-  }
+  static readonly HANDLE_OFFSET_PX = 12;
 
   /** The handle's touch target, centred on its knob. */
-  static get HANDLE_TARGET_PX() {
-    return 44;
-  }
+  static readonly HANDLE_TARGET_PX = 44;
 
   /** The knob the reader sees, centred in the target (the CSS's 16 px). */
-  static get HANDLE_KNOB_PX() {
-    return 16;
-  }
+  static readonly HANDLE_KNOB_PX = 16;
 
-  static get OVERLAY_CLASS() {
-    return 'virtual-scroller__touch-selection';
-  }
+  static readonly OVERLAY_CLASS = 'virtual-scroller__touch-selection';
 
-  static get BOX_CLASS() {
-    return 'virtual-scroller__touch-box';
-  }
+  static readonly BOX_CLASS = 'virtual-scroller__touch-box';
 
-  static get HANDLE_CLASS() {
-    return 'virtual-scroller__touch-handle';
-  }
+  static readonly HANDLE_CLASS = 'virtual-scroller__touch-handle';
 
   /** Whether this device has a finger at all — the class is inert without
    *  one. Both signals: an emulated WebKit reports no touch points yet

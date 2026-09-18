@@ -40,8 +40,7 @@ class $Field {
     });
   }
 
-  static get propsDefaults(): ExtractPropDefaultTypes<typeof $Field.propsTypes> {
-    return {
+  static readonly propsDefaults: ExtractPropDefaultTypes<typeof $Field.propsTypes> = {
       modelValue: null,
       label: '',
       hint: '',
@@ -52,7 +51,6 @@ class $Field {
       outlined: true,
       runner: null
     };
-  }
 
   /** The fusion — written once here, read through the receiver: a
    *  subclass's `props` fuses ITS types and defaults. A subclass that

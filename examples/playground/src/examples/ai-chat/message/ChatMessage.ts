@@ -84,9 +84,7 @@ class $ChatMessage extends KitContainer.$Class<ChatMessage.Roles> {
   }
 
   /** how long a tapped time bubble stays */
-  static get WHEN_MS() {
-    return 2600;
-  }
+  static readonly WHEN_MS = 2600;
 
   static readonly SPEAKER_LABELS: Record<SessionLog.Speaker, string> = {
     user: 'You',

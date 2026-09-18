@@ -33,9 +33,7 @@ import { Field } from '../Field';
 class $ChooseField extends Field.$Class {
   /** Sentinel `value` of the synthetic "Create …" option row — a live
    *  static knob (no `$`): a subclass can re-key it. */
-  static get createOptionValue() {
-    return '__create_option__';
-  }
+  static readonly createOptionValue = '__create_option__';
 
   /* Contract — STATIC. The class owns its inputs the way it owns its
      state; ContactField extends them with `super` and re-tunes only
@@ -44,8 +42,7 @@ class $ChooseField extends Field.$Class {
      them, wrapping object/array defaults in factories). */
 
   /** Params Types */
-  static override get propsTypes() {
-    return definePropTypes({
+  static override readonly propsTypes = definePropTypes({
       ...super.propsTypes,
 
       /** === QSelect Overrides === */
@@ -111,11 +108,9 @@ class $ChooseField extends Field.$Class {
       createLabel: { type: String as PropType<string> },
       createEntityAsOption: { type: Boolean as PropType<boolean> }
     });
-  }
 
   /** Params Defaults */
-  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $ChooseField.propsTypes> {
-    return {
+  static override readonly propsDefaults: ExtractPropDefaultTypes<typeof $ChooseField.propsTypes> = {
       ...super.propsDefaults,
 
       /** === QSelect Overrides === */
@@ -177,7 +172,6 @@ class $ChooseField extends Field.$Class {
       createLabel: '',
       createEntityAsOption: true // Show the create affordance as the first option row while typing.
     };
-  }
 
   /** Re-declared (one line) so the derived `ChooseField.Props` type
    *  carries the params above — see Field.props. */
@@ -186,12 +180,10 @@ class $ChooseField extends Field.$Class {
   }
 
   /** Emits */
-  static get emits() {
-    return {
+  static readonly emits = {
       'update:model-value': (value: any) => true,
       remove: (details: IFnParameter<QSelectProps, 'onRemove', 0>) => true
     };
-  }
 
   constructor(
     public props: ChooseField.Props,

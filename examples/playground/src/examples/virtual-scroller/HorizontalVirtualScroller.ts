@@ -25,12 +25,10 @@ class $HorizontalVirtualScroller<
   /* Contract — inherited whole; ONE default re-tuned. `props` needs no
      override: it reads through the receiver and fuses THESE defaults
      with the inherited types. */
-  static override get propsDefaults(): typeof VirtualScroller.Class.propsDefaults {
-    return {
+  static override readonly propsDefaults: typeof VirtualScroller.Class.propsDefaults = {
       ...super.propsDefaults,
       assumedSize: 300 // cards are ~hundreds of px wide where rows are tens tall
     };
-  }
 
   // invariant: Every axis dependency goes through a seam getter (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected override get lenisOrientation(): 'vertical' | 'horizontal' {
