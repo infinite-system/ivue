@@ -13,7 +13,9 @@ rediscovered and the accepted ones are not re-argued.
 Every claim below was executed: the specs named are in the tree, the
 numbers were measured, the frame logs were copied off the devices with
 the feel strip's own button, and the judgments that only a hand can make
-were made on a Galaxy S22 Ultra and an iPhone 16 Pro Max.
+were made on a Galaxy S22 Ultra and an iPhone 16 Pro Max, the iPhone at
+its default 60 Hz and at 120 Hz with the Safari flag off, the glide and
+the creep on the chat and on the 1M-row example.
 
 ## The generator
 
@@ -206,9 +208,6 @@ needs a new trial of the timing question:
 
 ## Open
 
-- The iPhone at 120 Hz with the Safari flag off has been judged with the
-  compositor glide once, "hard to see a difference, more stable". A
-  second look on the 1M-row example is pending.
 - Whether Chrome votes the panel's full rate for the compositor sequence
   is inferred from the eye on the Galaxy; the log cannot measure it.
 - An anchor shift under a running glide rebuilds the animation (one more
