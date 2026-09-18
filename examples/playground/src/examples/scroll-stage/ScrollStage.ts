@@ -66,6 +66,12 @@ class $ScrollStage {
     ];
   }
 
+  /** The creep's starting speed, px per second: a scene reads faster than
+   *  a chat, so it starts above the scroller's tuned reading cadence. */
+  static get DEFAULT_SPEED_PX_PER_S() {
+    return 14;
+  }
+
   /** The two scene slots: a chapter's scene lives in the slot of its parity. */
   static get SLOTS() {
     return 2;
@@ -189,6 +195,11 @@ class $ScrollStage {
     return ref(false);
   }
 
+  /** The reading creep's speed, px per second — the speed slider writes it. */
+  get speed() {
+    return ref(this.self.DEFAULT_SPEED_PX_PER_S);
+  }
+
   /** The track table, built once per stage element: the layers do not
    *  change under a mounted stage, and a query per layer per frame is a
    *  cost the callback path would pay for nothing. */
@@ -230,13 +241,34 @@ class $ScrollStage {
   }
 
   get modeLabel(): string {
-    return this.onCompositor.value
-      ? 'compositor · alongside the scroll'
-      : 'callback · with the scroll';
+    // one word each: the strip's cells must not change height as the label does
+    return this.onCompositor.value ? 'compositor' : 'callback';
   }
 
   get trackCountLabel(): string {
     return String(this.trackList().length);
+  }
+
+  /** The slider's px/s in the creep integrator's unit, ms per px. */
+  get creepMsPerPx(): number {
+    return 1000 / Math.max(1, this.speed.value);
+  }
+
+  get speedLabel(): string {
+    return `${this.speed.value.toFixed(0)} px/s`;
+  }
+
+  /** The scroller's reactive autoplay state, through its exposed surface. */
+  get isAutoPlaying(): boolean {
+    return this.scroller.value?.isAutoPlaying ?? false;
+  }
+
+  get playButtonIcon(): string {
+    return this.isAutoPlaying ? '⏸' : '▶';
+  }
+
+  get playButtonLabel(): string {
+    return this.isAutoPlaying ? 'pause' : 'autoplay';
   }
 
   /** The whole scrollable extent — the progress bar's denominator. */
@@ -363,6 +395,14 @@ class $ScrollStage {
   }
 
   // METHODS
+
+  /** The play button: arm the reading creep at once, or stop it. */
+  toggleAutoPlay() {
+    const scroller = this.scroller.value;
+    if (!scroller) return;
+    if (this.isAutoPlaying) scroller.stopAutoPlay();
+    else scroller.startAutoPlay(0);
+  }
 
   /** The scroller's ref resolved (or cleared): hear every rendered frame from it. */
   onScrollerChange() {

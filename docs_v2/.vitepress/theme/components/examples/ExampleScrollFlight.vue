@@ -18,6 +18,7 @@ const {
   // state refs
   items,
   onCompositor,
+  speed,
   // element refs
   scroller,
   stage: stageElement,
@@ -103,6 +104,7 @@ const {
         v-model="items"
         :assumed-size="150"
         :padding-quantity="flight.paddingQuantity"
+        :creep-ms-per-px="flight.creepMsPerPx"
         scrollbar
         @sequence="flight.onSequence($event)"
       >
@@ -117,12 +119,41 @@ const {
         </template>
       </VirtualScroller>
     </div>
+
+    <div class="d-row esf-controls">
+      <button
+        class="d-btn esf-play"
+        :class="{ 'esf-playing': flight.isAutoPlaying }"
+        type="button"
+        @click="flight.toggleAutoPlay()"
+      >
+        <span class="esf-play-icon">{{ flight.playButtonIcon }}</span>
+        {{ flight.playButtonLabel }}
+      </button>
+      <label class="esf-speed">
+        speed
+        <input v-model.number="speed" type="range" min="1" max="80" step="1" />
+        <span class="esf-speed-value">{{ flight.speedLabel }}</span>
+      </label>
+    </div>
   </DemoBox>
 </template>
 
 <style scoped>
 .esf-stats {
   margin-bottom: 12px;
+}
+/* the strip's values are one line each, whatever the label: a wrapping value
+   changes the row's height as the reader scrolls and moves the frame under
+   the finger */
+.esf-stats > div {
+  min-width: 0;
+}
+.esf-stats .d-n {
+  font-size: 1.35rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .esf-stats .d-n.live {
   color: #67e8f9;
@@ -312,7 +343,56 @@ const {
   color: #eaf2ff;
   text-shadow: 0 2px 26px rgba(0, 0, 0, 0.55);
 }
+/* the controls: the play button and the creep's speed */
+.esf-controls {
+  margin-top: 12px;
+}
+.dbx .d-btn.esf-play {
+  min-width: 124px;
+  justify-content: center;
+}
+.esf-play-icon {
+  margin-right: 6px;
+}
+.d-btn.esf-playing {
+  border-color: rgba(52, 211, 153, 0.6);
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+}
+.esf-speed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--vp-c-text-2);
+}
+.esf-speed input {
+  width: 140px;
+  accent-color: #6366f1;
+}
+.esf-speed-value {
+  min-width: 52px;
+  color: var(--vp-c-text-1);
+  font-variant-numeric: tabular-nums;
+}
 @media (max-width: 640px) {
+  /* one stat per line, the value beside its key: nothing wraps, nothing
+     is cut short, and the strip's height never changes under the finger */
+  .dbx :deep(.d-vals).esf-stats,
+  .d-vals.esf-stats {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .esf-stats > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .esf-stats .d-n {
+    margin-top: 0;
+    font-size: 1.05rem;
+  }
   .esf-frame {
     height: 84svh;
     border-radius: 0;

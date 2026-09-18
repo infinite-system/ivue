@@ -17,6 +17,7 @@ const {
   // state refs
   items,
   onCompositor,
+  speed,
   // element refs
   scroller,
   stage: stageElement
@@ -79,6 +80,7 @@ const {
         v-model="items"
         :assumed-size="64"
         :padding-quantity="stage.paddingQuantity"
+        :creep-ms-per-px="stage.creepMsPerPx"
         scrollbar
         @sequence="stage.onSequence($event)"
       >
@@ -87,12 +89,41 @@ const {
         </template>
       </VirtualScroller>
     </div>
+
+    <div class="d-row ess-controls">
+      <button
+        class="d-btn ess-play"
+        :class="{ 'ess-playing': stage.isAutoPlaying }"
+        type="button"
+        @click="stage.toggleAutoPlay()"
+      >
+        <span class="ess-play-icon">{{ stage.playButtonIcon }}</span>
+        {{ stage.playButtonLabel }}
+      </button>
+      <label class="ess-speed">
+        speed
+        <input v-model.number="speed" type="range" min="1" max="80" step="1" />
+        <span class="ess-speed-value">{{ stage.speedLabel }}</span>
+      </label>
+    </div>
   </DemoBox>
 </template>
 
 <style scoped>
 .ess-stats {
   margin-bottom: 12px;
+}
+/* the strip's values are one line each, whatever the label: a wrapping value
+   changes the row's height as the reader scrolls and moves the frame under
+   the finger */
+.ess-stats > div {
+  min-width: 0;
+}
+.ess-stats .d-n {
+  font-size: 1.35rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .ess-stats .d-n.live {
   color: #67e8f9;
@@ -203,7 +234,56 @@ const {
   font-weight: 700;
   font-size: 18px;
 }
+/* the controls: the play button and the creep's speed */
+.ess-controls {
+  margin-top: 12px;
+}
+.dbx .d-btn.ess-play {
+  min-width: 124px;
+  justify-content: center;
+}
+.ess-play-icon {
+  margin-right: 6px;
+}
+.d-btn.ess-playing {
+  border-color: rgba(52, 211, 153, 0.6);
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+}
+.ess-speed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--vp-c-text-2);
+}
+.ess-speed input {
+  width: 140px;
+  accent-color: #6366f1;
+}
+.ess-speed-value {
+  min-width: 52px;
+  color: var(--vp-c-text-1);
+  font-variant-numeric: tabular-nums;
+}
 @media (max-width: 640px) {
+  /* one stat per line, the value beside its key: nothing wraps, nothing
+     is cut short, and the strip's height never changes under the finger */
+  .dbx :deep(.d-vals).ess-stats,
+  .d-vals.ess-stats {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .ess-stats > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .ess-stats .d-n {
+    margin-top: 0;
+    font-size: 1.05rem;
+  }
   .ess-frame {
     height: 78svh;
     border-radius: 0;
