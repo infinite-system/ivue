@@ -226,7 +226,7 @@ class $ExampleFeelToggle {
     stamps: [] as number[],
     lastAt: 0,
     worstGap: 0,
-    trace: [] as Array<{ at: number; position: number }>
+    trace: [] as Array<{ at: number; position: number; target: number }>
   };
 
   protected startFrameMeter() {
@@ -245,7 +245,13 @@ class $ExampleFeelToggle {
     meter.lastAt = time;
     meter.stamps.push(time);
     while (time - meter.stamps[0] > 1000) meter.stamps.shift();
-    meter.trace.push({ at: time, position: this.scroller?.scrollPosition ?? 0 });
+    // the RENDERED position — what the glide draws this frame — beside the model's target
+    const lenis = this.scroller?.lenis;
+    meter.trace.push({
+      at: time,
+      position: lenis?.animatedScroll ?? this.scroller?.scrollPosition ?? 0,
+      target: lenis?.targetScroll ?? 0
+    });
     while (time - meter.trace[0].at > self.TRACE_MS) meter.trace.shift();
     if (time - meter.stamps[0] >= 950 && Math.round(time) % 4 === 0) {
       this.frameRate.value = meter.stamps.length;
@@ -256,8 +262,9 @@ class $ExampleFeelToggle {
   }
 
   /** The report as text: the device, the knobs, the rate, then one line per
-   *  frame of the last seconds — time, gap to the previous frame, position,
-   *  and the move — so a glide can be read frame by frame off the phone. */
+   *  frame of the last seconds — time, gap to the previous frame, the RENDERED
+   *  position (Lenis's animated scroll, what the frame drew), its move, and the
+   *  model's target — so a glide can be read frame by frame off the phone. */
   buildReport(): string {
     const trace = this.meter.trace;
     const head = [
@@ -265,14 +272,14 @@ class $ExampleFeelToggle {
       `dpr: ${devicePixelRatio} · viewport: ${innerWidth}×${innerHeight}`,
       `knobs: ${this.glide.value} · carry ${this.carry.value} · pixels ${this.pixels.value} · reset ${this.layerReset.value}`,
       `rate: ${this.frameRate.value} fps · worst gap ${this.worstGapMs.value} ms · frames: ${trace.length}`,
-      't(ms)  gap(ms)  position  move'
+      't(ms)  gap(ms)  rendered  move  target'
     ];
     const first = trace[0]?.at ?? 0;
     const lines = trace.map((frame, index) => {
       const previous = trace[index - 1];
       const gap = previous ? (frame.at - previous.at).toFixed(1) : '-';
       const move = previous ? (frame.position - previous.position).toFixed(3) : '-';
-      return `${(frame.at - first).toFixed(1)}\t${gap}\t${frame.position.toFixed(3)}\t${move}`;
+      return `${(frame.at - first).toFixed(1)}\t${gap}\t${frame.position.toFixed(3)}\t${move}\t${frame.target.toFixed(1)}`;
     });
     return [...head, ...lines].join('\n');
   }
