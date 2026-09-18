@@ -23,7 +23,9 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
 // domain-invariant: $Lenis — If a flick's glide plays on the compositor, then its keyframes are the integrator's own remaining curve sampled once per KEYFRAME_MS from the current value, ending exactly on the target for both glide models.
 Impossible if true: A written transform whose value times devicePixelRatio is not an integer. A target rounded by the write.
+// domain-invariant: $Lenis — If consecutive compositor keyframes snap to the same transform, then they are handed over as one held keyframe at the first step's offset; the first and last steps are always kept.
 Impossible if true: A compositor glide whose last keyframe is not the model's target, or whose first is not the value the layer already shows.
+Impossible if true: A held keyframe list whose offsets are not strictly increasing, or that ends short of the target's step.
 Impossible if true: A wheel up over a nested box scrolled down that moves the list instead of the box.
 Impossible if true: A swipe over rows that measured taller mid-drag reading a velocity of zero.
 Impossible if true: A wheel up at the top of the thread that moves nothing.
@@ -618,4 +620,27 @@ test('the compositor keyframes are the remaining curve of either glide model, fr
   for (let index = 1; index < exponentialFrames.length; index++) expect(exponentialFrames[index]).toBeGreaterThanOrEqual(exponentialFrames[index - 1]);
   // the step is one 120 Hz frame
   expect(KEYFRAME_MS).toBeCloseTo(8.333, 2);
+});
+
+// domain-invariant: $Lenis — If consecutive compositor keyframes snap to the same transform, then they are handed over as one held keyframe at the first step's offset; the first and last steps are always kept.
+// impossible-if-true: $Lenis — A held keyframe list whose offsets are not strictly increasing, or that ends short of the target's step.
+test('held keyframes merge equal snapped neighbours and keep the first and last steps at their offsets', () => {
+  const { heldKeyframes } = Lenis.Class;
+  const transforms = ['a', 'b', 'b', 'b', 'c', 'c', 'd', 'd'];
+  const frames = heldKeyframes(transforms);
+  expect(frames.map((frame) => frame.transform)).toEqual(['a', 'b', 'c', 'd', 'd']);
+  expect(frames.map((frame) => frame.offset)).toEqual([0, 1 / 7, 4 / 7, 6 / 7, 1]);
+  for (let index = 1; index < frames.length; index++) expect(Number(frames[index].offset)).toBeGreaterThan(Number(frames[index - 1].offset));
+  expect(frames.every((frame) => frame.easing === 'step-end')).toBe(true);
+  // a two-step glide keeps both; a single value keeps one
+  expect(heldKeyframes(['a', 'a']).length).toBe(2);
+  expect(heldKeyframes(['a']).length).toBe(1);
+  // an exponential glide's tail collapses: fewer keyframes than steps, same span
+  const exponential = new Animate.Class();
+  exponential.fromTo(0, 491, { lerp: 1 / 35 });
+  const steps = Lenis.Class.glideKeyframes(exponential).map((value) => `translateY(${-Lenis.Class.snapToDevicePixel(value)}px)`);
+  const held = heldKeyframes(steps);
+  expect(held.length).toBeLessThan(steps.length * 0.7);
+  expect(held[held.length - 1].offset).toBe(1);
+  expect(held[held.length - 1].transform).toBe(steps[steps.length - 1]);
 });

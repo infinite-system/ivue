@@ -166,6 +166,25 @@ class $Lenis {
     return values;
   }
 
+  /** The keyframes the compositor is handed: one per DISTINCT snapped value,
+   *  each at its step's offset and held to the next. A glide's slow tail moves
+   *  less than a device pixel per step, so the same transform would repeat
+   *  frame after frame — an exponential glide of 484 steps holds 283 distinct
+   *  values — and a hold is a hold whether it is one keyframe or three. The
+   *  first and last steps are always kept, so the hold begins where the layer
+   *  is and ends on the target. */
+  static heldKeyframes(transforms: readonly string[]): Keyframe[] {
+    const last = transforms.length - 1;
+    if (last < 1) return transforms.map((transform) => ({ transform, easing: 'step-end' }));
+    const frames: Keyframe[] = [];
+    for (let index = 0; index <= last; index++) {
+      const transform = transforms[index];
+      if (index !== 0 && index !== last && transform === transforms[index - 1]) continue;
+      frames.push({ transform, easing: 'step-end', offset: index / last });
+    }
+    return frames;
+  }
+
   /** A touch on a glide pulls its target this far ahead in TIME: the brake's
    *  length. In ms, not frames — four frames is 67 ms on a 60 Hz display and
    *  33 on a 120 Hz one, so a frame count made the brake twice as abrupt on
@@ -1501,14 +1520,13 @@ class $Lenis {
     const keyframes = self.glideKeyframes(this.animate);
     if (keyframes.length < 2) return;
     const axis = this.isHorizontal ? 'translateX' : 'translateY';
-    const frames = keyframes.map((value) => ({
-      transform: `${axis}(${-self.snapToDevicePixel(value - this.renderOffset)}px)`,
-      easing: 'step-end'
-    }));
+    const frames = self.heldKeyframes(
+      keyframes.map((value) => `${axis}(${-self.snapToDevicePixel(value - this.renderOffset)}px)`)
+    );
     this.compositor.keyframes = keyframes;
     this.compositor.modelDone = false;
     const animation = content.animate(frames, {
-      duration: (frames.length - 1) * self.KEYFRAME_MS,
+      duration: (keyframes.length - 1) * self.KEYFRAME_MS,
       fill: 'forwards'
     });
     animation.onfinish = () => this.onCompositorGlideFinish();
