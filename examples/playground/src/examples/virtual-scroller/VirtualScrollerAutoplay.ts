@@ -69,7 +69,11 @@ class $VirtualScrollerAutoplay {
   /** How much of the creep the compositor is handed at a time. A creep is
    *  open-ended; the layer takes it in chunks chained end to end. */
   static get CHUNK_MS() {
-    return 2000;
+    // DIAGNOSTIC 2026-09-18: 5000, from 2000. A 1 px shift of the whole layer
+    // every second or two was seen on the Galaxy during the creep and not on
+    // the iPhone; the chunk boundary is the only event on that scale. If the
+    // shift's interval follows this number, the boundary is the cause.
+    return 5000;
   }
 
   /** With this much of the playing chunk left, the next one is chained. */
