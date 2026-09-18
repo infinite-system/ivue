@@ -596,15 +596,29 @@ it is safe.
 One consequence of `readonly` to carry: it narrows a literal to itself
 (`= 15` is the type `15`), so a knob a subclass re-tunes carries its
 widened type (`: number`) or the subclass's value fails against the
-base's `self`. The forms interoperate across a hierarchy: a subclass may
-answer a base field with a getter when it must compute (`static
-override get KNOB() { return super.KNOB + 10; }`) and a base getter with
-a field when it has a plain value, and `super` reads across the seam
-either way — statics are own properties of each constructor, so lookup
-is a chain walk and the form is per class. (Instance members are the
-asymmetric case: there TypeScript refuses an accessor over a property.)
-The `Static()` anchor rule is unchanged: a class that declares statics
-anchors, fields included.
+base's `self`. The forms interoperate across a hierarchy — statics are
+own properties of each constructor, so lookup is a chain walk, the form
+is per class, and `super` reads across the seam either way; instance
+members are the asymmetric case, where TypeScript refuses an accessor
+over a property. But the two forms make different PROMISES to a reader,
+and an override keeps the base's promise, whatever its form:
+
+- a field promises ONE object — a reader may compare it by identity or
+  keep a memo in it. Over a base field, an override is a field
+  (`{ ...super.TABLE, mine: 1 }`) or a `$` getter, stable per receiver;
+  never a plain getter, which would hand the base's readers a fresh
+  object on every read.
+- a plain getter promises a FRESH value per read — a reader may mutate
+  its result. Over a base getter, an override is a getter; a field only
+  when the value is immutable, or one object is shared across every
+  read (the defaults hazard).
+- a `$` getter over a field is the one computing override a field
+  admits: computed at first read, the identity a field promised kept.
+
+The type checker cannot see this — both forms type the same — so the
+promise is the author's to keep; a gate check that reads the base's form
+across the import graph is an open item. The `Static()` anchor rule is
+unchanged: a class that declares statics anchors, fields included.
 
 ## Instance-owned bookkeeping that is not state
 
