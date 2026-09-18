@@ -448,7 +448,13 @@ class $Lenis {
   protected readonly compositor = {
     animation: null as Animation | null,
     keyframes: [] as number[],
-    modelDone: false
+    modelDone: false,
+    /** a linear sequence: two fractional endpoints the compositor interpolates
+     *  (a constant-speed creep), against held snapped keyframes (a glide) */
+    linear: false,
+    /** chunks scheduled to follow the current one (the creep chains them),
+     *  promoted one at a time as the one before finishes */
+    chained: [] as Array<{ animation: Animation; values: number[]; linear: boolean }>
   };
   /**
    * The direction of the scroll
@@ -1516,36 +1522,96 @@ class $Lenis {
 
   /** Hand the glide's remaining curve to the layer as held, snapped keyframes. */
   protected startCompositorGlide() {
+    if (!this.animate.isRunning) return;
+    this.startCompositorSequence(this.self.glideKeyframes(this.animate));
+  }
+
+  /** Whether the layer can take a compositor sequence at all. */
+  get canComposite(): boolean {
+    const content = this.options.content as HTMLElement | Window;
+    return typeof (content as HTMLElement).animate === 'function';
+  }
+
+  /** Hand any sequence of scroll values — one per KEYFRAME_MS, the first being
+   *  where the layer is — to the layer as held, snapped keyframes. Returns the
+   *  animation, or null when there is nothing to hand over. With `after`, the
+   *  new sequence is scheduled to begin exactly when that animation ends, on the
+   *  document timeline, so a chained chunk shows no seam. */
+  startCompositorSequence(
+    values: number[],
+    { after = null, linear = false }: { after?: Animation | null; linear?: boolean } = {}
+  ): Animation | null {
     const content = this.options.content as HTMLElement;
-    if (typeof content.animate !== 'function' || !this.animate.isRunning) return;
+    if (!this.canComposite || values.length < 2) return null;
     const self = this.self;
-    const keyframes = self.glideKeyframes(this.animate);
-    if (keyframes.length < 2) return;
     const axis = this.isHorizontal ? 'translateX' : 'translateY';
     const offset = this.renderOffset;
-    const frames = self.heldKeyframes(
-      keyframes,
-      (value) => `${axis}(${-self.snapToDevicePixel(value - offset)}px)`
-    );
-    this.compositor.keyframes = keyframes;
+    const duration = (values.length - 1) * self.KEYFRAME_MS;
+    // a glide: every step a held, snapped keyframe. A creep: the two fractional
+    // endpoints, interpolated — at a fraction of a device pixel per frame the
+    // compositor's filtering IS the motion, and a snapped step would be a tick.
+    const frames = linear
+      ? [values[0], values[values.length - 1]].map((value) => ({ transform: `${axis}(${-(value - offset)}px)` }))
+      : self.heldKeyframes(values, (value) => `${axis}(${-self.snapToDevicePixel(value - offset)}px)`);
+    const animation = content.animate(frames, { duration, fill: 'forwards' });
+    animation.onfinish = () => this.onCompositorSequenceFinish(animation);
+    if (after && after.startTime !== null) {
+      // a chained chunk: it begins on the document timeline exactly where the
+      // one before ends, and waits in the queue until that one finishes
+      const afterDuration = Number(after.effect?.getTiming().duration ?? 0);
+      animation.startTime = Number(after.startTime) + afterDuration;
+      this.compositor.chained.push({ animation, values, linear });
+      return animation;
+    }
+    this.compositor.keyframes = values;
+    this.compositor.linear = linear;
     this.compositor.modelDone = false;
-    const animation = content.animate(frames, {
-      duration: (keyframes.length - 1) * self.KEYFRAME_MS,
-      fill: 'forwards'
-    });
-    animation.onfinish = () => this.onCompositorGlideFinish();
     this.compositor.animation = animation;
+    return animation;
+  }
+
+  /** The playing sequence and the value it ends on — where a chained chunk starts. */
+  get compositorPlaying(): { animation: Animation; lastValue: number } | null {
+    const { animation, keyframes } = this.compositor;
+    return animation ? { animation, lastValue: keyframes[keyframes.length - 1] } : null;
+  }
+
+  /** The compositor's keyframe step, for a caller building its own sequence. */
+  get keyframeMs(): number {
+    return this.self.KEYFRAME_MS;
+  }
+
+  /** Whether a chunk is already queued to follow the playing one. */
+  get compositorHasChained(): boolean {
+    return this.compositor.chained.length > 0;
+  }
+
+  /** Milliseconds left in the sequence the compositor is playing, or 0. */
+  get compositorRemainingMs(): number {
+    const animation = this.compositor.animation;
+    if (!animation) return 0;
+    const duration = Number(animation.effect?.getTiming().duration ?? 0);
+    return Math.max(0, duration - Number(animation.currentTime ?? 0));
+  }
+
+  /** Take the layer back from any compositor sequence — a caller's seam, for
+   *  the creep stopping under input, at the end of the list, or on stop(). */
+  releaseCompositor(adopt: boolean) {
+    this.endCompositorGlide(adopt);
   }
 
   /** The value the compositor is showing now, from its own clock over our keyframes. */
   protected compositorShownValue(): number {
-    const { animation, keyframes } = this.compositor;
-    const elapsed = Number(animation?.currentTime ?? 0);
-    const index = Math.min(
-      keyframes.length - 1,
-      Math.max(0, Math.floor(elapsed / this.self.KEYFRAME_MS))
-    );
-    return keyframes[index] ?? this.animatedScroll;
+    const { animation, keyframes, linear } = this.compositor;
+    const elapsed = Math.max(0, Number(animation?.currentTime ?? 0));
+    const last = keyframes.length - 1;
+    if (last < 0) return this.animatedScroll;
+    if (linear) {
+      const progress = Math.min(1, elapsed / (last * this.self.KEYFRAME_MS));
+      return keyframes[0] + (keyframes[last] - keyframes[0]) * progress;
+    }
+    const index = Math.min(last, Math.floor(elapsed / this.self.KEYFRAME_MS));
+    return keyframes[index];
   }
 
   /** Take the layer back. With `adopt`, the model moves to the value on screen
@@ -1553,6 +1619,8 @@ class $Lenis {
   protected endCompositorGlide(adopt: boolean) {
     const animation = this.compositor.animation;
     if (!animation) return;
+    for (const pending of this.compositor.chained) pending.animation.cancel();
+    this.compositor.chained = [];
     if (adopt) {
       const shown = this.compositorShownValue();
       const delta = shown - this.animatedScroll;
@@ -1581,10 +1649,26 @@ class $Lenis {
     if (this.compositor.animation) this.compositor.modelDone = true;
   }
 
-  /** The compositor finished: the model is at its end or within a frame of
-   *  it; the inline write lands on the model's value and the animation goes. */
-  protected onCompositorGlideFinish() {
-    this.endCompositorGlide(false);
+  /** A sequence finished. If it is still the one in charge (a chained chunk
+   *  may have replaced it), the model is at its end or within a frame of it:
+   *  the inline write lands on the model's value and the animation goes. A
+   *  superseded chunk only needs cancelling. */
+  protected onCompositorSequenceFinish(animation: Animation) {
+    const compositor = this.compositor;
+    if (compositor.animation !== animation) {
+      animation.cancel();
+      return;
+    }
+    const next = compositor.chained.shift();
+    if (!next) {
+      this.endCompositorGlide(false);
+      return;
+    }
+    // the chunk after it is already playing from this one's last value
+    compositor.animation = next.animation;
+    compositor.keyframes = next.values;
+    compositor.linear = next.linear;
+    animation.cancel();
   }
 
   protected preventNextNativeScrollEvent() {

@@ -66,6 +66,17 @@ class $VirtualScrollerAutoplay {
   }
 
   /** How long the end is held before the auto-repeat chain resets to the top. */
+  /** How much of the creep the compositor is handed at a time. A creep is
+   *  open-ended; the layer takes it in chunks chained end to end. */
+  static get CHUNK_MS() {
+    return 2000;
+  }
+
+  /** With this much of the playing chunk left, the next one is chained. */
+  static get CHAIN_AT_MS() {
+    return 700;
+  }
+
   static get REPEAT_HOLD_MS() {
     return 10_000;
   }
@@ -88,7 +99,9 @@ class $VirtualScrollerAutoplay {
    *  nothing renders them, and the loop reads them every frame. */
   protected readonly creep = {
     frame: null as number | null,
-    lastTs: null as number | null
+    lastTs: null as number | null,
+    /** the creep, not a flick, put the playing sequence on the compositor */
+    composited: false
   };
 
   /** The two deferral timers: resuming the creep, and the end-of-content repeat. */
@@ -101,6 +114,13 @@ class $VirtualScrollerAutoplay {
    *  owner to tell the reader's own motion from a settling size wave. */
   get isCreeping(): boolean {
     return this.creep.frame !== null;
+  }
+
+  /** The creep plays on the compositor when the scroller's glide does — the
+   *  same option — as a linear sequence in chained chunks: constant speed by
+   *  construction, fractional, sequenced on the compositor's own clock. */
+  protected usesCompositor(lenis: VirtualScrollerAutoplay.Integrator): boolean {
+    return Boolean(lenis.options?.compositorGlide) && Boolean(lenis.canComposite);
   }
 
   /** Speed as a SETTING: the optional creepMsPerPx prop overrides the tuned
@@ -129,6 +149,7 @@ class $VirtualScrollerAutoplay {
 
   stop(callback = () => {}) {
     this.isPlaying.value = false;
+    this.releaseCreepCompositor();
     this.owner.cancelFrames();
     this.creep.lastTs = null;
     clearTimeout(this.timers.resume);
@@ -212,11 +233,13 @@ class $VirtualScrollerAutoplay {
       // Reader took over — hand back to play()'s defer loop, which resumes
       // the creep when the input settles.
       this.creep.lastTs = null;
+      this.releaseCreepCompositor();
       this.play();
       return;
     }
     if (owner.scrollDirection.value !== 'down') {
       this.creep.lastTs = null;
+      this.releaseCreepCompositor();
       return;
     }
 
@@ -234,23 +257,63 @@ class $VirtualScrollerAutoplay {
       // End reached: stop creeping and let the auto-repeat chain own the
       // resumption (reset to top after a pause, then play again).
       clearTimeout(this.timers.repeat);
+      this.releaseCreepCompositor();
       this.timers.repeat = setTimeout(() => this.repeatFromTop(), this.self.REPEAT_HOLD_MS);
       return;
     }
 
     clearTimeout(this.timers.repeat);
-    // Unsnapped on purpose: constant-velocity FRACTIONAL motion — the
-    // compositor's filtering renders ~0.11px/frame as an apparent glide.
-    // Snapped, the same speed ticks a whole device pixel every 150ms on
-    // dpr-1 screens, which reads as chop.
-    owner.setScrollPosition(-lenis.targetScroll);
+    if (this.usesCompositor(lenis)) {
+      // The compositor draws a linear, FRACTIONAL sequence — at ~0.11 px per
+      // frame its filtering is the motion; a snapped step would tick a whole
+      // device pixel every 150 ms on a 1x screen — and the model only keeps
+      // the window and the events.
+      this.feedCompositor(lenis);
+      lenis.animatedScroll = lenis.targetScroll;
+      owner.setScrollPosition(-lenis.targetScroll, false);
+    } else {
+      owner.setScrollPosition(-lenis.targetScroll);
+    }
     if (atEnd) {
       // Nothing left to creep into (the position write clamps at the end);
       // the next wheel re-arms play through the scroller.
       this.creep.lastTs = null;
+      this.releaseCreepCompositor();
       return;
     }
     this.creep.frame = requestAnimationFrame(this.creepStep);
+  }
+
+  /** The chunk of creep from `start`: constant speed, one value per keyframe step. */
+  protected chunkFrom(start: number, stepMs: number): number[] {
+    const count = Math.ceil(this.self.CHUNK_MS / stepMs);
+    const values = new Array<number>(count + 1);
+    for (let index = 0; index <= count; index++) values[index] = start + (index * stepMs) / this.msPerPx;
+    return values;
+  }
+
+  /** Keep the compositor fed: start a chunk from the model when nothing
+   *  plays, chain the next from the playing chunk's last value as it nears
+   *  its end. A flick's glide on the layer is left alone until it ends. */
+  protected feedCompositor(lenis: VirtualScrollerAutoplay.Integrator) {
+    const stepMs = lenis.keyframeMs ?? this.self.FRAME_MS / 2;
+    if (!lenis.compositorGlideActive) {
+      const started = lenis.startCompositorSequence?.(this.chunkFrom(lenis.targetScroll, stepMs), { linear: true });
+      if (started) this.creep.composited = true;
+      return;
+    }
+    if (!this.creep.composited) return;
+    if (lenis.compositorHasChained || (lenis.compositorRemainingMs ?? 0) > this.self.CHAIN_AT_MS) return;
+    const playing = lenis.compositorPlaying;
+    if (!playing) return;
+    lenis.startCompositorSequence?.(this.chunkFrom(playing.lastValue, stepMs), { after: playing.animation, linear: true });
+  }
+
+  /** The creep stops owning the layer: adopt what the compositor shows and let go. */
+  protected releaseCreepCompositor() {
+    if (!this.creep.composited) return;
+    this.creep.composited = false;
+    this.owner.lenis?.releaseCompositor?.(true);
   }
 
   /** The auto-repeat chain: back to the top, pause, then read again. */
@@ -282,7 +345,7 @@ export namespace VirtualScrollerAutoplay {
     /** where the content is heading — the creep advances this */
     targetScroll: number;
     /** where the content is right now — what the handoff adopts */
-    readonly animatedScroll: number;
+    animatedScroll: number;
     /** the browser's own offset — the end test reads it */
     readonly actualScroll: number;
     /** px per animation frame, signed: positive forward */
@@ -293,6 +356,23 @@ export namespace VirtualScrollerAutoplay {
     readonly isScrolling: Lenis.Scrolling;
     /** take this position as the current one, killing any lerp in flight */
     adoptExternalScroll(scroll: number): void;
+    /* The compositor seam — present on the fork, absent on a spec's fake; the
+     * creep takes the compositor path only when `options.compositorGlide` says so. */
+    /** the compositor glide option — the creep plays there when the glide does */
+    readonly options?: { compositorGlide?: boolean };
+    /** whether the layer can take a compositor sequence at all */
+    readonly canComposite?: boolean;
+    /** the compositor's keyframe step, ms */
+    readonly keyframeMs?: number;
+    readonly compositorGlideActive?: boolean;
+    readonly compositorHasChained?: boolean;
+    readonly compositorRemainingMs?: number;
+    readonly compositorPlaying?: { animation: Animation; lastValue: number } | null;
+    startCompositorSequence?(
+      values: number[],
+      options?: { after?: Animation | null; linear?: boolean }
+    ): Animation | null;
+    releaseCompositor?(adopt: boolean): void;
   }
 
   /** What the creep needs from the scroller that hosts it. */
