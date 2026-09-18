@@ -7,7 +7,7 @@
 // clocks, split by what they are: everything that moves WITH the scroll is a
 // transform the compositor plays; the wingbeat, the rain and the propeller,
 // which do not, are clocks of their own (lenis/presented-motion.generator.md).
-import { onUnmounted, ref, shallowRef, watch } from 'vue';
+import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import { ScrollStage } from '../scroll-stage/ScrollStage';
@@ -117,6 +117,16 @@ class $ScrollFlight extends ScrollStage.$Class {
 
   static get FLOCK_PARKED() {
     return 'translate(130cqw, 12cqh)';
+  }
+
+  /** The frame meter's window: the worst gap and the long frames in it. */
+  static get METER_WINDOW_MS() {
+    return 3000;
+  }
+
+  /** A frame gap this long is a dropped frame at 60 Hz. */
+  static get LONG_FRAME_MS() {
+    return 24;
   }
 
   /** The fraction of a chapter over which a crossing comes in. */
@@ -325,7 +335,17 @@ class $ScrollFlight extends ScrollStage.$Class {
       () => this.flockCanvas.value,
       () => this.onFlockCanvasChange()
     );
-    onUnmounted(() => this.flock.value?.stop());
+    // the frame meter: the main thread's own frame gaps, on the strip, so a
+    // stutter can be placed on the main thread or off it from the device
+    onMounted(() => this.startMeter());
+    watch(
+      () => this.mediaRides.value,
+      () => this.onMediaRidesChange()
+    );
+    onUnmounted(() => {
+      this.flock.value?.stop();
+      this.stopMeter();
+    });
   }
 
   protected override get self() {
@@ -360,6 +380,19 @@ class $ScrollFlight extends ScrollStage.$Class {
     return ref(true);
   }
 
+  /** The frame meter: the worst main-thread frame gap in the window, ms. */
+  get worstGapMs() {
+    return ref(0);
+  }
+
+  /** The frame meter: frames longer than a dropped frame, in the window. */
+  get longFrames() {
+    return ref(0);
+  }
+
+  /** The meter's bookkeeping: the pending frame, the last stamp, the gaps in the window. */
+  protected readonly meter = { frame: null as number | null, lastTs: 0, gaps: [] as Array<[number, number]> };
+
   // ELEMENT REFS
   get flockCanvas() {
     return ref<HTMLCanvasElement | null>(null);
@@ -374,6 +407,10 @@ class $ScrollFlight extends ScrollStage.$Class {
     return { mountains: 'the mountains', beach: 'the beach', rainforest: 'the rain forest' }[
       this.self.themeOf(this.chapter)
     ];
+  }
+
+  get meterLabel(): string {
+    return `${this.worstGapMs.value.toFixed(1)} ms worst · ${this.longFrames.value} long`;
   }
 
   get kindLabel(): string {
@@ -494,7 +531,11 @@ class $ScrollFlight extends ScrollStage.$Class {
     const flock = stage.querySelector<HTMLElement>('[data-track="flock"]');
     transform(flock, (value) => this.flockTransform(value));
     opacity(flock, (value) => this.flockOpacity(value));
-    return tracks;
+    // with the ride off, the media's transform track is left out entirely: the
+    // box then fades with one animation, like the scene slot does (the table
+    // is rebuilt for the switch)
+    if (this.mediaRides.value) return tracks;
+    return tracks.filter((track) => !(track.property === 'transform' && track.element.hasAttribute('data-media')));
   }
 
   /** The media's tracks follow the linear switch; every other track is held. */
@@ -505,6 +546,11 @@ class $ScrollFlight extends ScrollStage.$Class {
   /** The media holds still at the centre when the ride switch is off. */
   override mediaTransform(slot: number, value: number): string {
     return this.mediaRides.value ? super.mediaTransform(slot, value) : 'translateY(0.00px)';
+  }
+
+  /** The ride switch changed: the track table is rebuilt at the next write. */
+  onMediaRidesChange() {
+    this.trackCache.value = null;
   }
 
   // METHODS
@@ -540,6 +586,37 @@ class $ScrollFlight extends ScrollStage.$Class {
       path?.setAttribute('d', self.canopyPath(chapter, canopy));
       path?.setAttribute('fill', palette.ridges[index + 1]);
     });
+  }
+
+  startMeter() {
+    if (this.meter.frame !== null) return;
+    this.meter.lastTs = 0;
+    this.meter.frame = requestAnimationFrame(this.onMeterFrame);
+  }
+
+  stopMeter() {
+    if (this.meter.frame !== null) cancelAnimationFrame(this.meter.frame);
+    this.meter.frame = null;
+  }
+
+  /** One main-thread frame: its gap goes into the window; the strip shows
+   *  the window's worst gap and how many frames in it ran long. */
+  onMeterFrame(now: number) {
+    const meter = this.meter;
+    const self = this.self;
+    if (meter.lastTs) meter.gaps.push([now, now - meter.lastTs]);
+    meter.lastTs = now;
+    const since = now - self.METER_WINDOW_MS;
+    while (meter.gaps.length && meter.gaps[0][0] < since) meter.gaps.shift();
+    let worst = 0;
+    let long = 0;
+    for (const [, gap] of meter.gaps) {
+      if (gap > worst) worst = gap;
+      if (gap > self.LONG_FRAME_MS) long++;
+    }
+    if (Math.abs(worst - this.worstGapMs.value) >= 0.5) this.worstGapMs.value = worst;
+    if (long !== this.longFrames.value) this.longFrames.value = long;
+    meter.frame = requestAnimationFrame(this.onMeterFrame);
   }
 
   /** A pointer lands on the frame: the flock is startled from that point.

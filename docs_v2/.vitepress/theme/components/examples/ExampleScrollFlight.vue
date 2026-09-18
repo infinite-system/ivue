@@ -53,6 +53,10 @@ const {
         <div class="d-k">{{ flight.chapterLabel }}</div>
         <div class="d-n">{{ flight.chapterTitle }}</div>
       </div>
+      <div>
+        <div class="d-k">main-thread frames, last 3 s</div>
+        <div class="d-n">{{ flight.meterLabel }}</div>
+      </div>
     </div>
 
     <div class="esf-frame" @pointerdown="flight.onFramePointerDown($event)">
@@ -164,7 +168,7 @@ const {
         </div>
 
         <!-- the interludes: two media slots the list makes room for; a picture, or a video on its own clock -->
-        <figure v-for="slot in [0, 1]" :key="slot" class="esf-media" :class="{ blank: !mediaContent }" :data-media="slot">
+        <figure v-for="slot in [0, 1]" :key="slot" class="esf-media" :class="{ blank: !mediaContent, still: !mediaRides }" :data-media="slot">
           <img class="esf-media-image" alt="" decoding="async" />
           <video class="esf-media-video" muted loop playsinline preload="metadata"></video>
           <figcaption class="esf-media-caption" data-caption></figcaption>
@@ -704,6 +708,10 @@ const {
   opacity: 0;
   will-change: transform, opacity;
   background: #0b1020;
+}
+/* held still: no transform track and no will-change for it — one fading layer, like the scene slot */
+.esf-media.still {
+  will-change: opacity;
 }
 .esf-media.blank .esf-media-image,
 .esf-media.blank .esf-media-video {
