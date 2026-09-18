@@ -1827,3 +1827,25 @@ ten-minute cap), and only layers without text take it in pieces —
 aligned to the run's start on the document timeline, never chained on
 the text layer. General form: never let a Web Animation end under a
 text layer while the motion continues.
+
+## A CSS 3D model's axes are the model's, not the screen's (2026-09-18)
+
+A plane built from CSS planes with its nose along +x banks about x
+(`rotateX`), pitches about z (`rotateZ`) and yaws about y (`rotateY`).
+Written with the screen's intuition (bank = rotateZ) the jet flew nose-up
+by 34° with an 18° bank and its flat wings were edge-on: a stick with a
+fin. Read the wing's normal after the whole transform — the z component
+is how much of the wing the camera sees — before tuning angles by eye.
+
+## A pinned interlude is a presence function over the scroll (2026-09-18)
+
+Media the list makes room for is two tracks over the scroll value:
+presence (0 until the empty span has entered most of the frame, 1 while
+the span alone is in the frame, falling the moment the next row enters)
+and position (riding with the span while presence is low, settling at
+the centre as it comes in). Coverage-based presence measured against the
+span's own height held the picture full while the next chapter's heading
+arrived; measured against the frame and keyed to the next row's entry it
+is gone before the paragraph is readable. Scenes for a compositor
+sequence are prepared for where the sequence BEGINS, never its end: a
+run to the end of the list drew chapter 5 into chapter 1's slot.

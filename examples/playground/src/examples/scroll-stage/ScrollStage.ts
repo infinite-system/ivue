@@ -88,6 +88,29 @@ class $ScrollStage {
     return { width: 2000, height: 1000 };
   }
 
+  /** The interludes: media the list makes room for. A row that carries one
+   *  is an empty span of the list, and while that span crosses the frame the
+   *  stage shows the media pinned behind it — pulled in as the span enters,
+   *  held while it is in view, gone as it leaves — a picture, or a video on
+   *  its own clock. None in the base; a subclass fills the table. */
+  static get INTERLUDES(): ScrollStage.Interlude[] {
+    return [];
+  }
+
+  /** The two media slots: an interlude lives in the slot of its ordinal's parity. */
+  static get MEDIA_SLOTS() {
+    return 2;
+  }
+
+  /** The part of the frame over which an interlude's media fades: in, as
+   *  the last of the span's leading edge crosses that much of the frame —
+   *  so the media is full once the empty span fills the frame — and out,
+   *  from the moment the next row enters, gone by the time it has taken
+   *  that much of the frame. Between the two the media holds. */
+  static get INTERLUDE_FADE_FRACTION() {
+    return 0.6;
+  }
+
   /** The two scene slots: a chapter's scene lives in the slot of its parity. */
   static get SLOTS() {
     return 2;
@@ -196,6 +219,9 @@ class $ScrollStage {
   /** Which chapter each slot's scene currently draws — 0 until written. */
   protected readonly slotChapters: number[] = [0, 0];
 
+  /** Which interlude (by ordinal, 1-based) each media slot currently holds — 0 until written. */
+  protected readonly mediaOrdinals: number[] = [0, 0];
+
 
   // STATE
   get items() {
@@ -288,6 +314,20 @@ class $ScrollStage {
     return this.isAutoPlaying ? 'pause' : 'autoplay';
   }
 
+  /** The rows that carry an interlude, in order: index and interlude. */
+  get interludeRows(): Array<{ index: number; interlude: ScrollStage.Interlude }> {
+    const rows: Array<{ index: number; interlude: ScrollStage.Interlude }> = [];
+    this.items.value.forEach((row, index) => {
+      if (row.interlude) rows.push({ index, interlude: row.interlude });
+    });
+    return rows;
+  }
+
+  /** The frame's height along the scroll — what an interlude's span crosses. */
+  get frameSpan(): number {
+    return this.scroller.value?.containerSpan ?? 1;
+  }
+
   /** The whole scrollable extent — the progress bar's denominator. */
   get extent(): number {
     return this.scroller.value?.scrollExtent ?? 1;
@@ -315,11 +355,74 @@ class $ScrollStage {
     return Math.max(1, this.chapterStart(chapter + 1) - this.chapterStart(chapter));
   }
 
+  /** Where a chapter's text ends: at its first interlude row when it has
+   *  one, else where the next chapter starts. A crossing plays out over the
+   *  text, so it is done before the interlude takes the frame. */
+  textEnd(chapter: number): number {
+    const first = (chapter - 1) * this.self.CHAPTER_ROWS;
+    const last = Math.min(this.items.value.length, first + this.self.CHAPTER_ROWS);
+    for (let index = first; index < last; index++) {
+      if (!this.items.value[index]?.interlude) continue;
+      return this.scroller.value?.getAnchoredPosition(index) ?? index * this.self.ASSUMED_ROW_PX;
+    }
+    return this.chapterStart(chapter + 1);
+  }
+
+  /** A scroll value inside its chapter's TEXT: the progress runs 0 to 1 over
+   *  the rows before the interlude, and holds 1 through the interlude. */
+  textLocalOf(value: number): ScrollStage.Local {
+    const chapter = this.chapterAt(value);
+    const start = this.chapterStart(chapter);
+    const travel = Math.max(0, value - start);
+    const span = Math.max(1, this.textEnd(chapter) - start);
+    return { chapter, progress: Math.min(1, travel / span), travel };
+  }
+
   /** A scroll value as a chapter and its progress through it, 0 to 1. */
   localOf(value: number): ScrollStage.Local {
     const chapter = this.chapterAt(value);
     const travel = Math.max(0, value - this.chapterStart(chapter));
     return { chapter, progress: Math.min(1, travel / this.chapterSpan(chapter)), travel };
+  }
+
+  /** Where an interlude row spans: its anchored start and its measured
+   *  size, the assumed row before geometry knows it. */
+  interludeSpan(ordinal: number): { start: number; end: number } | null {
+    const row = this.interludeRows[ordinal - 1];
+    if (!row) return null;
+    const scroller = this.scroller.value;
+    const start = scroller?.getAnchoredPosition(row.index) ?? row.index * this.self.ASSUMED_ROW_PX;
+    const next = scroller?.getAnchoredPosition(row.index + 1) ?? start + this.self.ASSUMED_ROW_PX;
+    return { start, end: Math.max(start + 1, next) };
+  }
+
+  /** How present an interlude is at a scroll value: 0 until its span has
+   *  entered most of the frame, rising to 1 as the span fills it; 1 while
+   *  the span alone is in the frame; falling from the moment the next row
+   *  enters, 0 once that row has taken most of the frame. */
+  interludePresence(ordinal: number, value: number): number {
+    const span = this.interludeSpan(ordinal);
+    if (!span) return 0;
+    const frame = this.frameSpan;
+    const fade = frame * this.self.INTERLUDE_FADE_FRACTION;
+    const threshold = frame - fade;
+    // how much of the span has entered from the bottom; how much is still ahead of the top
+    const entered = value + frame - span.start;
+    const ahead = span.end - value;
+    const entering = Math.min(1, Math.max(0, (entered - threshold) / fade));
+    const leaving = Math.min(1, Math.max(0, (ahead - threshold) / fade));
+    return Math.min(entering, leaving);
+  }
+
+  /** The interlude whose span a scroll value is at or before: the one the
+   *  frame shows now, or the next one coming. Ordinals are 1-based. */
+  interludeAt(value: number): number {
+    const rows = this.interludeRows;
+    for (let ordinal = 1; ordinal <= rows.length; ordinal++) {
+      const span = this.interludeSpan(ordinal);
+      if (span && span.end > value) return ordinal;
+    }
+    return rows.length;
   }
 
   // TRACKS — each a formatter over the scroll value; the slot decides its role
@@ -356,6 +459,31 @@ class $ScrollStage {
     const x = (this.self.SUN_BAND_START_CQW + role.progress * this.self.SUN_BAND_CQW).toFixed(3);
     const y = (-Math.sin(role.progress * Math.PI) * this.self.SUN_APEX_CQH).toFixed(3);
     return `translate(${x}cqw, ${y}cqh)`;
+  }
+
+  /** A media slot's opacity: its interlude's presence, eased so the media
+   *  is faint while it still rides beside the rows and full once it holds. */
+  mediaOpacity(slot: number, value: number): string {
+    const ordinal = this.mediaOrdinals[slot];
+    const presence = ordinal ? this.interludePresence(ordinal, value) : 0;
+    return (presence * presence).toFixed(3);
+  }
+
+  /** A media slot's transform: the media rides in with its span — it sits
+   *  where the empty span is, so the rows never cross it — and settles at
+   *  the frame's centre as it comes fully in, from a slight zoom; it leaves
+   *  the same way, with the span. */
+  mediaTransform(slot: number, value: number): string {
+    const ordinal = this.mediaOrdinals[slot];
+    const span = ordinal ? this.interludeSpan(ordinal) : null;
+    if (!span) return 'translateY(0px) scale(1.06)';
+    const center = (span.start + span.end) / 2 - (value + this.frameSpan / 2);
+    const presence = this.interludePresence(ordinal, value);
+    // eased: the media stays with its span until it is nearly in, then settles
+    const settle = presence * presence * presence;
+    const ride = Lenis.Class.snapToDevicePixel(center * (1 - settle));
+    const zoom = (1.06 - presence * 0.06).toFixed(4);
+    return `translateY(${ride}px) scale(${zoom})`;
   }
 
   progressTransform(value: number): string {
@@ -400,6 +528,12 @@ class $ScrollStage {
           property: 'transform',
           formatOf: (value) => this.sunTransform(slot, value)
         });
+    }
+    for (let slot = 0; slot < this.self.MEDIA_SLOTS; slot++) {
+      const media = stage.querySelector<HTMLElement>(`[data-media="${slot}"]`);
+      if (!media) continue;
+      tracks.push({ element: media, property: 'opacity', formatOf: (value) => this.mediaOpacity(slot, value) });
+      tracks.push({ element: media, property: 'transform', formatOf: (value) => this.mediaTransform(slot, value) });
     }
     const bar = stage.querySelector<HTMLElement>('[data-track="progress"]');
     if (bar)
@@ -450,6 +584,49 @@ class $ScrollStage {
       this.slotChapters[slot] = target;
       this.drawScene(slot, target);
     }
+    this.prepareInterludes(value);
+  }
+
+  /** The interlude the frame is at or before in the slot of its parity, the
+   *  one after in the other — loaded only when the ordinal changes, so a
+   *  picture is fetched once and a video keeps playing while it is held. */
+  prepareInterludes(value: number) {
+    const rows = this.interludeRows;
+    if (!rows.length) return;
+    const ordinal = this.interludeAt(value);
+    for (const target of [ordinal, ordinal + 1]) {
+      if (target > rows.length) continue;
+      const slot = target % this.self.MEDIA_SLOTS;
+      if (this.mediaOrdinals[slot] === target) continue;
+      this.mediaOrdinals[slot] = target;
+      this.drawInterlude(slot, rows[target - 1].interlude);
+    }
+  }
+
+  /** Put an interlude's media into a slot: the picture's source, or the
+   *  video's, which plays on its own clock while it is held. */
+  drawInterlude(slot: number, interlude: ScrollStage.Interlude) {
+    const root = this.stage.value?.querySelector<HTMLElement>(`[data-media="${slot}"]`);
+    if (!root) return;
+    root.dataset.kind = interlude.kind;
+    const image = root.querySelector<HTMLImageElement>('img');
+    const video = root.querySelector<HTMLVideoElement>('video');
+    const caption = root.querySelector<HTMLElement>('[data-caption]');
+    if (image) {
+      image.src = interlude.kind === 'image' ? interlude.src : '';
+      image.alt = interlude.caption ?? '';
+    }
+    if (video) {
+      if (interlude.kind === 'video') {
+        video.src = interlude.src;
+        if (interlude.poster) video.poster = interlude.poster;
+        void video.play?.()?.catch?.(() => undefined);
+      } else {
+        video.pause?.();
+        video.removeAttribute('src');
+      }
+    }
+    if (caption) caption.textContent = interlude.caption ?? '';
   }
 
   /** Draw a chapter's scene into a slot: the palette and the four ridges. */
@@ -479,13 +656,15 @@ class $ScrollStage {
   /** The scroll handed the compositor a sequence: compose every track over
    *  the same values, aligned with the same animation on the document
    *  timeline. A glide's held values are taken whole; a linear run is cut
-   *  into held pieces the stage composes as the run plays. The scenes the
-   *  sequence will reach are drawn first, so a chapter change mid-glide has
-   *  its slot ready. */
+   *  into held pieces the stage composes as the run plays. */
   onSequence(sequence: Lenis.Sequence) {
     const tracks = this.trackList();
     if (!tracks.length) return;
-    this.prepareScenes(sequence.values[sequence.values.length - 1]);
+    // the scenes for where the sequence BEGINS: the model keeps stepping under
+    // a compositor sequence and prepares each chapter as it is reached, and a
+    // run to the end of the list must not draw its last chapter over the
+    // first's slot before the first has played
+    this.prepareScenes(sequence.values[0]);
     // a sequence chained after another keeps the tracks of the one playing
     if (!sequence.after) this.cancelTracks();
     const flight: ScrollStage.Flight = { scroll: sequence.animation, sequence, pieces: [], nextPieceMs: 0 };
@@ -629,6 +808,16 @@ export namespace ScrollStage {
     chapter: number;
     heading: boolean;
     body: string;
+    /** the media this row makes room for, if it is an interlude */
+    interlude?: Interlude;
+  }
+
+  /** Media the list makes room for: a picture, or a video on its own clock. */
+  export interface Interlude {
+    kind: 'image' | 'video';
+    src: string;
+    caption?: string;
+    poster?: string;
   }
 
   /** A ridge of a scene: its fraction of the chapter's travel and its shape. */

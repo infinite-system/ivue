@@ -1474,6 +1474,25 @@ a.feature-inline-link {
   max-width: none !important;
 }
 
+/* ---------- The scroll stages: the demo bleeds to the doc's edges ----------
+   The scene pages are read, not studied: the reading frame takes the whole
+   width the doc has, through the demo box's own padding and the doc's. The
+   negative margins mirror .VPDoc's padding at each breakpoint. */
+.examples-bleed .VPDoc .content {
+  max-width: 1480px !important;
+}
+.examples-bleed .dbx {
+  margin-inline: -24px;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+}
+@media (min-width: 768px) {
+  .examples-bleed .dbx {
+    margin-inline: -32px;
+  }
+}
+
 /* ---------- Mobile guard rails ---------- */
 @media (max-width: 719px) {
   /* the desktop polish sets display:table for full-width rounded corners —

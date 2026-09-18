@@ -2,7 +2,7 @@
 title: 'Example: Scroll Stage — a scene per chapter, composed on the scroll'
 description: "Every chapter of a 720-row virtual list owns a scene: its own sky and skyline, 4 ridges at their fractions of the chapter's travel, a sun crossing once, fading into the next chapter's scene. None of it listens to the scroll. Every layer is a track of the same sequence the text moves by, drawn by the compositor when the scroll is, written in the same callback when it is not."
 aside: false
-pageClass: benchmarks-wide examples-page
+pageClass: benchmarks-wide examples-page examples-bleed
 relatedPosts: [99-7-and-100-are-worlds-apart, subpixel-perfect-scrolling, a-million-rows-twelve-divs]
 ---
 

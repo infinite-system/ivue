@@ -7,6 +7,7 @@ Goal: A scene per chapter moves WITH the scroll on one clock — composed over t
 // domain-invariant: $ScrollStage — If a scroll sequence ends, is promoted or is interrupted, then its tracks are cancelled with it, and when nothing plays the tracks are written from the rendered position again.
 // domain-invariant: $ScrollStage — If the scroll plays a linear run, then the stage cuts it into held pieces aligned to the run's own start on the document timeline, two in flight, the next composed as one finishes, and every piece's values lie on the run's line.
 // domain-invariant: $ScrollStage — If the run's rate changes in place, then every piece in flight takes the same rate and a piece composed after inherits it, its offset scaled by it.
+// domain-invariant: $ScrollStage — If a row carries an interlude, then its media's presence is zero until the row's span has entered most of the frame, one once the span fills it, held while the span alone is in the frame, and falling from the moment the next row enters; the interlude the frame is at or before lives in the media slot of its parity, the next in the other.
 // domain-invariant: $ScrollStage — If a scroll value lies in a chapter, then that chapter's slot draws it at its progress and the other slot draws the next chapter waiting, the two opacities summing to one through the fade, and a ridge's rise is its fraction of the chapter's progress over the tile's overhang and never wraps.
 Impossible if true: A track written inline while the compositor owns the scroll.
 Impossible if true: A ridge risen by more than its fraction of the tile's overhang.
@@ -14,6 +15,7 @@ Impossible if true: Two chapters drawing the same skyline.
 Impossible if true: A track left playing after the scroll animation it was composed over was cancelled with nothing else in flight.
 Impossible if true: A piece of a run whose start is not the run's start plus its offset.
 Impossible if true: A piece moving at a rate other than the run's.
+Impossible if true: An interlude's media shown while its span is outside the frame.
 
 === GENERATOR-DESCRIBED ===
 The stage is a table of formatters over one number, a pair of slots the
@@ -25,6 +27,8 @@ read what was composed, over which values, aligned with what.
 import { expect, test } from 'vitest';
 import { nextTick } from 'vue';
 import { ScrollStage } from './ScrollStage';
+import { Reactive } from '../../ivue';
+import { Static } from '../../Static';
 import type { Lenis } from '../../lenis/Lenis';
 
 /** A Web Animation stand-in: what the stage aligns with and cancels. */
@@ -256,4 +260,76 @@ test("a rate change on the run reaches every piece in flight, and a later piece 
   expect(third.length).toBe(13);
   expect(third.every((composed) => composed.animation.playbackRate === 2)).toBe(true);
   expect(third.every((composed) => composed.animation.startTime === 1000 + (2 * TRACK_CHUNK_MS) / 2)).toBe(true);
+});
+
+// domain-invariant: $ScrollStage — If a row carries an interlude, then its media's presence is zero until the row's span has entered most of the frame, one once the span fills it, held while the span alone is in the frame, and falling from the moment the next row enters; the interlude the frame is at or before lives in the media slot of its parity, the next in the other.
+// impossible-if-true: $ScrollStage — An interlude's media shown while its span is outside the frame.
+test("an interlude is pulled in as its span enters the frame, held while it covers it, gone as it leaves; the slots hold this one and the next", () => {
+  class $Gallery extends ScrollStage.$Class {
+    static override readonly ITEM_COUNT: number = 40;
+    static override get INTERLUDES(): ScrollStage.Interlude[] {
+      return [
+        { kind: 'image', src: '/a.png', caption: 'A' },
+        { kind: 'image', src: '/b.png', caption: 'B' }
+      ];
+    }
+    static override buildItems(): ScrollStage.Row[] {
+      return super.buildItems().map((row, index) =>
+        index % 10 === 9 ? { ...row, interlude: this.INTERLUDES[Math.floor(index / 10) % 2] } : row
+      );
+    }
+  }
+  const Gallery = Static($Gallery);
+  const stage = new (Reactive(Gallery))();
+  const { ASSUMED_ROW_PX, INTERLUDE_FADE_FRACTION } = ScrollStage.Class;
+  // no scroller: rows are the assumed size, the frame's span is 1 — so presence is the frame's overlap with the row over the in-fraction
+  expect(stage.interludeRows.map((row) => row.index)).toEqual([9, 19, 29, 39]);
+  expect(stage.interludeSpan(1)).toEqual({ start: 9 * ASSUMED_ROW_PX, end: 10 * ASSUMED_ROW_PX });
+  // outside: nothing; entering: nothing until most of the frame, then rising as the span fills it;
+  // held while the span alone is in the frame; leaving from the moment the next row enters
+  const threshold = 1 - INTERLUDE_FADE_FRACTION;
+  expect(stage.interludePresence(1, 0)).toBe(0);
+  expect(stage.interludePresence(1, 9 * ASSUMED_ROW_PX - 1)).toBe(0);
+  expect(stage.interludePresence(1, 9 * ASSUMED_ROW_PX - 0.7)).toBe(0); // entered 0.3 of the frame: under the threshold
+  expect(stage.interludePresence(1, 9 * ASSUMED_ROW_PX - 0.1)).toBeCloseTo((0.9 - threshold) / INTERLUDE_FADE_FRACTION, 6);
+  expect(stage.interludePresence(1, 9 * ASSUMED_ROW_PX)).toBe(1);
+  expect(stage.interludePresence(1, 9 * ASSUMED_ROW_PX + 30)).toBe(1);
+  expect(stage.interludePresence(1, 10 * ASSUMED_ROW_PX - 1)).toBe(1); // the next row is about to enter
+  expect(stage.interludePresence(1, 10 * ASSUMED_ROW_PX - 0.7)).toBeCloseTo((0.7 - threshold) / INTERLUDE_FADE_FRACTION, 6);
+  expect(stage.interludePresence(1, 10 * ASSUMED_ROW_PX)).toBe(0);
+  // the chapter's text ends at its interlude row; the text-local progress holds 1 through it
+  expect(stage.textEnd(1)).toBe(9 * ASSUMED_ROW_PX);
+  expect(stage.textLocalOf(4.5 * ASSUMED_ROW_PX).progress).toBeCloseTo(0.5, 6);
+  expect(stage.textLocalOf(9.5 * ASSUMED_ROW_PX).progress).toBe(1);
+  // the interlude at a value: this one until its span has passed, then the next
+  expect(stage.interludeAt(0)).toBe(1);
+  expect(stage.interludeAt(9.5 * ASSUMED_ROW_PX)).toBe(1);
+  expect(stage.interludeAt(10 * ASSUMED_ROW_PX)).toBe(2);
+  // the media slots: two figures the class draws into, by the ordinal's parity
+  const root = document.createElement('div');
+  for (const slot of [0, 1]) {
+    const figure = document.createElement('figure');
+    figure.dataset.media = String(slot);
+    figure.appendChild(document.createElement('img'));
+    const caption = document.createElement('figcaption');
+    caption.dataset.caption = '';
+    figure.appendChild(caption);
+    root.appendChild(figure);
+  }
+  stage.stage.value = root;
+  stage.prepareScenes(0);
+  const figure = (slot: number) => root.querySelector<HTMLElement>(`[data-media="${slot}"]`)!;
+  expect(figure(1).querySelector('img')!.getAttribute('src')).toBe('/a.png');
+  expect(figure(0).querySelector('img')!.getAttribute('src')).toBe('/b.png');
+  expect(figure(1).querySelector('[data-caption]')!.textContent).toBe('A');
+  // its tracks: opacity is the presence, the transform settles from a zoom
+  expect(stage.mediaOpacity(1, 9 * ASSUMED_ROW_PX + 30)).toBe('1.000');
+  expect(stage.mediaOpacity(1, 0)).toBe('0.000');
+  expect(stage.mediaTransform(1, 9 * ASSUMED_ROW_PX + 30)).toContain('scale(1.0000)');
+  expect(stage.mediaTransform(1, 0)).toContain('scale(1.0600)');
+  // past the second interlude: the third takes slot 1, the fourth slot 0
+  stage.prepareScenes(20 * ASSUMED_ROW_PX);
+  expect(figure(1).querySelector('img')!.getAttribute('src')).toBe('/a.png');
+  expect(figure(0).querySelector('img')!.getAttribute('src')).toBe('/b.png');
+  expect(stage.interludeAt(20 * ASSUMED_ROW_PX)).toBe(3);
 });
