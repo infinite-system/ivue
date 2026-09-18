@@ -730,11 +730,21 @@ class $ScrollStage {
         alongside: scroll,
         offsetMs: atMs,
         durationMs,
-        property: track.property
+        property: track.property,
+        // a track may ask to be interpolated between a piece's two ends instead
+        // of held at every step — only over a linear run, where the ends are the line
+        linear: durationMs !== null && this.trackIsLinear(track)
       });
       if (animation) animations.push(animation);
     }
     return animations;
+  }
+
+  /** Whether a track is composed linear between a piece's ends rather than
+   *  held at every step. Held by default: a scene steps at a chapter
+   *  boundary. A subclass may answer for a track whose values are a line. */
+  protected trackIsLinear(_track: ScrollStage.Track): boolean {
+    return false;
   }
 
   /** The next piece of a linear run: its values sampled at the keyframe

@@ -21,6 +21,9 @@ const {
   items,
   onCompositor,
   speed,
+  mediaRides,
+  mediaLinear,
+  mediaContent,
   // element refs
   scroller,
   stage: stageElement,
@@ -161,7 +164,7 @@ const {
         </div>
 
         <!-- the interludes: two media slots the list makes room for; a picture, or a video on its own clock -->
-        <figure v-for="slot in [0, 1]" :key="slot" class="esf-media" :data-media="slot">
+        <figure v-for="slot in [0, 1]" :key="slot" class="esf-media" :class="{ blank: !mediaContent }" :data-media="slot">
           <img class="esf-media-image" alt="" decoding="async" />
           <video class="esf-media-video" muted loop playsinline preload="metadata"></video>
           <figcaption class="esf-media-caption" data-caption></figcaption>
@@ -214,6 +217,10 @@ const {
         <input v-model.number="speed" type="range" min="1" max="80" step="1" />
         <span class="esf-speed-value">{{ flight.speedLabel }}</span>
       </label>
+      <!-- the media switches: one deploy, every remaining variable of the choppy fade -->
+      <label class="esf-switch"><input v-model="mediaRides" type="checkbox" /> media rides</label>
+      <label class="esf-switch"><input v-model="mediaLinear" type="checkbox" /> media linear</label>
+      <label class="esf-switch"><input v-model="mediaContent" type="checkbox" /> media content</label>
     </div>
   </DemoBox>
 </template>
@@ -698,6 +705,13 @@ const {
   will-change: transform, opacity;
   background: #0b1020;
 }
+.esf-media.blank .esf-media-image,
+.esf-media.blank .esf-media-video {
+  visibility: hidden;
+}
+.esf-media.blank {
+  background: #3b4a7a;
+}
 .esf-media-image,
 .esf-media-video {
   position: absolute;
@@ -819,6 +833,16 @@ const {
   min-width: 52px;
   color: var(--vp-c-text-1);
   font-variant-numeric: tabular-nums;
+}
+.esf-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--vp-c-text-2);
+}
+.esf-switch input {
+  accent-color: #6366f1;
 }
 @media (prefers-reduced-motion: reduce) {
   .esf-waves,

@@ -338,6 +338,28 @@ class $ScrollFlight extends ScrollStage.$Class {
     return shallowRef<BirdFlock.Model | null>(null);
   }
 
+  /* The media switches — a diagnostic strip (2026-09-18): the interlude's fade
+   * is choppy on the Galaxy and not on the iPhone, after its ride was made
+   * fractional, its scale removed, its clip and shadow taken off and its
+   * translate replaced by insets. Each switch isolates one remaining variable
+   * so one deploy tests them all. */
+
+  /** Whether the media rides in with its span, or holds still at the centre. */
+  get mediaRides() {
+    return ref(true);
+  }
+
+  /** Whether the media's tracks are interpolated between a piece's ends
+   *  rather than held at every step. */
+  get mediaLinear() {
+    return ref(false);
+  }
+
+  /** Whether the media shows its picture or video, or a blank box. */
+  get mediaContent() {
+    return ref(true);
+  }
+
   // ELEMENT REFS
   get flockCanvas() {
     return ref<HTMLCanvasElement | null>(null);
@@ -473,6 +495,16 @@ class $ScrollFlight extends ScrollStage.$Class {
     transform(flock, (value) => this.flockTransform(value));
     opacity(flock, (value) => this.flockOpacity(value));
     return tracks;
+  }
+
+  /** The media's tracks follow the linear switch; every other track is held. */
+  protected override trackIsLinear(track: ScrollStage.Track): boolean {
+    return this.mediaLinear.value && track.element.hasAttribute('data-media');
+  }
+
+  /** The media holds still at the centre when the ride switch is off. */
+  override mediaTransform(slot: number, value: number): string {
+    return this.mediaRides.value ? super.mediaTransform(slot, value) : 'translateY(0.00px)';
   }
 
   // METHODS
