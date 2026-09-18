@@ -844,6 +844,11 @@ class $Lenis {
     this.isScrolling = false;
     this.lastVelocity = this.velocity = 0;
     this.animatedScroll = this.targetScroll = scroll;
+    // The layer moved — by the consumer's hand, but it moved — so whoever
+    // follows the layer (a stage composing scenes over it) hears it like
+    // every other write. Nothing here re-enters: the consumer that adopted
+    // is not a listener of its own write.
+    this.emit();
   }
 
   /**

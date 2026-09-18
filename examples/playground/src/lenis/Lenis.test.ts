@@ -20,6 +20,7 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 // domain-invariant: $Lenis — If a finger lands on a glide, then the glide's target is pulled to a few frames of travel ahead under a steep lerp and its momentum is remembered for a flick the same way; the first move takes over where the content is.
 // domain-invariant: $Lenis — If a wheel runs mostly across the scroller's axis, then the scroller leaves it alone — no cancel, no scroll — so whatever scrolls that way under the pointer takes it; a wheel along the axis with a little drift across is the scroller's.
 // domain-invariant: $Lenis — If the scroll model holds a position, then the transform is written at that position minus the render offset, rounded to the nearest device pixel at the write and nowhere earlier; the target keeps its fraction.
+// domain-invariant: $Lenis — If a consumer writes the layer itself and adopts the position, then the scroll event fires for that write as for any other, so whatever follows the layer follows a thumb drag, a seek and a jump too.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
 // domain-invariant: $Lenis — If a flick's glide plays on the compositor, then its keyframes are the integrator's own remaining curve sampled once per KEYFRAME_MS from the current value, ending exactly on the target for both glide models.
 Impossible if true: A written transform whose value times devicePixelRatio is not an integer. A target rounded by the write.
@@ -31,6 +32,7 @@ Impossible if true: A swipe over rows that measured taller mid-drag reading a ve
 Impossible if true: A wheel up at the top of the thread that moves nothing.
 Impossible if true: A reversal that waits for the old glide to run its distance.
 Impossible if true: A trackpad swiping a code block sideways that scrolls the list by its drift.
+Impossible if true: A layer moved by the consumer's own write that a scroll listener never hears of.
 
 === GENERATOR-DESCRIBED ===
 The trail is the one thing the fork adds to touch inertia; the sync
@@ -644,4 +646,27 @@ test('held keyframes merge equal snapped neighbours and keep the first and last 
   expect(held.length).toBeLessThan(steps.length * 0.7);
   expect(held[held.length - 1].offset).toBe(1);
   expect(held[held.length - 1].transform).toBe(snapped(steps[steps.length - 1]));
+});
+
+// domain-invariant: $Lenis — If a consumer writes the layer itself and adopts the position, then the scroll event fires for that write as for any other, so whatever follows the layer follows a thumb drag, a seek and a jump too.
+// impossible-if-true: $Lenis — A layer moved by the consumer's own write that a scroll listener never hears of.
+test('an adopted write is heard: the scroll event fires with the adopted position, once', () => {
+  class ObserverStub {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ObserverStub;
+  const wrapper = document.createElement('div');
+  const content = document.createElement('div');
+  wrapper.appendChild(content);
+  document.body.appendChild(wrapper);
+  const lenis = new Lenis.Class({ wrapper, content, autoRaf: false, syncTouch: true });
+  lenis.virtualLimit = () => 100_000;
+  const heard: number[] = [];
+  lenis.on('scroll', () => heard.push(lenis.animatedScroll));
+  // the scrollbar thumb: the scroller wrote the transform and adopts the position
+  lenis.adoptExternalScroll(4242);
+  expect(heard).toEqual([4242]);
+  expect(lenis.targetScroll).toBe(4242);
 });
