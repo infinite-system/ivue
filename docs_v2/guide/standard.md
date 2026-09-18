@@ -593,14 +593,18 @@ none; a getter answers at the read. When in doubt about a cycle or an
 environment, the getter is never wrong; the field is faster only where
 it is safe.
 
-Two consequences of `readonly` to carry: it narrows a literal to itself
+One consequence of `readonly` to carry: it narrows a literal to itself
 (`= 15` is the type `15`), so a knob a subclass re-tunes carries its
 widened type (`: number`) or the subclass's value fails against the
-base's `self`; and a hierarchy agrees per name — a base field is
-overridden by a field, a base getter by a getter — because TypeScript
-refuses an accessor over a property and the reverse. The `Static()`
-anchor rule is unchanged: a class that declares statics anchors, fields
-included.
+base's `self`. The forms interoperate across a hierarchy: a subclass may
+answer a base field with a getter when it must compute (`static
+override get KNOB() { return super.KNOB + 10; }`) and a base getter with
+a field when it has a plain value, and `super` reads across the seam
+either way — statics are own properties of each constructor, so lookup
+is a chain walk and the form is per class. (Instance members are the
+asymmetric case: there TypeScript refuses an accessor over a property.)
+The `Static()` anchor rule is unchanged: a class that declares statics
+anchors, fields included.
 
 ## Instance-owned bookkeeping that is not state
 
