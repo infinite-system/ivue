@@ -83,6 +83,15 @@ class $ExampleFeelToggle {
     return ref<'on' | 'off'>('off');
   }
 
+  /** The report shown on the strip when no copy path worked — empty means hidden. */
+  get reportText() {
+    return ref('');
+  }
+
+  get showsReport(): boolean {
+    return this.reportText.value !== '';
+  }
+
   /** The report was just copied — the button says so for a moment. */
   get copied() {
     return ref(false);
@@ -268,10 +277,50 @@ class $ExampleFeelToggle {
     return [...head, ...lines].join('\n');
   }
 
+  /** Copy the report: the clipboard API on a secure page, the legacy copy
+   *  command on a plain-http LAN page (the phones reach the dev server that
+   *  way), and when both refuse, the report opens on the strip to select by hand. */
   async copyReport() {
-    await navigator.clipboard.writeText(this.buildReport());
+    const report = this.buildReport();
+    const copied = (await this.writeClipboard(report)) || this.copyThroughCommand(report);
+    if (!copied) {
+      this.reportText.value = report;
+      return;
+    }
     this.copied.value = true;
     setTimeout(() => this.onCopiedShown(), this.self.COPIED_MS);
+  }
+
+  closeReport() {
+    this.reportText.value = '';
+  }
+
+  protected async writeClipboard(text: string): Promise<boolean> {
+    if (!navigator.clipboard?.writeText) return false;
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  protected copyThroughCommand(text: string): boolean {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    let copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch {
+      copied = false;
+    }
+    area.remove();
+    return copied;
   }
 
   protected onCopiedShown() {

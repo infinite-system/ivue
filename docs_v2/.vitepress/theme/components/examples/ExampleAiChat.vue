@@ -17,6 +17,7 @@ const {
   carry,
   pixels,
   layerReset,
+  reportText,
   // element refs
   shell
 } = feel;
@@ -102,6 +103,11 @@ const {
           {{ feel.copyLabel }}
         </button>
       </span>
+      <div v-if="feel.showsReport" class="eac-feel-report">
+        <span class="eac-feel-label">copy refused on this page — select the log by hand</span>
+        <textarea class="eac-feel-report-text" readonly :value="reportText" @focus="$event.target.select()"></textarea>
+        <button type="button" class="eac-feel-btn" @click="feel.closeReport()">close</button>
+      </div>
     </div>
     <div class="eac-frame">
       <ChatShell ref="shell" />
@@ -156,6 +162,25 @@ const {
   margin-left: auto;
   opacity: 0.55;
   font-family: var(--vp-font-family-mono, monospace);
+}
+.eac-feel-report {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.eac-feel-report-text {
+  width: 100%;
+  height: 160px;
+  font-family: var(--vp-font-family-mono, monospace);
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: pre;
+  overflow: auto;
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+  padding: 6px;
 }
 .eac-feel-meter {
   display: flex;
