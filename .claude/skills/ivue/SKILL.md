@@ -283,22 +283,25 @@ overridden by a subclass, is not inherited, and does not swap with
 `Class` under a global override — so a runtime declaration never lives
 there.
 
-- **Contract (on the class, static)** — `static readonly propsTypes`
-  (defineComponent-style, no defaults, a `definePropTypes({...})` table
-  so the `required: true` literal survives `typeof`); `propsDefaults`
-  (plain values, annotated `ExtractPropDefaultTypes<typeof
-  $X.propsTypes>` — required props are filtered out of the check
-  automatically, and a deliberately default-free optional prop is
-  declared `key: undefined`, stating the ruling in data) — a `static
-  readonly` field when it is a table, a `static get` when a default reads
-  another static; `static get props()` — the ONE fusion line,
+- **Contract (on the class, static)** — `static get propsTypes()`
+  (defineComponent-style, no defaults, returned through
+  `definePropTypes({...})` so the `required: true` literal survives
+  `typeof`); `static get propsDefaults()` (plain values, annotated
+  `ExtractPropDefaultTypes<typeof $X.propsTypes>` — required props are
+  filtered out of the check automatically, and a deliberately
+  default-free optional prop is declared `key: undefined`, stating the
+  ruling in data); `static get props()` — the ONE fusion line,
   `propsWithDefaults(this.propsDefaults, this.propsTypes)`, reading
   through the receiver so a subclass's `props` fuses ITS types and
-  defaults; `static readonly emits` (object-declared validators). Tuning
-  constants are `static readonly` fields too — knobs a subclass or a test
-  double overrides (see "Static data is a field"); the `$` prefix stays
-  reserved for compute-once caches. Types and defaults stay two members
-  ON PURPOSE: a variant re-tunes defaults without re-typing. A nested object prop (a knobs tree) is
+  defaults; `static get emits()` (object-declared validators). The four
+  contract members are ALWAYS getters — one form across every class,
+  because a contract is what gets merged across classes (a base, a peer,
+  a mixin) and a getter reads at first use, after every module has
+  loaded; and it is read once per construction, so the getter costs
+  nothing. Tuning constants and tables are `static readonly` fields
+  (see "Static data is a field"); the `$` prefix stays reserved for
+  compute-once caches. Types and defaults stay two members ON PURPOSE:
+  a variant re-tunes defaults without re-typing. A nested object prop (a knobs tree) is
   filled from the defaults at every depth with `nestedProps(props,
   this.self.propsDefaults)` from `ivue/extras`, once, in the
   constructor (in place — lodash's `defaultsDeep` with arrays taken
@@ -337,20 +340,22 @@ class $Box {
    *  definePropTypes is an identity call that keeps `required: true` a
    *  LITERAL — a bare object widens it to boolean, which would blind the
    *  defaults check below. */
-  static readonly propsTypes = definePropTypes({
-    title: { type: String as PropType<string>, required: true },
-    size: { type: Number as PropType<number> },
-    maxHeight: { type: Number as PropType<number> },
-    disabled: { type: Boolean as PropType<boolean> },
-  });
+  static get propsTypes() {
+    return definePropTypes({
+      title: { type: String as PropType<string>, required: true },
+      size: { type: Number as PropType<number> },
+      maxHeight: { type: Number as PropType<number> },
+      disabled: { type: Boolean as PropType<boolean> },
+    });
+  }
 
   /** 2 — the DEFAULTS: plain values, typed against the types object.
    *  Required props (`title`) are filtered out of the check
    *  automatically; every OPTIONAL prop must appear — `undefined` is the
-   *  explicit "no default ON PURPOSE" ruling, stated in data. A GETTER
-   *  here, because one default reads another static through the
-   *  receiver (a subclass re-tuning DEFAULT_SIZE re-tunes the default);
-   *  a defaults table with no such read is a `static readonly` field. */
+   *  explicit "no default ON PURPOSE" ruling, stated in data. A getter,
+   *  like every contract member: it may read a knob through the receiver
+   *  (a subclass re-tuning DEFAULT_SIZE re-tunes the default) or merge a
+   *  peer's defaults, and it is read once per construction. */
   static get propsDefaults(): ExtractPropDefaultTypes<typeof $Box.propsTypes> {
     return {
       size: this.DEFAULT_SIZE,
@@ -368,9 +373,11 @@ class $Box {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
-  static readonly emits = {
-    close: (title: string) => true,
-  };
+  static get emits() {
+    return {
+      close: (title: string) => true,
+    };
+  }
 
   /** A tuning constant: static DATA is a field, one value per class, read
    *  for free; a subclass overrides it. Annotated with its widened type
@@ -453,14 +460,14 @@ class $CardBox extends Box.$Class {
 }
 
 class $TaggedBox extends Box.$Class {
-  // a field extends a field: `super` works in a static initializer, and the
-  // spread is evaluated once, at class definition — one table per class
-  static override readonly propsTypes = definePropTypes({
-    ...super.propsTypes,
-    tag: { type: String as PropType<string> },
-  });
+  static override get propsTypes() {
+    return definePropTypes({
+      ...super.propsTypes,
+      tag: { type: String as PropType<string> },
+    });
+  }
   static override get propsDefaults(): ExtractPropDefaultTypes<typeof $TaggedBox.propsTypes> {
-    return { ...super.propsDefaults, tag: '' }; // a getter, because the base's is one
+    return { ...super.propsDefaults, tag: '' };
   }
   static override get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes); // widens TaggedBox.Props
@@ -482,12 +489,17 @@ runtime owner the class mechanics cannot reach). Shared base surfaces
 are a base CLASS (`class $ChooseField extends Field.$Class`), never a
 spread-in const: inheritance is the only composition the contract uses.
 
-## Static data is a field; a static that computes is a getter
+## Static data is a field; a static that computes, merges, or is the contract is a getter
 
 A static that HOLDS data — a number, a string, a table, a shader, a
-list of seeds, an emits map — is a `static readonly` field. A static
-that COMPUTES from other statics through the receiver — the `props`
-fusion, a default that reads a knob, a `$`-cached engine — is a getter.
+list of seeds — is a `static readonly` field. A static that COMPUTES
+from other statics through the receiver — the `props` fusion, a default
+that reads a knob, a `$`-cached engine — is a getter. And the four
+contract members (`propsTypes`, `propsDefaults`, `props`, `emits`) are
+getters ALWAYS, whatever they hold: one form across every class, because
+a contract is what gets merged across classes and it is read once per
+construction, where a getter costs nothing and a second form would be
+variance for no gain.
 The line is what happens on read: a field is one object per class, read
 for free; a getter runs its body every time, and a getter that returns a
 literal table allocates that table on EVERY read. In a formatter called
@@ -1419,7 +1431,8 @@ Constants use one form per role:
 | Role | Form |
 | --- | --- |
 | Tunable or overridable class constant — a literal (annotated with its widened type), or a table (`{ mouse: Selection.Class.AUTOSCROLL_MOUSE }`) | `static readonly SCREAMING_SNAKE_CASE` |
-| A constant that computes from another static through the receiver | `static get SCREAMING_SNAKE_CASE()` |
+| A constant that computes from another static through the receiver, reads another class, or probes the environment | `static get SCREAMING_SNAKE_CASE()` |
+| The contract — `propsTypes`, `propsDefaults`, `props`, `emits` | `static get`, always |
 | Contributor or pane identity data | Instance `readonly lowerCamelCase` field |
 | Extensible constructed dependency | Field assigned from a prototype `createX()` factory method |
 | Any other supposed constant | Defect: choose the real role or remove it |
@@ -1498,6 +1511,6 @@ convention and check it in review.
 - [ ] Static members precede the constructor; the constructor precedes state, prop, and derived getters; methods come last.
 - [ ] Spacing carries meaning: declaration-like getters contiguous within their group; blank lines only where a doc comment / multi-line body / category boundary begins; methods always separated.
 - [ ] A class that calls `this.$watch` / `$watchEffect` / `$stopEffects` merges the engine's helpers beside itself — `interface $X extends ReactiveHelpers {}` — so the body typechecks (never `(this as any)`, never per-member `declare` lines).
-- [ ] The class carries the WHOLE contract as statics (`propsTypes`, `propsDefaults`, the one-line `props` fusion, `emits`, tuning knobs — data as `static readonly` fields, computation as getters) and the namespace holds identity and types ONLY, every type derived from `$Class`; no module-level consts or TYPE declarations beside imports/class/namespace (every type a class file declares is a namespace member, read as `X.Name`), no `const`, `let`, or `function` of any kind in the namespace — contract data, tuning knobs, seed data, singletons (`use()`), helpers all live on the class as statics (the gate's `the_namespace_holds_identity_and_types_only` check enforces it), no sibling `XProps.ts`; the SFC reads `X.Class.props` / `X.Class.emits`; a subclass extends the contract with `super` and re-declares the fusion line only when it ADDS props.
+- [ ] The class carries the WHOLE contract as static getters (`propsTypes`, `propsDefaults`, the one-line `props` fusion, `emits` — always getters, one form across every class) and its tuning knobs and tables as `static readonly` fields and the namespace holds identity and types ONLY, every type derived from `$Class`; no module-level consts or TYPE declarations beside imports/class/namespace (every type a class file declares is a namespace member, read as `X.Name`), no `const`, `let`, or `function` of any kind in the namespace — contract data, tuning knobs, seed data, singletons (`use()`), helpers all live on the class as statics (the gate's `the_namespace_holds_identity_and_types_only` check enforces it), no sibling `XProps.ts`; the SFC reads `X.Class.props` / `X.Class.emits`; a subclass extends the contract with `super` and re-declares the fusion line only when it ADDS props.
 - [ ] Every member that overrides a base member carries `override` (with `noImplicitOverride` enabled).
 - [ ] No `private` members — internal members are `protected` (three-tier visibility: public = consumer surface, protected = hierarchy seam, private = banned).

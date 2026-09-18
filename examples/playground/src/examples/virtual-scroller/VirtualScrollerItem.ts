@@ -7,21 +7,27 @@ import { Static } from '../../Static';
 class $VirtualScrollerItem {
   /* Contract — STATIC */
 
-  static readonly propsTypes = definePropTypes({
-      index: { type: Number as PropType<number>, required: true },
-      /** Main axis the parent scroller virtualizes ('y' default). */
-      axis: { type: String as PropType<'y' | 'x'> }
-    });
+  static get propsTypes() {
+    return definePropTypes({
+        index: { type: Number as PropType<number>, required: true },
+        /** Main axis the parent scroller virtualizes ('y' default). */
+        axis: { type: String as PropType<'y' | 'x'> }
+      });
+  }
 
-  static readonly propsDefaults = { axis: 'y' as const };
+  static get propsDefaults() {
+    return { axis: 'y' as const };
+  }
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
-  static readonly emits = {
-      sizeUpdated: (size: number) => true
-    };
+  static get emits() {
+    return {
+        sizeUpdated: (size: number) => true
+      };
+  }
 
   constructor(
     public props: VirtualScrollerItem.Props,

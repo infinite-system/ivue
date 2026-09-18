@@ -29,12 +29,16 @@ class $Snippet {
 
   static readonly COPIED_FOR_MS = 1200;
 
-  static readonly propsTypes = definePropTypes({
-      snippet: { type: Object as PropType<Snippet.Source>, required: true },
-      kit: { type: Object as PropType<Kit.Entry<typeof Snippet>> }
-    });
+  static get propsTypes() {
+    return definePropTypes({
+        snippet: { type: Object as PropType<Snippet.Source>, required: true },
+        kit: { type: Object as PropType<Kit.Entry<typeof Snippet>> }
+      });
+  }
 
-  static readonly propsDefaults: ExtractPropDefaultTypes<typeof $Snippet.propsTypes> = { kit: undefined };
+  static get propsDefaults(): ExtractPropDefaultTypes<typeof $Snippet.propsTypes> {
+    return { kit: undefined };
+  }
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);

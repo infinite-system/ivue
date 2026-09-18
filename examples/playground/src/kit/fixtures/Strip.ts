@@ -38,14 +38,18 @@ class $Strip extends KitContainer.$Class<Strip.Roles, string> {
     return { code: item, cap: model.cap, 'data-key': key };
   }
 
-  static readonly propsTypes = definePropTypes({
-      title: { type: String as PropType<string>, required: true },
-      items: { type: Array as PropType<string[]> },
-      cap: { type: Number as PropType<number | null> },
-      kit: { type: Object as PropType<Kit.Entry<typeof Strip>> }
-    });
+  static get propsTypes() {
+    return definePropTypes({
+        title: { type: String as PropType<string>, required: true },
+        items: { type: Array as PropType<string[]> },
+        cap: { type: Number as PropType<number | null> },
+        kit: { type: Object as PropType<Kit.Entry<typeof Strip>> }
+      });
+  }
 
-  static readonly propsDefaults: ExtractPropDefaultTypes<typeof $Strip.propsTypes> = { items: [], cap: null, kit: undefined };
+  static get propsDefaults(): ExtractPropDefaultTypes<typeof $Strip.propsTypes> {
+    return { items: [], cap: null, kit: undefined };
+  }
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);

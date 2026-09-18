@@ -9,25 +9,31 @@ import { Static } from '../../Static';
 class $Badge {
   /* Contract — STATIC */
 
-  static readonly propsTypes = definePropTypes({
-      label: { type: String, required: true },
-      tone: { type: String as PropType<Badge.Tone> },
-      size: { type: Number, validator: (size: number) => size > 0 },
-      rounded: { type: Boolean }
-    });
+  static get propsTypes() {
+    return definePropTypes({
+        label: { type: String, required: true },
+        tone: { type: String as PropType<Badge.Tone> },
+        size: { type: Number, validator: (size: number) => size > 0 },
+        rounded: { type: Boolean }
+      });
+  }
 
-  static readonly propsDefaults = { tone: 'success' as Badge.Tone, size: 14, rounded: false };
+  static get propsDefaults() {
+    return { tone: 'success' as Badge.Tone, size: 14, rounded: false };
+  }
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
   /** KNOB — the values a panel may offer for each prop; a live static, read like the rest. */
-  static readonly propsChoices = {
-      label: ['runtime', 'props', 'value', 'ivue'],
-      tone: ['neutral', 'success', 'danger'] as readonly Badge.Tone[],
-      size: [0, 12, 14, 16, 20, 28]
-    };
+  static get propsChoices() {
+    return {
+        label: ['runtime', 'props', 'value', 'ivue'],
+        tone: ['neutral', 'success', 'danger'] as readonly Badge.Tone[],
+        size: [0, 12, 14, 16, 20, 28]
+      };
+  }
 
   constructor(public props: Badge.Props) {}
 

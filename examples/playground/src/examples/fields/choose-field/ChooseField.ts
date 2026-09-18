@@ -42,136 +42,140 @@ class $ChooseField extends Field.$Class {
      them, wrapping object/array defaults in factories). */
 
   /** Params Types */
-  static override readonly propsTypes = definePropTypes({
-      ...super.propsTypes,
-
-      /** === QSelect Overrides === */
-      multiple: { type: Boolean as PropType<boolean> },
-      /** Chips */
-      useChips: { type: Boolean as PropType<boolean> },
-      roundChips: { type: Boolean as PropType<boolean> },
-      /** Input */
-      useInput: { type: Boolean as PropType<boolean> },
-      inputDebounce: { type: Number as PropType<number> },
-      /** Icons */
-      dropdownIcon: { type: String as PropType<string> },
-      hideDropdownIcon: { type: Boolean as PropType<boolean> },
-      /** Options */
-      options: { type: Array as PropType<ChooseField.Option[]> },
-      optionValue: { type: String as PropType<string> },
-      optionsCover: { type: Boolean as PropType<boolean> },
-      prependOptions: { type: Array as PropType<ChooseField.Option[]> },
-      appendOptions: { type: Array as PropType<ChooseField.Option[]> },
-      /** Clearable */
-      clearable: { type: Boolean as PropType<boolean> },
-      clearIcon: { type: String as PropType<string> },
-      /** New Value Mode */
-      newValueMode: {
-        type: String as PropType<'add' | 'add-unique' | 'toggle' | undefined>
-      },
-      /** === QSelect Overrides End === */
-
-      /** === Custom Choose Field Params === */
-      /** Client-side filtering — `{ key, value }` equality rows; @see fetchFilters for server side. */
-      optionFilters: { type: Array as PropType<ChooseField.OptionFilter[]> },
-      /** Client-side sorting in 'field:asc,field2:desc' format; @see fetchSort for server side. */
-      optionSort: { type: String as PropType<string> },
-      /** Options */
-      optionClass: { type: String as PropType<string> },
-      /** Label */
-      optionLabel: { type: String as PropType<string> },
-      optionLabelPriority: { type: Array as PropType<string[]> },
-      /** Description */
-      optionDescription: { type: String as PropType<string> },
-      optionDescriptionPriority: { type: Array as PropType<string[]> },
-      /** Chip */
-      chipClass: { type: String as PropType<string> },
-      /** Icon */
-      icon: { type: String as PropType<string> },
-      /** Variants */
-      variants: { type: Array as PropType<ChooseField.Variant[]> },
-
-      /** Fetch */
-      fetchPath: { type: String as PropType<string> },
-      fetchOnFocus: { type: Boolean as PropType<boolean> },
-      fetchScrollThreshold: { type: Number as PropType<number> },
-      /** Fetch Filters */
-      fetchFilters: { type: String as PropType<string> },
-      fetchSort: { type: String as PropType<string> },
-      /** Fetch Search */
-      fetchSearch: { type: Boolean as PropType<boolean> },
-      /** Fetch Pagination */
-      fetchPagination: { type: Boolean as PropType<boolean> },
-      fetchRowsPerPage: { type: Number as PropType<number> },
-      /** Create */
-      createPath: { type: String as PropType<string> },
-      createLabel: { type: String as PropType<string> },
-      createEntityAsOption: { type: Boolean as PropType<boolean> }
-    });
+  static override get propsTypes() {
+    return definePropTypes({
+        ...super.propsTypes,
+  
+        /** === QSelect Overrides === */
+        multiple: { type: Boolean as PropType<boolean> },
+        /** Chips */
+        useChips: { type: Boolean as PropType<boolean> },
+        roundChips: { type: Boolean as PropType<boolean> },
+        /** Input */
+        useInput: { type: Boolean as PropType<boolean> },
+        inputDebounce: { type: Number as PropType<number> },
+        /** Icons */
+        dropdownIcon: { type: String as PropType<string> },
+        hideDropdownIcon: { type: Boolean as PropType<boolean> },
+        /** Options */
+        options: { type: Array as PropType<ChooseField.Option[]> },
+        optionValue: { type: String as PropType<string> },
+        optionsCover: { type: Boolean as PropType<boolean> },
+        prependOptions: { type: Array as PropType<ChooseField.Option[]> },
+        appendOptions: { type: Array as PropType<ChooseField.Option[]> },
+        /** Clearable */
+        clearable: { type: Boolean as PropType<boolean> },
+        clearIcon: { type: String as PropType<string> },
+        /** New Value Mode */
+        newValueMode: {
+          type: String as PropType<'add' | 'add-unique' | 'toggle' | undefined>
+        },
+        /** === QSelect Overrides End === */
+  
+        /** === Custom Choose Field Params === */
+        /** Client-side filtering — `{ key, value }` equality rows; @see fetchFilters for server side. */
+        optionFilters: { type: Array as PropType<ChooseField.OptionFilter[]> },
+        /** Client-side sorting in 'field:asc,field2:desc' format; @see fetchSort for server side. */
+        optionSort: { type: String as PropType<string> },
+        /** Options */
+        optionClass: { type: String as PropType<string> },
+        /** Label */
+        optionLabel: { type: String as PropType<string> },
+        optionLabelPriority: { type: Array as PropType<string[]> },
+        /** Description */
+        optionDescription: { type: String as PropType<string> },
+        optionDescriptionPriority: { type: Array as PropType<string[]> },
+        /** Chip */
+        chipClass: { type: String as PropType<string> },
+        /** Icon */
+        icon: { type: String as PropType<string> },
+        /** Variants */
+        variants: { type: Array as PropType<ChooseField.Variant[]> },
+  
+        /** Fetch */
+        fetchPath: { type: String as PropType<string> },
+        fetchOnFocus: { type: Boolean as PropType<boolean> },
+        fetchScrollThreshold: { type: Number as PropType<number> },
+        /** Fetch Filters */
+        fetchFilters: { type: String as PropType<string> },
+        fetchSort: { type: String as PropType<string> },
+        /** Fetch Search */
+        fetchSearch: { type: Boolean as PropType<boolean> },
+        /** Fetch Pagination */
+        fetchPagination: { type: Boolean as PropType<boolean> },
+        fetchRowsPerPage: { type: Number as PropType<number> },
+        /** Create */
+        createPath: { type: String as PropType<string> },
+        createLabel: { type: String as PropType<string> },
+        createEntityAsOption: { type: Boolean as PropType<boolean> }
+      });
+  }
 
   /** Params Defaults */
-  static override readonly propsDefaults: ExtractPropDefaultTypes<typeof $ChooseField.propsTypes> = {
-      ...super.propsDefaults,
-
-      /** === QSelect Overrides === */
-      multiple: false,
-      /** Chips */
-      useChips: false,
-      roundChips: false,
-      /** Input */
-      useInput: false,
-      inputDebounce: 250,
-      /** Icons */
-      dropdownIcon: 'arrow_drop_down',
-      hideDropdownIcon: false,
-      /** Options */
-      options: [],
-      optionValue: '',
-      optionsCover: false,
-      prependOptions: [], // Extra options ahead of fetched/static options.
-      appendOptions: [], // Extra options after fetched/static options.
-      /** Clearable */
-      clearable: false,
-      clearIcon: 'close',
-      /** New Value Mode */
-      newValueMode: undefined,
-      /** === QSelect Overrides End === */
-
-      /** === Custom Choose Field Params === */
-      optionFilters: [], // Client-side equality filters, applied after any server fetch.
-      optionSort: '', // Client-side sort, 'field:asc,field2:desc' — same grammar as fetchSort.
-      /** Options */
-      optionClass: '',
-      /** Option Label */
-      optionLabel: '', // Custom prop to use for the label.
-      optionLabelPriority: ['label', 'name', 'value', 'id'], // Fallback chain when optionLabel is not set.
-      /** Option Description */
-      optionDescription: '', // Custom prop to use for the description.
-      optionDescriptionPriority: ['description', 'caption'], // Fallback chain when optionDescription is not set.
-      /** Chips */
-      chipClass: '',
-      /** Icon */
-      icon: '',
-      /** Variants */
-      variants: [],
-
-      /** Fetch */
-      fetchPath: '', // List endpoint to fetch options from ('' = purely client-side options).
-      fetchOnFocus: true, // Refetch on each focus, for an always-fresh-data feel.
-      fetchScrollThreshold: 5, // Items left below the viewport that trigger the next-page fetch.
-      /** Fetch Filters */
-      fetchFilters: '', // Server-side filter expression; @see optionFilters for client side.
-      fetchSort: '', // Server-side sort: 'columnName:asc,columnName2:desc'; @see optionSort for client side.
-      /** Fetch Search */
-      fetchSearch: false, // Search through the server even without pagination.
-      /** Fetch Pagination */
-      fetchPagination: false, // Implies server search — client search over a partial page lies.
-      fetchRowsPerPage: 20,
-      /** Create */
-      createPath: '', // POST endpoint enabling the create-new-option affordance.
-      createLabel: '',
-      createEntityAsOption: true // Show the create affordance as the first option row while typing.
-    };
+  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $ChooseField.propsTypes> {
+    return {
+        ...super.propsDefaults,
+  
+        /** === QSelect Overrides === */
+        multiple: false,
+        /** Chips */
+        useChips: false,
+        roundChips: false,
+        /** Input */
+        useInput: false,
+        inputDebounce: 250,
+        /** Icons */
+        dropdownIcon: 'arrow_drop_down',
+        hideDropdownIcon: false,
+        /** Options */
+        options: [],
+        optionValue: '',
+        optionsCover: false,
+        prependOptions: [], // Extra options ahead of fetched/static options.
+        appendOptions: [], // Extra options after fetched/static options.
+        /** Clearable */
+        clearable: false,
+        clearIcon: 'close',
+        /** New Value Mode */
+        newValueMode: undefined,
+        /** === QSelect Overrides End === */
+  
+        /** === Custom Choose Field Params === */
+        optionFilters: [], // Client-side equality filters, applied after any server fetch.
+        optionSort: '', // Client-side sort, 'field:asc,field2:desc' — same grammar as fetchSort.
+        /** Options */
+        optionClass: '',
+        /** Option Label */
+        optionLabel: '', // Custom prop to use for the label.
+        optionLabelPriority: ['label', 'name', 'value', 'id'], // Fallback chain when optionLabel is not set.
+        /** Option Description */
+        optionDescription: '', // Custom prop to use for the description.
+        optionDescriptionPriority: ['description', 'caption'], // Fallback chain when optionDescription is not set.
+        /** Chips */
+        chipClass: '',
+        /** Icon */
+        icon: '',
+        /** Variants */
+        variants: [],
+  
+        /** Fetch */
+        fetchPath: '', // List endpoint to fetch options from ('' = purely client-side options).
+        fetchOnFocus: true, // Refetch on each focus, for an always-fresh-data feel.
+        fetchScrollThreshold: 5, // Items left below the viewport that trigger the next-page fetch.
+        /** Fetch Filters */
+        fetchFilters: '', // Server-side filter expression; @see optionFilters for client side.
+        fetchSort: '', // Server-side sort: 'columnName:asc,columnName2:desc'; @see optionSort for client side.
+        /** Fetch Search */
+        fetchSearch: false, // Search through the server even without pagination.
+        /** Fetch Pagination */
+        fetchPagination: false, // Implies server search — client search over a partial page lies.
+        fetchRowsPerPage: 20,
+        /** Create */
+        createPath: '', // POST endpoint enabling the create-new-option affordance.
+        createLabel: '',
+        createEntityAsOption: true // Show the create affordance as the first option row while typing.
+      };
+  }
 
   /** Re-declared (one line) so the derived `ChooseField.Props` type
    *  carries the params above — see Field.props. */
@@ -180,10 +184,12 @@ class $ChooseField extends Field.$Class {
   }
 
   /** Emits */
-  static readonly emits = {
-      'update:model-value': (value: any) => true,
-      remove: (details: IFnParameter<QSelectProps, 'onRemove', 0>) => true
-    };
+  static get emits() {
+    return {
+        'update:model-value': (value: any) => true,
+        remove: (details: IFnParameter<QSelectProps, 'onRemove', 0>) => true
+      };
+  }
 
   constructor(
     public props: ChooseField.Props,

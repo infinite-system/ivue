@@ -38,21 +38,25 @@ class $Code {
     });
   }
 
-  static readonly propsDefaults: ExtractPropDefaultTypes<typeof $Code.propsTypes> = {
-      lang: 'text',
-      theme: 'github-light',
-      lineNumbers: false,
-      maxLines: null,
-      kit: undefined
-    };
+  static get propsDefaults(): ExtractPropDefaultTypes<typeof $Code.propsTypes> {
+    return {
+        lang: 'text',
+        theme: 'github-light',
+        lineNumbers: false,
+        maxLines: null,
+        kit: undefined
+      };
+  }
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
-  static readonly emits = {
-      copy: (code: string) => typeof code === 'string'
-    };
+  static get emits() {
+    return {
+        copy: (code: string) => typeof code === 'string'
+      };
+  }
 
   /** the colour engine — a GETTER, not a field: it reads another class, and
    *  a field would read it at module evaluation, where an import cycle can

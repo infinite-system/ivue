@@ -54,10 +54,12 @@ class $Gallery {
     ];
   }
 
-  static readonly propsTypes = definePropTypes({
-      snippets: { type: Array as PropType<Snippet.Source[]> },
-      kit: { type: Object as PropType<Kit.Entry<typeof Gallery>> }
-    });
+  static get propsTypes() {
+    return definePropTypes({
+        snippets: { type: Array as PropType<Snippet.Source[]> },
+        kit: { type: Object as PropType<Kit.Entry<typeof Gallery>> }
+      });
+  }
 
   static get propsDefaults(): ExtractPropDefaultTypes<typeof $Gallery.propsTypes> {
     return { snippets: this.SAMPLES, kit: undefined };

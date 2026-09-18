@@ -7,12 +7,16 @@ import { Static } from '../../../Static';
 class $ContactAvatar {
   /* Contract — STATIC */
 
-  static readonly propsTypes = definePropTypes({
-      name: { type: String as PropType<string>, required: true },
-      size: { type: Number as PropType<number> }
-    });
+  static get propsTypes() {
+    return definePropTypes({
+        name: { type: String as PropType<string>, required: true },
+        size: { type: Number as PropType<number> }
+      });
+  }
 
-  static readonly propsDefaults = { size: 32 };
+  static get propsDefaults() {
+    return { size: 32 };
+  }
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);

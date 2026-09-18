@@ -30,22 +30,26 @@ class $TextMarquee {
      member. The namespace below holds identity and TYPES only. */
 
   /** 1 — the TYPES: a defineComponent-style object, no defaults inside. */
-  static readonly propsTypes = definePropTypes({
-      /** The full text — newlines and all; the marquee one-lines it. */
-      text: { type: String as PropType<string>, required: true },
-      /** Glide speed. The default is a comfortable reading glide. */
-      pxPerSecond: { type: Number as PropType<number> },
-      /** Characters per chunk (cut at spaces). Bigger chunks = fewer items;
-       *  smaller chunks = finer virtualization granularity. */
-      targetChars: { type: Number as PropType<number> }
-    });
+  static get propsTypes() {
+    return definePropTypes({
+        /** The full text — newlines and all; the marquee one-lines it. */
+        text: { type: String as PropType<string>, required: true },
+        /** Glide speed. The default is a comfortable reading glide. */
+        pxPerSecond: { type: Number as PropType<number> },
+        /** Characters per chunk (cut at spaces). Bigger chunks = fewer items;
+         *  smaller chunks = finer virtualization granularity. */
+        targetChars: { type: Number as PropType<number> }
+      });
+  }
 
   /** 2 — the DEFAULTS: plain values, typed against the types object
    *  (`text` is required — filtered out of the check automatically). */
-  static readonly propsDefaults: ExtractPropDefaultTypes<typeof $TextMarquee.propsTypes> = {
-      pxPerSecond: 50,
-      targetChars: 400
-    };
+  static get propsDefaults(): ExtractPropDefaultTypes<typeof $TextMarquee.propsTypes> {
+    return {
+        pxPerSecond: 50,
+        targetChars: 400
+      };
+  }
 
   /** 3 — the MERGE: a standard Vue props object, ready for defineProps.
    *  Reads through the receiver, so a subclass's `props` is its own

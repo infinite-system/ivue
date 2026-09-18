@@ -8,12 +8,16 @@ import type { Member } from './Member';
 class $MemberAvatar {
   /* Contract — STATIC */
 
-  static readonly propsTypes = definePropTypes({
-      member: { type: Object as PropType<Member.Model> },
-      size: { type: String as PropType<MemberAvatar.Size> }
-    });
+  static get propsTypes() {
+    return definePropTypes({
+        member: { type: Object as PropType<Member.Model> },
+        size: { type: String as PropType<MemberAvatar.Size> }
+      });
+  }
 
-  static readonly propsDefaults = { size: 'medium' as MemberAvatar.Size };
+  static get propsDefaults() {
+    return { size: 'medium' as MemberAvatar.Size };
+  }
 
   static get props() {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);

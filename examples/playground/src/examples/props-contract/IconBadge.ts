@@ -8,12 +8,16 @@ import { Badge } from './Badge';
 class $IconBadge extends Badge.$Class {
   /* Contract — STATIC, extended */
 
-  static override readonly propsTypes = definePropTypes({
-      ...super.propsTypes,
-      icon: { type: String }
-    });
+  static override get propsTypes() {
+    return definePropTypes({
+        ...super.propsTypes,
+        icon: { type: String }
+      });
+  }
 
-  static override readonly propsDefaults = { ...super.propsDefaults, size: 16, icon: '★' };
+  static override get propsDefaults() {
+    return { ...super.propsDefaults, size: 16, icon: '★' };
+  }
 
   // re-declared because it ADDS a prop — static return types are not polymorphic
   static override get props() {

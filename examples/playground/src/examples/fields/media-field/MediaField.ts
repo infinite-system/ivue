@@ -52,20 +52,22 @@ export class $MediaField extends Field.$Class {
   }
 
   /** Params Defaults */
-  static override readonly propsDefaults: ExtractPropDefaultTypes<typeof $MediaField.propsTypes> = {
-      ...super.propsDefaults,
-      multiple: false,
-      accept: '.pdf, image/*',
-      maxFiles: 12,
-      maxFileSize: 100 * 1024 * 1024, // 100 MB
-      label: 'Media',
-      thumbnailSize: 132,
-      canPreview: true,
-      canDownload: true,
-      canRename: true,
-      canRenameCaption: true,
-      canRemove: true
-    };
+  static override get propsDefaults(): ExtractPropDefaultTypes<typeof $MediaField.propsTypes> {
+    return {
+        ...super.propsDefaults,
+        multiple: false,
+        accept: '.pdf, image/*',
+        maxFiles: 12,
+        maxFileSize: 100 * 1024 * 1024, // 100 MB
+        label: 'Media',
+        thumbnailSize: 132,
+        canPreview: true,
+        canDownload: true,
+        canRename: true,
+        canRenameCaption: true,
+        canRemove: true
+      };
+  }
 
   /** Re-declared so `MediaField.Props` carries the params above. */
   static override get props() {
@@ -82,12 +84,14 @@ export class $MediaField extends Field.$Class {
     };
 
   /** Emits */
-  static readonly emits = {
-      'update:modelValue': (value: MediaField.Model) => true,
-      uploaded: (rows: MediaField.Item[]) => true,
-      removed: (row: MediaField.Item) => true,
-      error: (message: string) => true
-    };
+  static get emits() {
+    return {
+        'update:modelValue': (value: MediaField.Model) => true,
+        uploaded: (rows: MediaField.Item[]) => true,
+        removed: (row: MediaField.Item) => true,
+        error: (message: string) => true
+      };
+  }
 
   constructor(
     public props: MediaField.Props,

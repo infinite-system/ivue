@@ -151,7 +151,8 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
     return propsWithDefaults(this.propsDefaults, this.propsTypes);
   }
 
-  static readonly emits = {
+  static get emits() {
+    return {
       itemsChanged: (args: VirtualScroller.ItemsChangeEmitArgs) => true,
       /** the scroll handed the compositor a sequence — a flick's glide, a creep
        *  chunk — so a stage can compose its own tracks over the same values,
@@ -161,6 +162,7 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
        *  stage's tracks alongside it take the same rate */
       sequenceRate: (change: Lenis.SequenceRate) => true
     };
+  }
 
   /** How much tail actually gets RENDERED below the window — a safety
    *  margin of a few viewports, not the whole remaining post. The layer
