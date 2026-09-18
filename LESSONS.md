@@ -1813,3 +1813,17 @@ playground's own config, which has no DOM — every spec that touches
 is `cd <repo root> && npx vitest run src/<path>`. A Bash cwd that
 drifted into the playground produced the second failure once this
 session without any file changing.
+
+## Chrome re-rasters a text layer where one animation ends and the next begins (2026-09-18)
+
+A creep played on the compositor as 2-second chunks chained end to end
+was exact in its values and seamless on the iPhone, and on the Galaxy the
+whole text layer shifted 1 px at every boundary. Made 5 s, the shift
+came every 5 s — the diagnostic that convicted the boundary. Chrome
+snaps a text layer's raster translation to the pixel grid on the commit
+that ends an animation; Safari does not. So a layer that carries text
+takes an open-ended motion as ONE run (to the end of the content, or a
+ten-minute cap), and only layers without text take it in pieces —
+aligned to the run's start on the document timeline, never chained on
+the text layer. General form: never let a Web Animation end under a
+text layer while the motion continues.

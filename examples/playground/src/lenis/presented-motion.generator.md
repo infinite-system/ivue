@@ -114,13 +114,17 @@ shifted model; the render-bias rebase waits. Measured: build 0.04–0.13
 ms, parse 0.2–0.4 ms per flick, an exponential glide's 509 keyframes
 merged to 309; per frame cheaper than before.
 
-[The creep plays on the compositor as a linear sequence in chained chunks](lenis.invariants.md#the-creep-plays-on-the-compositor-as-a-linear-sequence-in-chained-chunks).
-A creep has no end, so the layer takes it in 2-second chunks; the next
-is scheduled on the document timeline to begin exactly where the current
-ends and waits in a queue until then, so the boundary is never a frame
-the page has to hit. Linear between two fractional endpoints, by the
-scope boundary above. A speed change releases the layer at the shown
-value and the next frame hands over a fresh chunk.
+[The creep plays on the compositor as one linear run](lenis.invariants.md#the-creep-plays-on-the-compositor-as-one-linear-run).
+A creep runs to the end of the content as one animation: linear between
+two fractional endpoints, by the scope boundary above, and one because
+the layer carries text. Where one animation ends and the next begins,
+Chrome re-rasterises the text layer with its translation snapped to the
+pixel grid, and every boundary is a 1 px shift of the whole layer — seen
+on the Galaxy at every 2-second chunk, at every 5 seconds when the chunk
+was made 5 seconds, and never on the iPhone. A speed change releases the
+layer at the shown value and the next frame hands over a fresh run. A
+stage composing tracks over the run cuts it into pieces itself, aligned
+to the run's start on the document timeline: its layers carry no text.
 
 ## The ladder — how it was found
 
@@ -169,6 +173,11 @@ was removed.
   shows what the page computed, never what the panel presented.
 - **Interpolated compositor keyframes** — the compositor would present
   fractions at its phase and the shimmer would return.
+- **The creep in chained 2-second chunks** (`f3759c0c` to `2431c358`) —
+  seamless in its values and on the iPhone; on the Galaxy a 1 px shift of
+  the whole text layer at every boundary, the interval following the
+  chunk length when it was changed to 5 seconds. Chrome re-rasters a text
+  layer where one animation ends and the next begins.
 - **A window-hysteresis knob** holding 200 rows so a glide mounted nothing
   — never committed; cleared mounting as the cause in one tap on each
   phone. Recorded in the grid record's evidence as an uncommitted trial.
@@ -198,9 +207,12 @@ needs a new trial of the timing question:
 - **An address is a moment.** Row plus fraction maps every scroll value
   to a step of the sequence, exact where the row is measured, without the
   global total ever needing to exist.
-- **Open-ended motion is chained chunks.** Anything that runs without an
-  end — a creep, a channel of scenes, a played book — is handed to the
-  presenter in finite pieces that begin where the last one ends.
+- **Open-ended motion is one run for a text layer, pieces for the rest.**
+  Anything that runs without an end — a creep, a channel of scenes, a
+  played book — is handed to the presenter as far as it can see; a layer
+  that carries text takes it whole, because the presenter re-rasters text
+  where animations meet, and layers without text take it in pieces
+  aligned to the run's own start.
 - **A bounce, a snap point, a choreography** are motion laws over the
   same number, each a sequence the presenter plays, each continuous at
   its handoff — the same continuity rule that made the glide's release

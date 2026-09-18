@@ -131,8 +131,9 @@ test('the flight has 21 tracks — the stage’s 13 plus 4 clouds, the plane and
   flight.onSequence({
     animation: scroll as unknown as Animation,
     values: [0, 40, 80, 120],
-    linear: true,
-    after: null
+    linear: false,
+    after: null,
+    durationMs: 3 * (1000 / 120)
   } as Lenis.Sequence);
   expect(animates.length).toBe(21);
   expect(animates.filter((composed) => composed.property === 'opacity').length).toBe(4);

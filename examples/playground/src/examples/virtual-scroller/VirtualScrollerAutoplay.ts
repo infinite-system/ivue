@@ -66,17 +66,17 @@ class $VirtualScrollerAutoplay {
   }
 
   /** How long the end is held before the auto-repeat chain resets to the top. */
-  /** How much of the creep the compositor is handed at a time. A creep is
-   *  open-ended; the layer takes it in chunks chained end to end. */
-  static get CHUNK_MS() {
-    // DIAGNOSTIC 2026-09-18: 5000, from 2000. A 1 px shift of the whole layer
-    // every second or two was seen on the Galaxy during the creep and not on
-    // the iPhone; the chunk boundary is the only event on that scale. If the
-    // shift's interval follows this number, the boundary is the cause.
-    return 5000;
+  /** The most creep the compositor is handed as ONE run. A creep runs to
+   *  the end of the content in a single linear animation, because the text
+   *  layer re-rasters where one animation ends and the next begins (a 1 px
+   *  shift of the whole layer at every 2 s chunk boundary on the Galaxy,
+   *  2026-09-18); this only bounds the numbers a very long list would put
+   *  into one animation — ten minutes at reading speed. */
+  static get RUN_MS() {
+    return 600_000;
   }
 
-  /** With this much of the playing chunk left, the next one is chained. */
+  /** With this much of the playing run left, the next one is chained. */
   static get CHAIN_AT_MS() {
     return 700;
   }
@@ -284,32 +284,34 @@ class $VirtualScrollerAutoplay {
   }
 
   /** The creep plays on the compositor when the scroller's glide does — the
-   *  same option — as a linear sequence in chained chunks: constant speed by
-   *  construction, fractional, sequenced on the compositor's own clock. */
+   *  same option — as one linear run: constant speed by construction,
+   *  fractional, sequenced on the compositor's own clock. */
   protected usesCompositor(lenis: VirtualScrollerAutoplay.Integrator): boolean {
     return Boolean(lenis.options?.compositorGlide) && Boolean(lenis.canComposite);
   }
 
-  /** The chunk of creep from `start`: constant speed, one value per keyframe step. */
-  protected chunkFrom(start: number, stepMs: number): number[] {
-    const count = Math.ceil(this.self.CHUNK_MS / stepMs);
-    const values = new Array<number>(count + 1);
-    for (let index = 0; index <= count; index++) values[index] = start + (index * stepMs) / this.msPerPx;
-    return values;
+  /** The run of creep from `start`: constant speed to the end of the content
+   *  (or the run cap), as the two endpoints and the time between them. */
+  protected runFrom(start: number, lenis: VirtualScrollerAutoplay.Integrator): { values: number[]; durationMs: number } {
+    const capPx = this.self.RUN_MS / this.msPerPx;
+    const end = Math.min(lenis.limit ?? start + capPx, start + capPx);
+    const distance = Math.max(0, end - start);
+    return { values: [start, start + distance], durationMs: distance * this.msPerPx };
   }
 
-  /** Keep the compositor fed: start a chunk from the model when nothing
-   *  plays, chain the next from the playing chunk's last value as it nears
-   *  its end. A flick's glide on the layer is left alone until it ends. */
-  // invariant: The creep plays on the compositor as a linear sequence in chained chunks (examples/playground/src/lenis/lenis.invariants.md)
+  /** Keep the compositor fed: start a run from the model when nothing plays;
+   *  only a run that hits its cap chains the next from its last value as it
+   *  nears its end. A flick's glide on the layer is left alone until it ends. */
+  // invariant: The creep plays on the compositor as one linear run (examples/playground/src/lenis/lenis.invariants.md)
   protected feedCompositor(lenis: VirtualScrollerAutoplay.Integrator) {
-    const stepMs = lenis.keyframeMs ?? this.self.FRAME_MS / 2;
-    // a new speed: the chunk playing and the one queued were built at the old
-    // one, so the layer is taken back at the shown value and the next frame
-    // hands over a fresh chunk — the speed changes within a frame, not a chunk
+    // a new speed: the run playing was built at the old one, so the layer is
+    // taken back at the shown value and the next frame hands over a fresh
+    // run — the speed changes within a frame
     if (this.creep.composited && this.creep.chunkMsPerPx !== this.msPerPx) this.releaseCreepCompositor();
     if (!lenis.compositorGlideActive) {
-      const started = lenis.startCompositorSequence?.(this.chunkFrom(lenis.targetScroll, stepMs), { linear: true });
+      const run = this.runFrom(lenis.targetScroll, lenis);
+      if (run.durationMs <= 0) return;
+      const started = lenis.startCompositorSequence?.(run.values, { linear: true, durationMs: run.durationMs });
       if (started) {
         this.creep.composited = true;
         this.creep.chunkMsPerPx = this.msPerPx;
@@ -320,7 +322,9 @@ class $VirtualScrollerAutoplay {
     if (lenis.compositorHasChained || (lenis.compositorRemainingMs ?? 0) > this.self.CHAIN_AT_MS) return;
     const playing = lenis.compositorPlaying;
     if (!playing) return;
-    lenis.startCompositorSequence?.(this.chunkFrom(playing.lastValue, stepMs), { after: playing.animation, linear: true });
+    const run = this.runFrom(playing.lastValue, lenis);
+    if (run.durationMs <= 0) return;
+    lenis.startCompositorSequence?.(run.values, { after: playing.animation, linear: true, durationMs: run.durationMs });
   }
 
   /** The creep stops owning the layer: adopt what the compositor shows and let go. */
@@ -387,9 +391,11 @@ export namespace VirtualScrollerAutoplay {
     readonly compositorHasChained?: boolean;
     readonly compositorRemainingMs?: number;
     readonly compositorPlaying?: { animation: Animation; lastValue: number } | null;
+    /** the end of the scrollable range — a run is built to it */
+    readonly limit?: number;
     startCompositorSequence?(
       values: number[],
-      options?: { after?: Animation | null; linear?: boolean }
+      options?: { after?: Animation | null; linear?: boolean; durationMs?: number | null }
     ): Animation | null;
     releaseCompositor?(adopt: boolean): void;
   }

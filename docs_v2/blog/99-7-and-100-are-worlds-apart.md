@@ -292,6 +292,15 @@ would tick a whole pixel every 150 ms on a 1x screen. That was the
 scope boundary on the grid, and the creep's own comment had been holding
 it the whole time.
 
+> **Update, the next day.** The chunks did not survive the Galaxy. Every
+> 2 seconds the whole paragraph shifted by a pixel, and when the chunk
+> was made 5 seconds long the shift came every 5 seconds: Chrome
+> re-rasterises a text layer where one animation ends and the next
+> begins, snapping its translation to the grid at that commit. Safari
+> does not. The creep is now one linear run to the end of the content,
+> with no boundary to re-raster at; a stage that composes scenery over
+> it cuts the run into pieces itself, on layers that carry no text.
+
 Both phones, both paths, by hand: the same. On the Galaxy the compositor
 glide reads more stable than the callback-driven one, which suggests
 Chrome votes the panel's full rate for it, the way it does for its own

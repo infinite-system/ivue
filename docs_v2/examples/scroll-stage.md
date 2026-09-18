@@ -38,7 +38,7 @@ presenter playing a sequence made for its own frames. The story is in
 The stage follows the same rule, in both directions:
 
 - **When the scroll hands the compositor a sequence** — a flick's glide,
-  a chunk of the reading creep — the scroller emits it as an event with
+  the reading creep's run — the scroller emits it as an event with
   the animation and the values it was built from. The stage composes
   every track over those same values, aligned alongside that same
   animation on the document timeline. The compositor samples the text and

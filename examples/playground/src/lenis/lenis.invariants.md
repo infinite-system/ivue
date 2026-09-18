@@ -40,7 +40,7 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 - [A glide renders at the rate the platform grants a page](#a-glide-renders-at-the-rate-the-platform-grants-a-page) — why a perfect glide still reads softer than a native fling on a 120 Hz phone, and what lifts it.
 - [A frame advances by the reported gap](#a-frame-advances-by-the-reported-gap) — why the integrator trusts the callback's own moment, and why stepping by an assumed interval read as a nudge.
 - [A glide plays on the compositor as held snapped keyframes](#a-glide-plays-on-the-compositor-as-held-snapped-keyframes) — why a flick's glide has no timing error at all: the presenter plays a sequence authored for its own frames.
-- [The creep plays on the compositor as a linear sequence in chained chunks](#the-creep-plays-on-the-compositor-as-a-linear-sequence-in-chained-chunks) — why the reading creep is the same motion with no seam, and stays fractional.
+- [The creep plays on the compositor as one linear run](#the-creep-plays-on-the-compositor-as-one-linear-run) — why the reading creep is the same motion with no seam, and stays fractional.
 - [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page) — why a reader at an end is never trapped inside the scroller.
 - [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it) — why a trackpad can scroll a code block sideways.
 
@@ -229,23 +229,25 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 
 **Last refined:** 2026-09-17
 
-### The creep plays on the compositor as a linear sequence in chained chunks
+### The creep plays on the compositor as one linear run
 
-**Invariant:** If the reading creep runs and the layer can take a Web Animation, then it hands the layer 2-second chunks of constant speed as a linear animation between two fractional endpoints, chains the next chunk onto the playing one at its exact end on the document timeline with 700 ms to go, and writes the model only; every stop — input, a direction change, the end of the content, `stop()` — adopts the value the compositor is showing and releases the layer. A flick's glide already on the layer is left alone until it ends.
+**Invariant:** If the reading creep runs and the layer can take a Web Animation, then it hands the layer ONE linear animation between two fractional endpoints — from the model's position to the end of the content, or to a ten-minute cap, at constant speed — and writes the model only; a run that reaches its cap chains the next from its last value at its exact end on the document timeline with 700 ms to go; every stop — input, a direction change, the end of the content, `stop()` — adopts the value the compositor is showing and releases the layer; a speed change releases and starts a fresh run within a frame. A flick's glide already on the layer is left alone until it ends.
 
-**Scope:** `VirtualScrollerAutoplay.ts` `creepStep`, `feedCompositor`, `chunkFrom`, `releaseCreepCompositor`, `CHUNK_MS`, `CHAIN_AT_MS`; `Lenis.ts` `startCompositorSequence` (`linear`, `after`), `compositorPlaying`, `compositorHasChained`, `compositorRemainingMs`, `releaseCompositor`.
+**Scope:** `VirtualScrollerAutoplay.ts` `creepStep`, `feedCompositor`, `runFrom`, `releaseCreepCompositor`, `RUN_MS`, `CHAIN_AT_MS`; `Lenis.ts` `startCompositorSequence` (`linear`, `durationMs`, `after`), `compositorPlaying`, `compositorHasChained`, `compositorRemainingMs`, `releaseCompositor`.
 
-**Mechanism:** The same as the glide's: a sequence authored for presentation moments has no timing error. A creep is open-ended, so the compositor takes it in finite pieces; a chained chunk starts on the document timeline where the one before ends and waits in a queue until then, so the boundary is never a frame the page has to hit. The creep is fractional and linear because its speed is below one device pixel per frame (the scope boundary on the grid record).
+**Mechanism:** The same as the glide's: a sequence authored for presentation moments has no timing error. The creep is fractional and linear because its speed is below one device pixel per frame (the scope boundary on the grid record). It is one run because the layer carries text, and a text layer is re-rasterised where one animation ends and the next begins: Chrome snaps the raster's translation to the pixel grid at that commit, so every boundary is a 1 px shift of the whole layer. A run to the end has no boundary. The tracks a stage composes over the run are cut into pieces by the stage — those layers carry no text, and a held track needs a keyframe per step — aligned to the run's own start on the document timeline, never chained.
 
-**Evidence:** Headless on the 1M example, 2026-09-17: 2000 ms chunks, the next queued at a negative current time while the current plays, no inline write while the compositor owns the layer. By hand on both phones: the creep reads as it did or better, at 60 Hz too.
+**Evidence:** On the Galaxy S22 Ultra, 2026-09-18, during the creep on the flight page: a 1 px shift of the whole layer every 2 s with 2000 ms chained chunks; every 5 s with 5000 ms chunks (`2431c358`, the diagnostic); none on the iPhone. Headless on the 1M example, 2026-09-17, the chained form: the next chunk queued at a negative current time while the current played, no inline write while the compositor owned the layer. Spec: `ScrollStage.test.ts` holds the pieces aligned to the run's start plus their offsets.
 
-**Impossible if true:** A visible seam at a chunk boundary. A creep frame written inline while a compositor chunk plays. A creep chunk started while a flick's glide owns the layer.
+**Impossible if true:** A visible seam during a creep short of ten minutes. A creep frame written inline while a run plays. A run started while a flick's glide owns the layer. A stage piece that begins anywhere but the run's start plus its offset.
 
-**Verification:** `npx vitest run examples/playground/src/examples/virtual-scroller -t "creep"`; on a device, autoplay on the 1M example with the compositor switch on and off.
+**Rejected alternatives:** 2-second chunks chained end to end on the document timeline (`f3759c0c` to `2431c358`) — exact in their values and seamless on the iPhone, a 1 px shift of the whole text layer at every boundary on the Galaxy, confirmed by the interval following the chunk length.
+
+**Verification:** `npx vitest run src/examples/virtual-scroller -t "creep"` and `npx vitest run src/examples/scroll-stage`; on a device, autoplay on the flight page with the compositor switch on: no periodic shift of the paragraphs.
 
 **Status:** provisional
 
-**Last refined:** 2026-09-17
+**Last refined:** 2026-09-18
 
 ### A flick under friction stops where its throw runs out
 

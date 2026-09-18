@@ -72,6 +72,15 @@ class $ScrollStage {
     return 14;
   }
 
+  /** How much of a linear run the stage's tracks take at a time. The scroll
+   *  layer plays a creep as ONE run (it carries text, and a text layer
+   *  re-rasters where an animation ends), but a held track needs a keyframe
+   *  per step, so the stage cuts the run into pieces of this length, each
+   *  aligned to the run's own start on the document timeline, two in flight. */
+  static get TRACK_CHUNK_MS() {
+    return 2000;
+  }
+
   /** The two scene slots: a chapter's scene lives in the slot of its parity. */
   static get SLOTS() {
     return 2;
@@ -174,7 +183,7 @@ class $ScrollStage {
   }
 
   /** The tracks in flight, paired with the scroll animation each was composed over. */
-  protected readonly tracks: Array<{ scroll: Animation; animations: Animation[] }> = [];
+  protected readonly tracks: ScrollStage.Flight[] = [];
 
   /** Which chapter each slot's scene currently draws — 0 until written. */
   protected readonly slotChapters: number[] = [0, 0];
@@ -460,31 +469,32 @@ class $ScrollStage {
   }
 
   /** The scroll handed the compositor a sequence: compose every track over
-   *  the same values, aligned with the same animation — alongside a new
-   *  sequence, after the one before for a chained chunk. The scenes the
+   *  the same values, aligned with the same animation on the document
+   *  timeline. A glide's held values are taken whole; a linear run is cut
+   *  into held pieces the stage composes as the run plays. The scenes the
    *  sequence will reach are drawn first, so a chapter change mid-glide has
    *  its slot ready. */
   onSequence(sequence: Lenis.Sequence) {
     const tracks = this.trackList();
     if (!tracks.length) return;
     this.prepareScenes(sequence.values[sequence.values.length - 1]);
+    // a sequence chained after another keeps the tracks of the one playing
     if (!sequence.after) this.cancelTracks();
-    const alignment = sequence.after
-      ? { after: this.lastTrackAnimation() }
-      : { alongside: sequence.animation };
-    const animations: Animation[] = [];
-    for (const track of tracks) {
-      // a scene track is never interpolated: a chapter boundary inside the
-      // sequence is a step in the role, and only held keyframes step with it
-      const animation = Lenis.Class.composeSequence(
-        track.element,
-        sequence.values,
-        track.formatOf,
-        { ...alignment, property: track.property }
-      );
-      if (animation) animations.push(animation);
+    const flight: ScrollStage.Flight = { scroll: sequence.animation, sequence, pieces: [], nextPieceMs: 0 };
+    this.tracks.push(flight);
+    if (sequence.linear) {
+      // two pieces in flight: the one playing and the one queued after it.
+      // The queued one aligns to the run's start on the document timeline,
+      // which the browser assigns when the run is ready to play — after the
+      // frame that created it, later than a frame callback sees. Until then
+      // it waits on the run's own ready promise, or it would begin now and
+      // cover the first piece.
+      this.composePiece(flight);
+      if (sequence.animation.startTime !== null) this.composePiece(flight);
+      else sequence.animation.ready?.then(() => this.onRunStarted(flight));
+    } else {
+      flight.pieces.push({ atMs: 0, animations: this.composeTracks(sequence.values, sequence.animation, 0, null) });
     }
-    this.tracks.push({ scroll: sequence.animation, animations });
     this.onCompositor.value = true;
     sequence.animation.addEventListener(
       'cancel',
@@ -498,13 +508,76 @@ class $ScrollStage {
     );
   }
 
-  /** A scroll sequence ended — naturally, by promotion of a chained chunk, or
+  /** Every track over a list of values, aligned `atMs` into the scroll
+   *  animation; a scene track is never interpolated — a chapter boundary
+   *  inside the values is a step in the role, and only held keyframes step
+   *  with it. */
+  protected composeTracks(
+    values: readonly number[],
+    scroll: Animation,
+    atMs: number,
+    durationMs: number | null
+  ): Animation[] {
+    const animations: Animation[] = [];
+    for (const track of this.trackList()) {
+      const animation = Lenis.Class.composeSequence(track.element, values, track.formatOf, {
+        alongside: scroll,
+        offsetMs: atMs,
+        durationMs,
+        property: track.property
+      });
+      if (animation) animations.push(animation);
+    }
+    return animations;
+  }
+
+  /** The next piece of a linear run: its values sampled at the keyframe
+   *  step from the run's two endpoints, composed to begin where the piece
+   *  before ends. When a piece finishes it is dropped and one more is
+   *  composed, so two are always in flight. */
+  protected composePiece(flight: ScrollStage.Flight) {
+    const { sequence } = flight;
+    if (flight.nextPieceMs >= sequence.durationMs) return;
+    const stepMs = Lenis.Class.KEYFRAME_MS;
+    const fromMs = flight.nextPieceMs;
+    const toMs = Math.min(sequence.durationMs, fromMs + this.self.TRACK_CHUNK_MS);
+    const [start, end] = [sequence.values[0], sequence.values[sequence.values.length - 1]];
+    const valueAt = (ms: number) => start + ((end - start) * ms) / sequence.durationMs;
+    const values: number[] = [];
+    for (let ms = fromMs; ms < toMs; ms += stepMs) values.push(valueAt(ms));
+    values.push(valueAt(toMs));
+    const piece: ScrollStage.Piece = {
+      atMs: fromMs,
+      animations: this.composeTracks(values, sequence.animation, fromMs, toMs - fromMs)
+    };
+    flight.pieces.push(piece);
+    flight.nextPieceMs = toMs;
+    piece.animations[0]?.addEventListener('finish', () => this.onPieceFinish(flight, piece), { once: true });
+  }
+
+  /** The run is ready to play: its start time is known, so the queued
+   *  piece can be aligned to it. */
+  protected onRunStarted(flight: ScrollStage.Flight) {
+    if (this.tracks.includes(flight)) this.composePiece(flight);
+  }
+
+  /** A piece of a run played out: it goes, and the piece after the one now
+   *  playing is composed. */
+  protected onPieceFinish(flight: ScrollStage.Flight, piece: ScrollStage.Piece) {
+    const index = flight.pieces.indexOf(piece);
+    if (index < 0) return;
+    for (const animation of piece.animations) animation.cancel();
+    flight.pieces.splice(index, 1);
+    if (this.tracks.includes(flight)) this.composePiece(flight);
+  }
+
+  /** A scroll sequence ended — naturally, by promotion of a chained one, or
    *  by an interrupt. Its tracks go with it; when nothing plays any more the
    *  stage is written from the rendered position again. */
   onScrollSequenceOver(scroll: Animation) {
     const index = this.tracks.findIndex((track) => track.scroll === scroll);
     if (index >= 0) {
-      for (const animation of this.tracks[index].animations) animation.cancel();
+      this.cancelFlight(this.tracks[index]);
       this.tracks.splice(index, 1);
     }
     const lenis = this.scroller.value?.lenis;
@@ -515,14 +588,13 @@ class $ScrollStage {
   }
 
   cancelTracks() {
-    for (const track of this.tracks) for (const animation of track.animations) animation.cancel();
+    for (const flight of this.tracks) this.cancelFlight(flight);
     this.tracks.length = 0;
   }
 
-  /** The latest track animation, for a chained chunk to follow. */
-  protected lastTrackAnimation(): Animation | null {
-    const last = this.tracks[this.tracks.length - 1];
-    return last?.animations[0] ?? null;
+  protected cancelFlight(flight: ScrollStage.Flight) {
+    for (const piece of flight.pieces) for (const animation of piece.animations) animation.cancel();
+    flight.pieces.length = 0;
   }
 }
 
@@ -567,6 +639,22 @@ export namespace ScrollStage {
   /** What a slot draws at a scroll value. */
   export interface Role extends Local {
     current: boolean;
+  }
+
+  /** A piece of a run on the stage's tracks: its start into the scroll
+   *  animation and the animations composed for it. */
+  export interface Piece {
+    atMs: number;
+    animations: Animation[];
+  }
+
+  /** The stage's tracks over one scroll sequence: its pieces in flight and
+   *  where the next piece begins. */
+  export interface Flight {
+    scroll: Animation;
+    sequence: Lenis.Sequence;
+    pieces: Piece[];
+    nextPieceMs: number;
   }
 
   /** One track on the stage: an element, the property it animates, and the formatter. */

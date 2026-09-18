@@ -212,11 +212,13 @@ class $Lenis {
       alongside = null,
       linear = false,
       property = 'transform',
-      stepMs = this.KEYFRAME_MS
+      stepMs = this.KEYFRAME_MS,
+      durationMs = null,
+      offsetMs = 0
     }: Lenis.ComposeOptions = {}
   ): Animation | null {
     if (typeof element.animate !== 'function' || values.length < 2) return null;
-    const duration = (values.length - 1) * stepMs;
+    const duration = durationMs ?? (values.length - 1) * stepMs;
     const frames: Keyframe[] = linear
       ? [values[0], values[values.length - 1]].map((value) => ({ [property]: formatOf(value) }))
       : this.heldKeyframes(values, formatOf, property);
@@ -225,7 +227,8 @@ class $Lenis {
       const afterDuration = Number(after.effect?.getTiming().duration ?? 0);
       animation.startTime = Number(after.startTime) + afterDuration;
     } else if (alongside && alongside.startTime !== null) {
-      animation.startTime = alongside.startTime;
+      // alongside another sequence, from its start or from a moment into it
+      animation.startTime = Number(alongside.startTime) + offsetMs;
     }
     return animation;
   }
@@ -497,9 +500,12 @@ class $Lenis {
     /** a linear sequence: two fractional endpoints the compositor interpolates
      *  (a constant-speed creep), against held snapped keyframes (a glide) */
     linear: false,
-    /** chunks scheduled to follow the current one (the creep chains them),
-     *  promoted one at a time as the one before finishes */
-    chained: [] as Array<{ animation: Animation; values: number[]; linear: boolean }>
+    /** the sequence's duration on the compositor, ms: a run's own when it
+     *  was given one, else the keyframe count times the step */
+    durationMs: 0,
+    /** sequences scheduled to follow the current one, promoted one at a
+     *  time as the one before finishes */
+    chained: [] as Array<{ animation: Animation; values: number[]; linear: boolean; durationMs: number }>
   };
   /**
    * The direction of the scroll
@@ -1617,7 +1623,11 @@ class $Lenis {
   // invariant: A glide plays on the compositor as held snapped keyframes (examples/playground/src/lenis/lenis.invariants.md)
   startCompositorSequence(
     values: number[],
-    { after = null, linear = false }: { after?: Animation | null; linear?: boolean } = {}
+    {
+      after = null,
+      linear = false,
+      durationMs = null
+    }: { after?: Animation | null; linear?: boolean; durationMs?: number | null } = {}
   ): Animation | null {
     const content = this.options.content as HTMLElement;
     if (!this.canComposite || values.length < 2) return null;
@@ -1633,18 +1643,20 @@ class $Lenis {
       linear
         ? (value) => `${axis}(${-(value - offset)}px)`
         : (value) => `${axis}(${-self.snapToDevicePixel(value - offset)}px)`,
-      { after, linear }
+      { after, linear, durationMs }
     );
     if (!animation) return null;
+    const duration = durationMs ?? (values.length - 1) * self.KEYFRAME_MS;
     animation.onfinish = () => this.onCompositorSequenceFinish(animation);
-    this.options.onSequence?.({ animation, values, linear, after });
+    this.options.onSequence?.({ animation, values, linear, after, durationMs: duration });
     if (after && after.startTime !== null) {
-      // a chained chunk: it begins on the document timeline exactly where the
-      // one before ends, and waits in the queue until that one finishes
-      this.compositor.chained.push({ animation, values, linear });
+      // a chained sequence: it begins on the document timeline exactly where
+      // the one before ends, and waits in the queue until that one finishes
+      this.compositor.chained.push({ animation, values, linear, durationMs: duration });
       return animation;
     }
     this.compositor.keyframes = values;
+    this.compositor.durationMs = duration;
     this.compositor.linear = linear;
     this.compositor.modelDone = false;
     this.compositor.animation = animation;
@@ -1659,12 +1671,12 @@ class $Lenis {
 
   /** The value the compositor is showing now, from its own clock over our keyframes. */
   protected compositorShownValue(): number {
-    const { animation, keyframes, linear } = this.compositor;
+    const { animation, keyframes, linear, durationMs } = this.compositor;
     const elapsed = Math.max(0, Number(animation?.currentTime ?? 0));
     const last = keyframes.length - 1;
     if (last < 0) return this.animatedScroll;
     if (linear) {
-      const progress = Math.min(1, elapsed / (last * this.self.KEYFRAME_MS));
+      const progress = Math.min(1, elapsed / Math.max(1, durationMs));
       return keyframes[0] + (keyframes[last] - keyframes[0]) * progress;
     }
     const index = Math.min(last, Math.floor(elapsed / this.self.KEYFRAME_MS));
@@ -1725,6 +1737,7 @@ class $Lenis {
     compositor.animation = next.animation;
     compositor.keyframes = next.values;
     compositor.linear = next.linear;
+    compositor.durationMs = next.durationMs;
     animation.cancel();
   }
 
@@ -1968,6 +1981,10 @@ export namespace Lenis {
     values: readonly number[];
     linear: boolean;
     after: Animation | null;
+    /** the sequence's duration on the compositor, ms — a linear run spans
+     *  it between its two values; a held sequence steps through its values
+     *  over it */
+    durationMs: number;
   }
 
   /** How `composeSequence` aligns and shapes a track. */
@@ -1977,6 +1994,10 @@ export namespace Lenis {
     linear?: boolean;
     property?: string;
     stepMs?: number;
+    /** the duration outright, instead of the value count times the step */
+    durationMs?: number | null;
+    /** ms into `alongside` at which this sequence begins */
+    offsetMs?: number;
   }
 
   /** The options as given. */
