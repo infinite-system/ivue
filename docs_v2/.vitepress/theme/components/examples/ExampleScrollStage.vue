@@ -154,10 +154,12 @@ const {
   background-position: center 0;
 }
 /* the sun turns about a pivot at the bottom centre: it rises, crosses, sets */
+/* a 300px orbit from a pivot just under the horizon: the sun rises at the
+   left, crosses near the top right of the rows, and sets at the right */
 .ess-sun-pivot {
   position: absolute;
-  left: 76%;
-  bottom: 6%;
+  left: 62%;
+  bottom: -8%;
   width: 0;
   height: 0;
   will-change: transform;
@@ -165,7 +167,7 @@ const {
 .ess-sun {
   position: absolute;
   left: -22px;
-  top: -440px;
+  top: -300px;
   width: 44px;
   height: 44px;
   border-radius: 50%;
