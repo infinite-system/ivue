@@ -28,6 +28,21 @@ class $ScrollStage {
     return 8;
   }
 
+  /** The band of the stage the sun crosses, in hundredths of its width: the
+   *  open half right of the rows, so the sun is never behind the text. */
+  static get SUN_BAND_START_CQW() {
+    return 48;
+  }
+
+  static get SUN_BAND_CQW() {
+    return 52;
+  }
+
+  /** How high the sun's arc peaks, in hundredths of the stage's height. */
+  static get SUN_APEX_CQH() {
+    return 82;
+  }
+
   /** The sun crosses the sky once over this much scroll. */
   static get SUN_ARC_PX() {
     return 24_000;
@@ -35,7 +50,7 @@ class $ScrollStage {
 
   /** The tracks, by the `data-track` an element carries in the stage. A
    *  parallax layer moves at its fraction of the scroll, snapped to the device
-   *  grid; the sun turns about its pivot; the bar scales to the fraction of
+   *  grid; the sun crosses the stage on an arc; the bar scales to the fraction of
    *  the whole extent. Adding a layer is one line here and one element there. */
   static get TRACKS(): ScrollStage.Track[] {
     return [
@@ -158,8 +173,14 @@ class $ScrollStage {
         const wrapped = ((travel % period) + period) % period;
         return `translateY(${-Lenis.Class.snapToDevicePixel(wrapped)}px)`;
       }
-      case 'arc':
-        return `rotate(${(value / this.self.SUN_ARC_PX) * 360}deg)`;
+      case 'arc': {
+        // across the open band of the stage in its own units: up from behind
+        // the ridges, over the top, down past the right edge, once per SUN_ARC_PX
+        const progress = (((value / this.self.SUN_ARC_PX) % 1) + 1) % 1;
+        const x = (this.self.SUN_BAND_START_CQW + progress * this.self.SUN_BAND_CQW).toFixed(3);
+        const y = (-Math.sin(progress * Math.PI) * this.self.SUN_APEX_CQH).toFixed(3);
+        return `translate(${x}cqw, ${y}cqh)`;
+      }
       case 'progress':
         return `scaleX(${Math.min(1, Math.max(0, value / this.extent))})`;
     }

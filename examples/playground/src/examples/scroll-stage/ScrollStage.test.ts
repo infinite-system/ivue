@@ -79,7 +79,9 @@ test('a parallax layer wraps at its period on the device grid; the sun turns by 
     expect(px).toBeGreaterThan(-360);
   }
   const sun = ScrollStage.Class.TRACKS.find((track) => track.key === 'sun')!;
-  expect(stage.transformOf(sun, 12_000)).toBe('rotate(180deg)');
+  // half a cycle: mid-stage, at the apex
+  expect(stage.transformOf(sun, 12_000)).toBe('translate(74.000cqw, -82.000cqh)');
+  expect(stage.transformOf(sun, 0)).toBe('translate(48.000cqw, 0.000cqh)');
   const progress = ScrollStage.Class.TRACKS.find((track) => track.key === 'progress')!;
   // no scroller mounted: the extent falls back to 1 and the bar clamps
   expect(stage.transformOf(progress, 5)).toBe('scaleX(1)');

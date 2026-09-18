@@ -100,6 +100,8 @@ const {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  /* the sun's arc is in the stage's own units (cqw, cqh) */
+  container-type: size;
 }
 .ess-layer {
   position: absolute;
@@ -154,12 +156,12 @@ const {
   background-position: center 0;
 }
 /* the sun turns about a pivot at the bottom centre: it rises, crosses, sets */
-/* a 300px orbit from a pivot just under the horizon: the sun rises at the
-   left, crosses near the top right of the rows, and sets at the right */
+/* the sun starts under the horizon at the left edge; its track carries it
+   across the stage on an arc, in the stage's own units */
 .ess-sun-pivot {
   position: absolute;
-  left: 62%;
-  bottom: -8%;
+  left: 0;
+  bottom: -40px;
   width: 0;
   height: 0;
   will-change: transform;
@@ -167,7 +169,7 @@ const {
 .ess-sun {
   position: absolute;
   left: -22px;
-  top: -300px;
+  top: -22px;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -206,8 +208,9 @@ const {
   position: absolute;
   inset: 0;
 }
+/* the rows keep to the left half; the sun crosses the open half */
 .ess-row {
-  margin: 0 38% 8px 24px;
+  margin: 0 52% 8px 24px;
   max-width: 560px;
   padding: 12px 16px;
   border-radius: 10px;
