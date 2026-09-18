@@ -221,7 +221,7 @@ test('the props object fuses every default into the types, leaves the required l
   }
   expect(props.modelValue).toMatchObject({ required: true });
   expect(props.modelValue).not.toHaveProperty('default');
-  expect(Object.keys(VirtualScroller.Class.emits)).toEqual(['itemsChanged']);
+  expect(Object.keys(VirtualScroller.Class.emits)).toEqual(['itemsChanged', 'sequence']);
 
   const tuned = scroller(rows(3));
   expect(tuned.instance.probeCreepMsPerPx()).toBe(150);

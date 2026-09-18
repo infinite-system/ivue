@@ -153,7 +153,11 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   static get emits() {
     return {
-      itemsChanged: (args: VirtualScroller.ItemsChangeEmitArgs) => true
+      itemsChanged: (args: VirtualScroller.ItemsChangeEmitArgs) => true,
+      /** the scroll handed the compositor a sequence — a flick's glide, a creep
+       *  chunk — so a stage can compose its own tracks over the same values,
+       *  on the same clock (see lenis/presented-motion.generator.md) */
+      sequence: (sequence: Lenis.Sequence) => true
     };
   }
 
@@ -1012,8 +1016,15 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
       // until it reaches its own edge; only then does the gesture move the list
       allowNestedScroll: true,
       autoRaf: false, // we drive it ourselves
+      onSequence: (sequence) => this.onSequence(sequence),
       ...this.lenisMotion
     });
+  }
+
+  /** Lenis handed the compositor a sequence: a consumer that composes tracks
+   *  over the scroll hears it as an event, with the animation and the values. */
+  onSequence(sequence: Lenis.Sequence) {
+    this.emit('sequence', sequence);
   }
 
   /**

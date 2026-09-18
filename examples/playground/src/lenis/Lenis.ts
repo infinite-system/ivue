@@ -174,17 +174,60 @@ class $Lenis {
    *  first and last steps are always kept, so the hold begins where the layer
    *  is and ends on the target. One pass: the value is formatted here and only
    *  a kept keyframe is allocated. A single step carries no offset. */
-  static heldKeyframes(values: readonly number[], transformOf: (value: number) => string): Keyframe[] {
+  static heldKeyframes(
+    values: readonly number[],
+    formatOf: (value: number) => string,
+    property = 'transform'
+  ): Keyframe[] {
     const last = values.length - 1;
     const frames: Keyframe[] = [];
     let previous = '';
     for (let index = 0; index <= last; index++) {
-      const transform = transformOf(values[index]);
-      if (index !== 0 && index !== last && transform === previous) continue;
-      previous = transform;
-      frames.push(last > 0 ? { transform, easing: 'step-end', offset: index / last } : { transform, easing: 'step-end' });
+      const formatted = formatOf(values[index]);
+      if (index !== 0 && index !== last && formatted === previous) continue;
+      previous = formatted;
+      frames.push(
+        last > 0
+          ? { [property]: formatted, easing: 'step-end', offset: index / last }
+          : { [property]: formatted, easing: 'step-end' }
+      );
     }
     return frames;
+  }
+
+  /** Any element, any value list, any formatter: the sequence as one Web
+   *  Animation — held keyframes (one per distinct formatted value) or the two
+   *  linear endpoints — aligned on the document timeline either AFTER another
+   *  animation (a chained chunk) or ALONGSIDE one (a scene track over the
+   *  scroll's own sequence: same start, same clock, no drift possible). The
+   *  scroll layer uses this for itself; a stage uses it for every track it
+   *  derives from the same values. Returns null when the element cannot animate
+   *  or the list is too short. */
+  static composeSequence(
+    element: Element,
+    values: readonly number[],
+    formatOf: (value: number) => string,
+    {
+      after = null,
+      alongside = null,
+      linear = false,
+      property = 'transform',
+      stepMs = this.KEYFRAME_MS
+    }: Lenis.ComposeOptions = {}
+  ): Animation | null {
+    if (typeof element.animate !== 'function' || values.length < 2) return null;
+    const duration = (values.length - 1) * stepMs;
+    const frames: Keyframe[] = linear
+      ? [values[0], values[values.length - 1]].map((value) => ({ [property]: formatOf(value) }))
+      : this.heldKeyframes(values, formatOf, property);
+    const animation = element.animate(frames, { duration, fill: 'forwards' });
+    if (after && after.startTime !== null) {
+      const afterDuration = Number(after.effect?.getTiming().duration ?? 0);
+      animation.startTime = Number(after.startTime) + afterDuration;
+    } else if (alongside && alongside.startTime !== null) {
+      animation.startTime = alongside.startTime;
+    }
+    return animation;
   }
 
   /** A touch on a glide pulls its target this far ahead in TIME: the brake's
@@ -235,6 +278,7 @@ class $Lenis {
     pixelSnap = true,
     safariLayerReset = false,
     compositorGlide = true,
+    onSequence,
     duration, // in seconds
     easing,
     lerp = 0.1,
@@ -299,6 +343,7 @@ class $Lenis {
       pixelSnap,
       safariLayerReset,
       compositorGlide,
+      onSequence,
       duration,
       easing,
       lerp,
@@ -1574,20 +1619,23 @@ class $Lenis {
     const self = this.self;
     const axis = this.isHorizontal ? 'translateX' : 'translateY';
     const offset = this.renderOffset;
-    const duration = (values.length - 1) * self.KEYFRAME_MS;
     // a glide: every step a held, snapped keyframe. A creep: the two fractional
     // endpoints, interpolated — at a fraction of a device pixel per frame the
     // compositor's filtering IS the motion, and a snapped step would be a tick.
-    const frames = linear
-      ? [values[0], values[values.length - 1]].map((value) => ({ transform: `${axis}(${-(value - offset)}px)` }))
-      : self.heldKeyframes(values, (value) => `${axis}(${-self.snapToDevicePixel(value - offset)}px)`);
-    const animation = content.animate(frames, { duration, fill: 'forwards' });
+    const animation = self.composeSequence(
+      content,
+      values,
+      linear
+        ? (value) => `${axis}(${-(value - offset)}px)`
+        : (value) => `${axis}(${-self.snapToDevicePixel(value - offset)}px)`,
+      { after, linear }
+    );
+    if (!animation) return null;
     animation.onfinish = () => this.onCompositorSequenceFinish(animation);
+    this.options.onSequence?.({ animation, values, linear, after });
     if (after && after.startTime !== null) {
       // a chained chunk: it begins on the document timeline exactly where the
       // one before ends, and waits in the queue until that one finishes
-      const afterDuration = Number(after.effect?.getTiming().duration ?? 0);
-      animation.startTime = Number(after.startTime) + afterDuration;
       this.compositor.chained.push({ animation, values, linear });
       return animation;
     }
@@ -1907,6 +1955,25 @@ export namespace Lenis {
     userData?: UserData;
   };
 
+  /** A sequence the compositor was handed: the animation, the scroll values
+   *  it was built from (one per KEYFRAME_MS), whether it is linear, and the
+   *  animation it was chained after, if any. */
+  export interface Sequence {
+    animation: Animation;
+    values: readonly number[];
+    linear: boolean;
+    after: Animation | null;
+  }
+
+  /** How `composeSequence` aligns and shapes a track. */
+  export interface ComposeOptions {
+    after?: Animation | null;
+    alongside?: Animation | null;
+    linear?: boolean;
+    property?: string;
+    stepMs?: number;
+  }
+
   /** The options as given. */
   export type Options = {
     /**
@@ -1972,6 +2039,11 @@ export namespace Lenis {
      *  JavaScript-timed glide. Under observation: the two handoffs (a grab
      *  mid-glide, an anchor shift under a running glide) are the surface. */
     compositorGlide?: boolean;
+    /** Called each time the scroll hands the compositor a sequence — a flick's
+     *  glide, a creep chunk — with the animation and the values it was built
+     *  from, so a stage can compose its own tracks over the same list, aligned
+     *  alongside (or, for a chained chunk, after) the same animation. */
+    onSequence?: (sequence: Lenis.Sequence) => void;
     /**
      * Scroll duration in seconds
      */
@@ -2071,7 +2143,7 @@ export namespace Lenis {
   /** The options as resolved: every default filled, four left optional. */
   export type ResolvedOptions = OptionalPick<
     Required<Options>,
-    'duration' | 'easing' | 'prevent' | 'virtualScroll'
+    'duration' | 'easing' | 'prevent' | 'virtualScroll' | 'onSequence'
   >;
   type OptionalPick<T, F extends keyof T> = Omit<T, F> & Partial<Pick<T, F>>;
 }
