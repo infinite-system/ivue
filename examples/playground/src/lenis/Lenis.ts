@@ -172,15 +172,17 @@ class $Lenis {
    *  frame after frame — an exponential glide of 484 steps holds 283 distinct
    *  values — and a hold is a hold whether it is one keyframe or three. The
    *  first and last steps are always kept, so the hold begins where the layer
-   *  is and ends on the target. */
-  static heldKeyframes(transforms: readonly string[]): Keyframe[] {
-    const last = transforms.length - 1;
-    if (last < 1) return transforms.map((transform) => ({ transform, easing: 'step-end' }));
+   *  is and ends on the target. One pass: the value is formatted here and only
+   *  a kept keyframe is allocated. A single step carries no offset. */
+  static heldKeyframes(values: readonly number[], transformOf: (value: number) => string): Keyframe[] {
+    const last = values.length - 1;
     const frames: Keyframe[] = [];
+    let previous = '';
     for (let index = 0; index <= last; index++) {
-      const transform = transforms[index];
-      if (index !== 0 && index !== last && transform === transforms[index - 1]) continue;
-      frames.push({ transform, easing: 'step-end', offset: index / last });
+      const transform = transformOf(values[index]);
+      if (index !== 0 && index !== last && transform === previous) continue;
+      previous = transform;
+      frames.push(last > 0 ? { transform, easing: 'step-end', offset: index / last } : { transform, easing: 'step-end' });
     }
     return frames;
   }
@@ -1520,8 +1522,10 @@ class $Lenis {
     const keyframes = self.glideKeyframes(this.animate);
     if (keyframes.length < 2) return;
     const axis = this.isHorizontal ? 'translateX' : 'translateY';
+    const offset = this.renderOffset;
     const frames = self.heldKeyframes(
-      keyframes.map((value) => `${axis}(${-self.snapToDevicePixel(value - this.renderOffset)}px)`)
+      keyframes,
+      (value) => `${axis}(${-self.snapToDevicePixel(value - offset)}px)`
     );
     this.compositor.keyframes = keyframes;
     this.compositor.modelDone = false;

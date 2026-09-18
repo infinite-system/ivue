@@ -626,21 +626,22 @@ test('the compositor keyframes are the remaining curve of either glide model, fr
 // impossible-if-true: $Lenis — A held keyframe list whose offsets are not strictly increasing, or that ends short of the target's step.
 test('held keyframes merge equal snapped neighbours and keep the first and last steps at their offsets', () => {
   const { heldKeyframes } = Lenis.Class;
-  const transforms = ['a', 'b', 'b', 'b', 'c', 'c', 'd', 'd'];
-  const frames = heldKeyframes(transforms);
+  const letter = (value: number) => 'abcd'[value];
+  const frames = heldKeyframes([0, 1, 1, 1, 2, 2, 3, 3], letter);
   expect(frames.map((frame) => frame.transform)).toEqual(['a', 'b', 'c', 'd', 'd']);
   expect(frames.map((frame) => frame.offset)).toEqual([0, 1 / 7, 4 / 7, 6 / 7, 1]);
   for (let index = 1; index < frames.length; index++) expect(Number(frames[index].offset)).toBeGreaterThan(Number(frames[index - 1].offset));
   expect(frames.every((frame) => frame.easing === 'step-end')).toBe(true);
-  // a two-step glide keeps both; a single value keeps one
-  expect(heldKeyframes(['a', 'a']).length).toBe(2);
-  expect(heldKeyframes(['a']).length).toBe(1);
+  // a two-step glide keeps both; a single value keeps one, with no offset to divide by zero
+  expect(heldKeyframes([0, 0], letter).length).toBe(2);
+  expect(heldKeyframes([0], letter)).toEqual([{ transform: 'a', easing: 'step-end' }]);
   // an exponential glide's tail collapses: fewer keyframes than steps, same span
   const exponential = new Animate.Class();
   exponential.fromTo(0, 491, { lerp: 1 / 35 });
-  const steps = Lenis.Class.glideKeyframes(exponential).map((value) => `translateY(${-Lenis.Class.snapToDevicePixel(value)}px)`);
-  const held = heldKeyframes(steps);
+  const steps = Lenis.Class.glideKeyframes(exponential);
+  const snapped = (value: number) => `translateY(${-Lenis.Class.snapToDevicePixel(value)}px)`;
+  const held = heldKeyframes(steps, snapped);
   expect(held.length).toBeLessThan(steps.length * 0.7);
   expect(held[held.length - 1].offset).toBe(1);
-  expect(held[held.length - 1].transform).toBe(steps[steps.length - 1]);
+  expect(held[held.length - 1].transform).toBe(snapped(steps[steps.length - 1]));
 });
