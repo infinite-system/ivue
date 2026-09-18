@@ -213,7 +213,7 @@ class $Lenis {
     syncTouchGlide = 'exponential',
     pixelSnap = true,
     safariLayerReset = false,
-    compositorGlide = false,
+    compositorGlide = true,
     duration, // in seconds
     easing,
     lerp = 0.1,
@@ -1853,11 +1853,14 @@ export namespace Lenis {
      *  glides on a raster made once, the way Chrome does, and a drag into
      *  mounting rows showed none left blank. `true` restores the workaround. */
     safariLayerReset?: boolean;
-    /** EXPERIMENT — a flick's glide plays on the compositor: the whole curve is
+    /** A flick's glide plays on the compositor: the whole remaining curve is
      *  handed to the layer as one snapped keyframe per 120 Hz step, held between
      *  keyframes, so every presented frame is on the device grid and no
      *  callback's timing is in the loop — the way a native fling renders. The
-     *  model keeps running for the window and the events. Off by default. */
+     *  model keeps running for the window and the events. ON by default since
+     *  2026-09-17, judged by hand on both phones; `false` restores the
+     *  JavaScript-timed glide. Under observation: the two handoffs (a grab
+     *  mid-glide, an anchor shift under a running glide) are the surface. */
     compositorGlide?: boolean;
     /**
      * Scroll duration in seconds

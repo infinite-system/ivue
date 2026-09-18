@@ -99,11 +99,11 @@ class $ExampleFeelToggle {
     return ref<'on' | 'off'>('off');
   }
 
-  /** EXPERIMENT — a flick's glide plays on the compositor as held, snapped
-   *  keyframes, the way a native fling renders: no callback timing in the loop.
-   *  'off' is the shipped scroller. Judged by eye at 120 Hz on the iPhone. */
+  /** A flick's glide plays on the compositor as held, snapped keyframes, the
+   *  way a native fling renders: no callback timing in the loop. 'on' is the
+   *  shipped scroller; 'off' is the JavaScript-timed glide, for comparison. */
   get compositorGlide() {
-    return ref<'off' | 'on'>('off');
+    return ref<'off' | 'on'>('on');
   }
 
   get compositorGlideOptions(): Array<'off' | 'on'> {
