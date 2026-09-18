@@ -11,6 +11,14 @@ Chosen invariants stand on reality invariants, never the reverse.
 
 ## Generator
 
+The fork's mechanism is a swipe becoming the glide it meant; the records
+from "The layer is written where the model says" onward are a second
+mechanism it composes with — how a computed motion is PRESENTED without
+a timing or phase error — whose reasoning, ladder and refused forms are
+prose, not records.
+
+STUDY ALSO: [Presented motion — the generator, what fell out, what was refused](presented-motion.generator.md) — read it before touching the write, the frame loop, the compositor sequences or the creep, and before proposing any snap, step or refresh-rate trick: every one tried so far is there with its trial.
+
 ### A swipe becomes the glide it meant on every phone
 
 **Invariant:** If a finger swipes the content and lifts, then the content glides at the velocity of the finger's last stretch, whatever shape the platform delivered the touch events in; and if a finger lands on a glide, then the content neither freezes nor jumps — it runs on until the finger moves, and the finger takes over from where the content is.
