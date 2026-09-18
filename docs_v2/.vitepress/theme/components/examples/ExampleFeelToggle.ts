@@ -99,6 +99,17 @@ class $ExampleFeelToggle {
     return ref<'on' | 'off'>('off');
   }
 
+  /** EXPERIMENT — a flick's glide plays on the compositor as held, snapped
+   *  keyframes, the way a native fling renders: no callback timing in the loop.
+   *  'off' is the shipped scroller. Judged by eye at 120 Hz on the iPhone. */
+  get compositorGlide() {
+    return ref<'off' | 'on'>('off');
+  }
+
+  get compositorGlideOptions(): Array<'off' | 'on'> {
+    return ['off', 'on'];
+  }
+
   /** The report shown on the strip when no copy path worked — empty means hidden. */
   get reportText() {
     return ref('');
@@ -176,6 +187,7 @@ class $ExampleFeelToggle {
     if (options) {
       this.pixels.value = options.pixelSnap === false ? 'fraction' : 'device';
       this.layerReset.value = options.safariLayerReset === false ? 'off' : 'on';
+      this.compositorGlide.value = options.compositorGlide ? 'on' : 'off';
     }
   }
 
@@ -230,6 +242,15 @@ class $ExampleFeelToggle {
 
   isLayerReset(value: string) {
     return this.layerReset.value === value;
+  }
+
+  pickCompositorGlide(value: 'off' | 'on') {
+    this.compositorGlide.value = value;
+    this.scroller?.lenis?.tune?.({ compositorGlide: value === 'on' });
+  }
+
+  isCompositorGlide(value: string) {
+    return this.compositorGlide.value === value;
   }
 
   /* ---- the frame meter and the report ---- */

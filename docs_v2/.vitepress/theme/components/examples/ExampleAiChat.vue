@@ -17,6 +17,7 @@ const {
   carry,
   pixels,
   layerReset,
+  compositorGlide,
   reportText,
   // element refs
   shell
@@ -96,7 +97,23 @@ const {
           </button>
         </div>
       </div>
-      <span class="eac-feel-now">{{ glide }} &middot; {{ carry }} &middot; {{ pixels }} &middot; reset {{ layerReset }}</span>
+      <div class="eac-feel-group">
+        <span class="eac-feel-label">compositor glide</span>
+        <div class="eac-feel-options">
+          <button
+            v-for="option in feel.compositorGlideOptions"
+            :key="option"
+            type="button"
+            class="eac-feel-btn"
+            :disabled="!feel.isLive"
+            :class="{ on: feel.isCompositorGlide(option) }"
+            @click="feel.pickCompositorGlide(option)"
+          >
+            {{ option }}
+          </button>
+        </div>
+      </div>
+      <span class="eac-feel-now">{{ glide }} &middot; {{ carry }} &middot; {{ pixels }} &middot; reset {{ layerReset }} &middot; compositor {{ compositorGlide }}</span>
       <span class="eac-feel-meter">
         {{ feel.frameLabel }}
         <button type="button" class="eac-feel-btn eac-feel-copy" :disabled="!feel.isLive" @click="feel.copyReport()">

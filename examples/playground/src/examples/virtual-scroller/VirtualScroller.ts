@@ -1101,6 +1101,10 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
 
   // invariant: Rendered offsets are rebased by whole chunks (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
   protected updateRenderBias(scroll: number) {
+    // a compositor glide holds keyframes written against the bias it started
+    // with; the rebase waits for the glide to end (a glide's travel is far
+    // inside f32's range at any bias)
+    if (this.lenis?.compositorGlideActive) return;
     const chunk = this.self.RENDER_BIAS_CHUNK;
     const bias = Math.max(0, (Math.floor(scroll / chunk) - 1) * chunk);
     if (bias !== this.renderBias.value) {

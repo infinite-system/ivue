@@ -21,7 +21,9 @@ Goal: Read a flick's velocity off the finger's last stretch of moves, so a touch
 // domain-invariant: $Lenis — If a wheel runs mostly across the scroller's axis, then the scroller leaves it alone — no cancel, no scroll — so whatever scrolls that way under the pointer takes it; a wheel along the axis with a little drift across is the scroller's.
 // domain-invariant: $Lenis — If the scroll model holds a position, then the transform is written at that position minus the render offset, rounded to the nearest device pixel at the write and nowhere earlier; the target keeps its fraction.
 Impossible if true: A flick that dies because the last animation frame before the touchend saw no move.
+// domain-invariant: $Lenis — If a flick's glide plays on the compositor, then its keyframes are the integrator's own remaining curve sampled once per KEYFRAME_MS from the current value, ending exactly on the target for both glide models.
 Impossible if true: A written transform whose value times devicePixelRatio is not an integer. A target rounded by the write.
+Impossible if true: A compositor glide whose last keyframe is not the model's target, or whose first is not the value the layer already shows.
 Impossible if true: A wheel up over a nested box scrolled down that moves the list instead of the box.
 Impossible if true: A swipe over rows that measured taller mid-drag reading a velocity of zero.
 Impossible if true: A wheel up at the top of the thread that moves nothing.
@@ -35,6 +37,7 @@ lerp and the inertia multiplier are upstream Lenis.
 
 import { expect, test, vi } from 'vitest';
 import { Lenis } from './Lenis';
+import { Animate } from './Animate';
 
 const { FLICK_WINDOW_MS } = Lenis.Class;
 const trailVelocity = Lenis.Class.trailVelocity;
@@ -585,4 +588,34 @@ test('the layer is written on the device-pixel grid, the model and the target un
     wrapper.remove();
     if (!hadObserver) delete (globalThis as unknown as { ResizeObserver?: unknown }).ResizeObserver;
   }
+});
+
+// domain-invariant: $Lenis — If a flick's glide plays on the compositor, then its keyframes are the integrator's own remaining curve sampled once per KEYFRAME_MS from the current value, ending exactly on the target for both glide models.
+// impossible-if-true: $Lenis — A compositor glide whose last keyframe is not the model's target, or whose first is not the value the layer already shows.
+test('the compositor keyframes are the remaining curve of either glide model, from the current value to the target', () => {
+  const { glideKeyframes, KEYFRAME_MS, frictionEasing } = Lenis.Class;
+  // friction: a 1 s constant-deceleration glide from 0 to 100, already 0.25 s in
+  const friction = new Animate.Class();
+  friction.fromTo(0, 100, { duration: 1, easing: frictionEasing });
+  friction.advance(0.25);
+  const frictionFrames = glideKeyframes(friction);
+  expect(frictionFrames[0]).toBeCloseTo(friction.value, 6);
+  expect(frictionFrames[frictionFrames.length - 1]).toBe(100);
+  // the remaining 0.75 s at 120 Hz is 90 steps plus the current value — 91, or 92 when
+  // the summed float steps land a hair short of the end and one more lands on it
+  expect(frictionFrames.length).toBeGreaterThanOrEqual(91);
+  expect(frictionFrames.length).toBeLessThanOrEqual(92);
+  for (let index = 1; index < frictionFrames.length; index++) expect(frictionFrames[index]).toBeGreaterThanOrEqual(frictionFrames[index - 1]);
+  // the ease-out shape: the first step is the largest
+  expect(frictionFrames[1] - frictionFrames[0]).toBeGreaterThan(frictionFrames[90] - frictionFrames[89]);
+  // exponential: a lerp toward 100 settles within the band and ends ON the target
+  const exponential = new Animate.Class();
+  exponential.fromTo(0, 100, { lerp: 0.1 });
+  const exponentialFrames = glideKeyframes(exponential);
+  expect(exponentialFrames[0]).toBe(0);
+  expect(exponentialFrames[exponentialFrames.length - 1]).toBe(100);
+  expect(exponentialFrames.length).toBeLessThan(Lenis.Class.MAX_KEYFRAMES);
+  for (let index = 1; index < exponentialFrames.length; index++) expect(exponentialFrames[index]).toBeGreaterThanOrEqual(exponentialFrames[index - 1]);
+  // the step is one 120 Hz frame
+  expect(KEYFRAME_MS).toBeCloseTo(8.333, 2);
 });

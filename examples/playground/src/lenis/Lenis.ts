@@ -120,6 +120,52 @@ class $Lenis {
     return Math.round(px * ratio) / ratio;
   }
 
+  /** The compositor glide's keyframe step: one per 120 Hz frame. A 60 Hz panel
+   *  samples every other one; a 120 Hz panel every one. */
+  static get KEYFRAME_MS() {
+    return 1000 / 120;
+  }
+
+  /** The most keyframes a compositor glide is handed — 6 s at 120 Hz; an
+   *  exponential tail past that is below the settle band anyway. */
+  static get MAX_KEYFRAMES() {
+    return 720;
+  }
+
+  /** The glide's remaining curve as absolute scroll values, one per KEYFRAME_MS
+   *  from the integrator's current state: the friction curve is evaluated from
+   *  its own elapsed time, the exponential model is stepped by damp until it
+   *  settles — the same arithmetic `Animate.advance` runs, at a fixed step. The
+   *  first value is the current one, so the hold begins where the layer is. */
+  static glideKeyframes(animate: Animate.Model, stepMs = this.KEYFRAME_MS): number[] {
+    const values = [animate.value];
+    const stepSeconds = stepMs / 1000;
+    if (animate.duration && animate.easing) {
+      let time = animate.currentTime;
+      while (values.length < this.MAX_KEYFRAMES) {
+        time += stepSeconds;
+        const progress = LenisUtils.Class.clamp(0, time / animate.duration, 1);
+        values.push(
+          progress >= 1 ? animate.to : animate.from + (animate.to - animate.from) * animate.easing(progress)
+        );
+        if (progress >= 1) break;
+      }
+    } else if (animate.lerp) {
+      let value = animate.value;
+      while (values.length < this.MAX_KEYFRAMES) {
+        value = LenisUtils.Class.damp(value, animate.to, animate.lerp * 60, stepSeconds);
+        if (Math.abs(value - animate.to) < Animate.Class.SETTLE_PX) {
+          values.push(animate.to);
+          break;
+        }
+        values.push(value);
+      }
+    } else {
+      values.push(animate.to);
+    }
+    return values;
+  }
+
   /** A touch on a glide pulls its target this far ahead in TIME: the brake's
    *  length. In ms, not frames — four frames is 67 ms on a 60 Hz display and
    *  33 on a 120 Hz one, so a frame count made the brake twice as abrupt on
@@ -167,6 +213,7 @@ class $Lenis {
     syncTouchGlide = 'exponential',
     pixelSnap = true,
     safariLayerReset = false,
+    compositorGlide = false,
     duration, // in seconds
     easing,
     lerp = 0.1,
@@ -230,6 +277,7 @@ class $Lenis {
       syncTouchGlide,
       pixelSnap,
       safariLayerReset,
+      compositorGlide,
       duration,
       easing,
       lerp,
@@ -373,6 +421,14 @@ class $Lenis {
 
   /** The wall time the last animation frame actually took, in ms. */
   frameMs = this.self.FRAME_MS;
+  /** The compositor glide in flight, if any: the Web Animation on the content,
+   *  its keyframes in scroll space (to adopt the shown value on interrupt), and
+   *  whether the model has already completed while it plays. */
+  protected readonly compositor = {
+    animation: null as Animation | null,
+    keyframes: [] as number[],
+    modelDone: false
+  };
   /**
    * The direction of the scroll
    */
@@ -668,6 +724,7 @@ class $Lenis {
    * first re-pin).
    */
   adoptExternalScroll(scroll: number) {
+    this.endCompositorGlide(false);
     // The consumer wrote the transform itself and is telling us where it put
     // the content, so this is what a read-back would say — record it rather
     // than dropping the cache, which left it cold on every frame that
@@ -705,10 +762,19 @@ class $Lenis {
     // will-change with a forced layout between, and the whole layer is
     // rasterised again. Once per anchor restore, on every measurement
     // wave, it read as a choppy scroll on an iPhone that Chrome never saw.
-    if (write) this.setScroll(this.scroll);
+    if (this.compositor.animation) this.restartCompositorGlide();
+    else if (write) this.setScroll(this.scroll);
+  }
+
+  /** Whether a compositor glide owns the layer right now. */
+  get compositorGlideActive(): boolean {
+    return this.compositor.animation !== null;
   }
 
   protected setScroll(scroll: number) {
+    // The compositor owns the layer while a glide plays there: the model still
+    // runs, but no write reaches the DOM until the glide ends or is interrupted.
+    if (this.compositor.animation) return;
     // behavior: 'instant' bypasses the scroll-behavior CSS property
 
     scroll -= this.renderOffset;
@@ -1055,6 +1121,7 @@ class $Lenis {
             ...(friction && frictionDuration > 0
               ? { duration: frictionDuration, easing: this.self.frictionEasing }
               : { lerp: hasTouchInertia ? this.options.syncTouchLerp : 1 }),
+            compositor: hasTouchInertia,
             // A DRAG is not an animation: the content belongs under the
             // finger, at the pixel the finger is at, the way the browser's
             // own scrolling puts it there. Through a lerp — even a lerp of
@@ -1101,6 +1168,7 @@ class $Lenis {
         | 'syncTouchGlide'
         | 'pixelSnap'
         | 'safariLayerReset'
+        | 'compositorGlide'
         | 'wheelMaxPxPerMs'
         | 'touchMaxPxPerMs'
       >
@@ -1261,7 +1329,8 @@ class $Lenis {
       onComplete,
       force = false, // scroll even if stopped
       programmatic = true, // called from outside of the class
-      userData
+      userData,
+      compositor = false
     }: Lenis.ScrollToOptions = {}
   ) {
     if ((this.isStopped || this.isLocked) && !force) return;
@@ -1331,6 +1400,9 @@ class $Lenis {
     }
 
     this.userData = userData ?? {};
+    // any new motion takes the layer back from a compositor glide, at the
+    // value the compositor is showing, so the handoff has no jump
+    this.endCompositorGlide(true);
 
     if (immediate) {
       // The speed the content is actually moving at, kept across the jump:
@@ -1401,6 +1473,7 @@ class $Lenis {
         if (!completed) this.emit();
 
         if (completed) {
+          this.onModelGlideComplete();
           this.reset();
           this.emit();
           onComplete?.(this);
@@ -1415,6 +1488,81 @@ class $Lenis {
         }
       }
     });
+    if (compositor && this.options.compositorGlide) this.startCompositorGlide();
+  }
+
+  /* ---- the compositor glide ---- */
+
+  /** Hand the glide's remaining curve to the layer as held, snapped keyframes. */
+  protected startCompositorGlide() {
+    const content = this.options.content as HTMLElement;
+    if (typeof content.animate !== 'function' || !this.animate.isRunning) return;
+    const self = this.self;
+    const keyframes = self.glideKeyframes(this.animate);
+    if (keyframes.length < 2) return;
+    const axis = this.isHorizontal ? 'translateX' : 'translateY';
+    const frames = keyframes.map((value) => ({
+      transform: `${axis}(${-self.snapToDevicePixel(value - this.renderOffset)}px)`,
+      easing: 'step-end'
+    }));
+    this.compositor.keyframes = keyframes;
+    this.compositor.modelDone = false;
+    const animation = content.animate(frames, {
+      duration: (frames.length - 1) * self.KEYFRAME_MS,
+      fill: 'forwards'
+    });
+    animation.onfinish = () => this.onCompositorGlideFinish();
+    this.compositor.animation = animation;
+  }
+
+  /** The value the compositor is showing now, from its own clock over our keyframes. */
+  protected compositorShownValue(): number {
+    const { animation, keyframes } = this.compositor;
+    const elapsed = Number(animation?.currentTime ?? 0);
+    const index = Math.min(
+      keyframes.length - 1,
+      Math.max(0, Math.floor(elapsed / this.self.KEYFRAME_MS))
+    );
+    return keyframes[index] ?? this.animatedScroll;
+  }
+
+  /** Take the layer back. With `adopt`, the model moves to the value on screen
+   *  first, so the inline write that follows changes nothing visible. */
+  protected endCompositorGlide(adopt: boolean) {
+    const animation = this.compositor.animation;
+    if (!animation) return;
+    if (adopt) {
+      const shown = this.compositorShownValue();
+      const delta = shown - this.animatedScroll;
+      this.animatedScroll = shown;
+      if (this.animate.isRunning) this.animate.shift(delta);
+    }
+    this.compositor.animation = null;
+    this.compositor.keyframes = [];
+    // inline first, cancel second: the animation overrides the inline write
+    // until it is gone, so the layer never shows an older inline value
+    this.setScroll(this.scroll);
+    animation.cancel();
+  }
+
+  /** The content shifted under the glide (rows measured): rebuild the
+   *  remaining curve from the shifted model and hand it over again. */
+  protected restartCompositorGlide() {
+    if (!this.compositor.animation) return;
+    this.endCompositorGlide(false);
+    this.startCompositorGlide();
+  }
+
+  /** The model finished first: the compositor plays its last held frames out
+   *  and the finish handler takes the layer back at the model's end value. */
+  protected onModelGlideComplete() {
+    if (this.compositor.animation) this.compositor.modelDone = true;
+  }
+
+  /** The compositor finished: the model is at its end or within a frame of
+   *  it; the inline write lands on the model's value and the animation goes. */
+  protected onCompositorGlideFinish() {
+    this.endCompositorGlide(false);
   }
 
   protected preventNextNativeScrollEvent() {
@@ -1636,6 +1784,8 @@ export namespace Lenis {
      * @default false
      */
     force?: boolean;
+    /** the glide may play on the compositor (a flick's inertia only) */
+    compositor?: boolean;
     /**
      * Scroll initiated from outside of the lenis instance
      * @default false
@@ -1703,6 +1853,12 @@ export namespace Lenis {
      *  glides on a raster made once, the way Chrome does, and a drag into
      *  mounting rows showed none left blank. `true` restores the workaround. */
     safariLayerReset?: boolean;
+    /** EXPERIMENT — a flick's glide plays on the compositor: the whole curve is
+     *  handed to the layer as one snapped keyframe per 120 Hz step, held between
+     *  keyframes, so every presented frame is on the device grid and no
+     *  callback's timing is in the loop — the way a native fling renders. The
+     *  model keeps running for the window and the events. Off by default. */
+    compositorGlide?: boolean;
     /**
      * Scroll duration in seconds
      */
