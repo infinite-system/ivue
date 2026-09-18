@@ -1744,3 +1744,20 @@ mirror clone does not copy them, which is why a backup's `fsck` is clean.
   `waitForSelector('.vp-doc')` with no slug in the error. Before running it,
   `ss -ltnp | grep :5189` and kill by PID; the probe cannot tell a stale
   server from its own.
+
+## The last blur was the frame rate, and the phone never says so
+
+- Both phones drew a JavaScript glide at 60 Hz while their native fling ran
+  at 120: Safari caps page animation at 60 on ProMotion by default, and
+  Chrome on Android asks the panel for 120 only under touch and for its own
+  compositor scroll. The per-frame log — gap, rendered position, move — is
+  what showed it: a textbook deceleration, no dropped frame, 16.7 ms every
+  line, and 8.3 ms only while a finger was down. Motion blur on a
+  sample-and-hold panel scales with distance per displayed frame, so half
+  the frames is twice the blur, only in motion. Before hunting a softness
+  during motion in the numbers, read the frame rate off rAF on the device.
+- Two instrument lessons. First log the RENDERED value (Lenis's animated
+  scroll), not the model's target — the first report showed a flick as one
+  jump and told nothing. And `navigator.clipboard` does not exist on a
+  plain-http LAN page; the copy button needs the legacy command and a
+  textarea fallback or it silently does nothing on Android.

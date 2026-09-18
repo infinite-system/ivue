@@ -1207,6 +1207,7 @@ class $Lenis {
    *
    * @param time The time in ms from an external clock like `requestAnimationFrame` or Tempus
    */
+  // invariant: A glide renders at the rate the platform grants a page (examples/playground/src/lenis/lenis.invariants.md)
   raf(time: number) {
     const deltaTime = time - (this.time || time);
     this.time = time;

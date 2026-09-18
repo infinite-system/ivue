@@ -222,6 +222,35 @@ That is the method again, applied to its own paperwork. Ask what must be
 true. Delete what reality does not require. Keep what survives. And when
 something survived because nobody looked, look.
 
+## What the frame log found next
+
+The night after the grid went in, both phones still read a hair softer
+than native during a glide. Not a shimmer, a blur, only while moving.
+So the feel strip grew a meter and a copy button: the rate the page
+renders at, read off `requestAnimationFrame` itself, and a log of the
+last 4 seconds, one line per frame with the gap to the previous frame,
+the rendered position and its move.
+
+The Galaxy's glide was a textbook deceleration: 37.8 px per frame down
+to 0, losing 0.63 px each frame, every gap 16.7 ms, not one frame
+dropped. Nothing left to fix in the numbers. And 16.7 ms is 60 Hz, on a
+120 Hz panel. The 8.3 ms gaps appeared in exactly one place: while a
+finger was on the glass. Chrome asks the panel for 120 Hz under touch
+and for its own fling, and gives a page's animation 60 the moment the
+finger lifts. The iPhone 16 Pro Max read 60 Hz too, under Safari's
+default. With "Prefer Page Rendering Updates near 60fps" turned off in
+Safari's feature flags, the same log read 8 to 9 ms: 120 Hz, native's
+own rate, drawing our numbers on native's grid.
+
+Motion blur on a phone screen is sample-and-hold blur: the eye tracks
+the text and the panel holds each frame still, so the smear is the
+distance moved per displayed frame. Half the frames at the same speed is
+twice the blur, only while moving, gone at rest. That was the last
+fraction, and it was never in the scroller. On the iPhone a reader can
+lift it with one setting. On Android a page cannot change what Chrome
+asks the panel for, and a 1px compositor animation kept running did not
+change it either. That one is a floor with a name, recorded as such.
+
 ## The shape of it
 
 2 posts ago the scroller was 537 lines smaller and I called it native.

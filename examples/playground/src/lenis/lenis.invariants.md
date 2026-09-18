@@ -29,6 +29,7 @@ Chosen invariants stand on reality invariants, never the reverse.
 - [A lerp completes within half a pixel of any target](#a-lerp-completes-within-half-a-pixel-of-any-target) — why a glide always ends, and the scroller can rest.
 - [The layer is written where the model says](#the-layer-is-written-where-the-model-says) — why the finger's own sub-pixel reaches the model, and the screen is drawn on its own pixel grid.
 - [The frame write leaves the layer promoted](#the-frame-write-leaves-the-layer-promoted) — why the iPhone moves one raster instead of drawing a new one every frame.
+- [A glide renders at the rate the platform grants a page](#a-glide-renders-at-the-rate-the-platform-grants-a-page) — why a perfect glide still reads softer than a native fling on a 120 Hz phone, and what lifts it.
 - [An outward gesture at a limit belongs to the page](#an-outward-gesture-at-a-limit-belongs-to-the-page) — why a reader at an end is never trapped inside the scroller.
 - [A cross-axis wheel belongs to what is under it](#a-cross-axis-wheel-belongs-to-what-is-under-it) — why a trackpad can scroll a code block sideways.
 
@@ -71,6 +72,30 @@ Chosen invariants stand on reality invariants, never the reverse.
 **Status:** provisional
 
 **Last refined:** 2026-09-07
+
+### A glide renders at the rate the platform grants a page
+
+**Invariant:** If a glide is driven from JavaScript (a `requestAnimationFrame` loop writing a transform), then it renders at the frame rate the browser grants page animation, not at the rate the browser's own scroll runs at: 60 Hz on a ProMotion iPhone under Safari's default, and 60 Hz on a 120 Hz Android panel once the finger lifts, however smooth the numbers are.
+
+**Scope:** every frame the fork writes; both phones; independent of the write policy, the heights, the pad and the glide model.
+
+**Renegotiable at:** the browsers' refresh policy. Safari: the reader's feature flag "Prefer Page Rendering Updates near 60fps" (off lifts the page to 120 Hz — measured 8 to 9 ms gaps). Chrome on Android: the panel is asked for 120 Hz under touch and for compositor-driven scroll and animation, and a page's own loop gets 60 after the finger lifts; nothing a page does changes the vote (a 1px compositor animation kept running was tried and did not).
+
+**Mechanism:** Perceived motion blur on a sample-and-hold display is proportional to the distance moved per displayed frame. At the same speed, half the frames is twice the blur, only while moving, gone at rest. A native fling on the same phone draws at the panel's full rate, so a JavaScript glide reads as softer than native during acceleration and deceleration even when its per-frame moves are exact and its frames are never dropped.
+
+**Rejected alternatives:**
+
+- Holding the refresh vote from the page with a 1px compositor animation (`eac-refresh-hold`, in `22083d3f`, out in `9426026a`): on the Galaxy S22 Ultra with it running, every glide frame stayed at 16.7 ms.
+
+**Evidence:** Frame logs copied from the docs feel strip (`ExampleFeelToggle.ts`, `buildReport`) on 2026-09-17. Galaxy S22 Ultra: a glide from 37.8 px per frame to 0, constant deceleration, every gap 16.7 ms, no dropped frame; 8.3 ms gaps only under the finger and at the copy tap. iPhone 16 Pro Max: 16 to 17 ms gaps with Safari's default; 8 to 9 ms with the flag off.
+
+**Impossible if true:** A JavaScript glide on a stock Safari or a lifted-finger Android Chrome logging 8 ms gaps throughout. A per-frame move column that is exact and a glide that still reads blurrier than native for a reason inside this integrator.
+
+**Verification:** on the device, the feel strip's meter at rest and a copied log across a glide: the gap column.
+
+**Status:** provisional
+
+**Last refined:** 2026-09-17
 
 ## Chosen invariants
 

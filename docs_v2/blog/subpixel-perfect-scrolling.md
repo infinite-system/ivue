@@ -219,6 +219,15 @@ new ones is not, yet.
 That is the remaining gap, and it is a real one. It is also small enough
 that 2 thumbs, on 2 phones, called the result native.
 
+> **Update.** One more thing native has that a page does not: the panel's
+> full frame rate. A ProMotion iPhone scrolls at 120 Hz and Safari draws
+> page animation at 60 unless the reader turns off "Prefer Page Rendering
+> Updates near 60fps" in Safari's feature flags; a 120 Hz Android asks
+> for 120 under a finger and gives a page 60 the moment it lifts. Half the
+> frames at the same speed is twice the motion blur, only while moving.
+> The per-frame log that found it, and the same glide at 120 Hz, are in
+> [99.7% and 100% are worlds apart](/blog/99-7-and-100-are-worlds-apart).
+
 ## The shape of it
 
 None of the 9 is a trick. Each is something that has to be true if a
