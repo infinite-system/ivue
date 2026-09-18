@@ -96,6 +96,22 @@ const {
           </button>
         </div>
       </div>
+      <div class="eac-feel-group">
+        <span class="eac-feel-label">hold 120 Hz</span>
+        <div class="eac-feel-options">
+          <button
+            v-for="option in feel.refreshHoldOptions"
+            :key="option"
+            type="button"
+            class="eac-feel-btn"
+            :class="{ on: feel.isRefreshHold(option) }"
+            @click="feel.pickRefreshHold(option)"
+          >
+            {{ option }}
+          </button>
+        </div>
+      </div>
+      <div v-if="feel.holdsRefresh" class="eac-refresh-hold" aria-hidden="true"></div>
       <span class="eac-feel-now">{{ glide }} &middot; {{ carry }} &middot; {{ pixels }} &middot; reset {{ layerReset }}</span>
       <span class="eac-feel-meter">
         {{ feel.frameLabel }}
@@ -162,6 +178,24 @@ const {
   margin-left: auto;
   opacity: 0.55;
   font-family: var(--vp-font-family-mono, monospace);
+}
+/* the experiment's 1px compositor animation: present only while the switch is on */
+.eac-refresh-hold {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0.02;
+  background: currentColor;
+  will-change: transform;
+  animation: eac-refresh-hold 1s linear infinite;
+  pointer-events: none;
+}
+@keyframes eac-refresh-hold {
+  to {
+    transform: translate3d(0, 0, 0) rotate(360deg);
+  }
 }
 .eac-feel-report {
   flex-basis: 100%;

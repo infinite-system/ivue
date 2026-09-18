@@ -83,6 +83,23 @@ class $ExampleFeelToggle {
     return ref<'on' | 'off'>('off');
   }
 
+  /** EXPERIMENT — a 1px compositor animation kept running on the page. On
+   *  Android, Chrome asks the panel for 120 Hz under a finger and drops to 60
+   *  the moment it lifts, so a JavaScript glide renders at half the rate a
+   *  native fling gets; the log showed 8.3 ms gaps only while touching. A
+   *  compositor animation may keep the vote up. The meter says whether it does. */
+  get refreshHold() {
+    return ref<'off' | 'on'>('off');
+  }
+
+  get refreshHoldOptions(): Array<'off' | 'on'> {
+    return ['off', 'on'];
+  }
+
+  get holdsRefresh(): boolean {
+    return this.refreshHold.value === 'on';
+  }
+
   /** The report shown on the strip when no copy path worked — empty means hidden. */
   get reportText() {
     return ref('');
@@ -214,6 +231,14 @@ class $ExampleFeelToggle {
 
   isLayerReset(value: string) {
     return this.layerReset.value === value;
+  }
+
+  pickRefreshHold(value: 'off' | 'on') {
+    this.refreshHold.value = value;
+  }
+
+  isRefreshHold(value: string) {
+    return this.refreshHold.value === value;
   }
 
   /* ---- the frame meter and the report ---- */
