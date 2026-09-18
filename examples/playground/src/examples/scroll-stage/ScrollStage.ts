@@ -1,13 +1,14 @@
-// ScrollStage.ts — a pinned stage of tracks that move WITH a virtual
-// scroller: layers of scenery at their own fractions of the scroll, a sun on
-// an arc, a progress bar. Each track is a formatter over the scroll value and
-// nothing else, and it goes wherever the scroll goes: when the scroll hands
-// the compositor a sequence (a flick's glide, a creep chunk), the stage
-// composes every track over the SAME values alongside the SAME animation;
-// when the scroll is written from a callback (a drag, a wheel), the tracks
-// are written in that same callback from the rendered position. One clock
-// per frame, never two: a scene is a track of the scroll's sequence, not a
-// listener to its position (lenis/presented-motion.generator.md).
+// ScrollStage.ts — a scene per chapter, composed on the scroll. Each chapter
+// of the list owns a scene: its own skyline and palette, ridges that move at
+// their fractions of the CHAPTER's travel (finite, so nothing ever wraps or
+// repeats), a sun crossing that chapter's sky once. As a chapter ends its
+// scene fades out and the next chapter's fades in; two slots alternate, so
+// sixty chapters cost two scenes in the DOM. Every track is a formatter over
+// the scroll value and nothing else, and it goes wherever the scroll goes:
+// when the scroll hands the compositor a sequence, the stage composes every
+// track over the SAME values alongside the SAME animation; when a callback
+// writes the scroll, the tracks are written in that callback. One clock per
+// frame, never two (lenis/presented-motion.generator.md).
 import { ref, shallowRef, watch } from 'vue';
 import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
@@ -28,6 +29,22 @@ class $ScrollStage {
     return 8;
   }
 
+  /** The row height the scroller assumes before a row has been measured —
+   *  the stage's fallback for a chapter's span before geometry knows it. */
+  static get ASSUMED_ROW_PX() {
+    return 64;
+  }
+
+  /** The last fraction of a chapter over which its scene fades into the next. */
+  static get FADE_FRACTION() {
+    return 0.22;
+  }
+
+  /** How high the sun's arc peaks, in hundredths of the stage's height. */
+  static get SUN_APEX_CQH() {
+    return 82;
+  }
+
   /** The band of the stage the sun crosses, in hundredths of its width: the
    *  open half right of the rows, so the sun is never behind the text. */
   static get SUN_BAND_START_CQW() {
@@ -38,33 +55,47 @@ class $ScrollStage {
     return 52;
   }
 
-  /** How high the sun's arc peaks, in hundredths of the stage's height. */
-  static get SUN_APEX_CQH() {
-    return 82;
-  }
-
-  /** The sun crosses the sky once over this much scroll. */
-  static get SUN_ARC_PX() {
-    return 24_000;
-  }
-
-  /** The tracks, by the `data-track` an element carries in the stage. A
-   *  parallax layer moves at its fraction of the scroll, snapped to the device
-   *  grid; the sun crosses the stage on an arc; the bar scales to the fraction of
-   *  the whole extent. Adding a layer is one line here and one element there. */
-  static get TRACKS(): ScrollStage.Track[] {
+  /** The ridges of a scene, back to front: each moves at its fraction of the
+   *  chapter's travel and has its own shape. Adding a ridge is one line. */
+  static get RIDGES(): ScrollStage.Ridge[] {
     return [
-      { key: 'sky', kind: 'parallax', factor: 0.06, period: 900 },
-      { key: 'far', kind: 'parallax', factor: 0.14, period: 720 },
-      { key: 'mid', kind: 'parallax', factor: 0.3, period: 600 },
-      { key: 'near', kind: 'parallax', factor: 0.55, period: 480 },
-      { key: 'ground', kind: 'parallax', factor: 0.85, period: 360 },
-      { key: 'sun', kind: 'arc' },
-      { key: 'progress', kind: 'progress' }
+      { key: 'far', factor: 0.12, base: 0.5, amplitude: 0.22, points: 9 },
+      { key: 'mid', factor: 0.28, base: 0.62, amplitude: 0.16, points: 11 },
+      { key: 'near', factor: 0.5, base: 0.74, amplitude: 0.1, points: 13 },
+      { key: 'ground', factor: 0.8, base: 0.88, amplitude: 0.04, points: 7 }
     ];
   }
 
-  /** The rows: chapter headings over a long text, so the scroll has content. */
+  /** The two scene slots: a chapter's scene lives in the slot of its parity. */
+  static get SLOTS() {
+    return 2;
+  }
+
+  /** How far a ridge can rise over a chapter, in the stage's own height: the
+   *  tile's overhang below the frame, so a full chapter's rise never shows
+   *  the tile's edge whatever the chapter's span in pixels. */
+  static get RIDGE_RISE_CQH() {
+    return 40;
+  }
+
+  /** The lines of a chapter, one short sentence per row. */
+  static get LINES() {
+    return [
+      'This chapter has its own sky.',
+      'The ridges move at 4 fractions of its travel.',
+      'The sun crosses once.',
+      'None of it listens to the scroll.',
+      'Every layer is a track of the same sequence.',
+      'The text moves by that sequence too.',
+      'One clock per frame.',
+      'At the end, the scene fades into the next.',
+      'Two slots alternate; 60 chapters cost 2 scenes.',
+      'The skyline is seeded per chapter.',
+      'No two chapters draw the same one.'
+    ];
+  }
+
+  /** The rows: a heading then short lines, so the scroll has content. */
   static buildItems(): ScrollStage.Row[] {
     const items = new Array<ScrollStage.Row>(this.ITEM_COUNT);
     for (let index = 0; index < this.ITEM_COUNT; index++) {
@@ -75,13 +106,52 @@ class $ScrollStage {
         position: String(index + 1),
         chapter,
         heading: line === 0,
-        body:
-          line === 0
-            ? `Chapter ${chapter}`
-            : `Line ${line}. The scenery behind this text is 5 layers, each at its own fraction of the scroll; the sun crosses the sky once every 24,000 px. None of it listens to the scroll — every layer is a track of the same sequence the text is.`
+        body: line === 0 ? `Chapter ${chapter}` : this.LINES[(line - 1) % this.LINES.length]
       };
     }
     return items;
+  }
+
+  /** A chapter's skyline for one ridge: a seeded polyline across the tile,
+   *  as an SVG path in a 1000 × 1000 box. The same chapter always draws the
+   *  same ridge, and no two chapters draw the same one. */
+  static ridgePath(chapter: number, ridge: ScrollStage.Ridge): string {
+    let seed = chapter * 9973 + ridge.points * 7919;
+    const next = () => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed / 2147483648;
+    };
+    const steps = ridge.points;
+    let path = `M0 ${Math.round((ridge.base + (next() - 0.5) * ridge.amplitude) * 1000)}`;
+    for (let step = 1; step <= steps; step++) {
+      const x = Math.round((step / steps) * 1000);
+      const y = Math.round((ridge.base + (next() - 0.5) * 2 * ridge.amplitude) * 1000);
+      path += ` L${x} ${y}`;
+    }
+    return `${path} L1000 1000 L0 1000 Z`;
+  }
+
+  /** A chapter's palette: a hue that walks the wheel, the ridges darkening
+   *  toward the front, the sky a gradient of the same hue. */
+  static palette(chapter: number): ScrollStage.Palette {
+    const hue = (chapter * 41) % 360;
+    return {
+      skyTop: `hsl(${hue} 55% 9%)`,
+      skyBottom: `hsl(${(hue + 30) % 360} 50% 26%)`,
+      ridges: [
+        `hsl(${hue} 42% 34%)`,
+        `hsl(${hue} 44% 27%)`,
+        `hsl(${hue} 46% 20%)`,
+        `hsl(${hue} 48% 14%)`
+      ]
+    };
+  }
+
+  /** How far into its fade a chapter is at a progress, 0 before the fade
+   *  starts and 1 at the chapter's end. */
+  static fadeAt(progress: number): number {
+    const fadeStart = 1 - this.FADE_FRACTION;
+    return Math.min(1, Math.max(0, (progress - fadeStart) / this.FADE_FRACTION));
   }
 
   constructor() {
@@ -96,6 +166,12 @@ class $ScrollStage {
   protected get self() {
     return this.constructor as typeof $ScrollStage;
   }
+
+  /** The tracks in flight, paired with the scroll animation each was composed over. */
+  protected readonly tracks: Array<{ scroll: Animation; animations: Animation[] }> = [];
+
+  /** Which chapter each slot's scene currently draws — 0 until written. */
+  protected readonly slotChapters: number[] = [0, 0];
 
   // STATE
   get items() {
@@ -112,15 +188,13 @@ class $ScrollStage {
     return ref(false);
   }
 
-  /** The tracks in flight, paired with the scroll animation each was composed over. */
-  protected readonly tracks: Array<{ scroll: Animation; animations: Animation[] }> = [];
-
   // ELEMENT REFS
   get scroller() {
     return ref<VirtualScroller.Exposed<ScrollStage.Row> | null>(null);
   }
 
-  /** The stage: the pinned element whose `[data-track]` children are the layers. */
+  /** The stage: the pinned element holding the slots, whose `[data-track]`
+   *  children are the layers the class drives. */
   get stage() {
     return ref<HTMLElement | null>(null);
   }
@@ -130,12 +204,13 @@ class $ScrollStage {
     return this.items.value.length.toLocaleString();
   }
 
-  /** The chapter under the top edge — the pinned headline reads it, through
-   *  the scroller's own row-at-offset lookup over the rendered position. */
+  get paddingQuantity(): number {
+    return this.self.PADDING_QUANTITY;
+  }
+
+  /** The chapter under the top edge — the pinned headline reads it. */
   get chapter(): number {
-    const at = this.scroller.value?.getIndexAtPosition(this.position.value);
-    const index = Math.min(at?.index ?? 0, this.items.value.length - 1);
-    return this.items.value[index]?.chapter ?? 1;
+    return this.chapterAt(this.position.value);
   }
 
   get chapterLabel(): string {
@@ -153,7 +228,7 @@ class $ScrollStage {
   }
 
   get trackCountLabel(): string {
-    return String(this.self.TRACKS.length);
+    return String(this.self.SLOTS * (this.self.RIDGES.length + 2) + 1);
   }
 
   /** The whole scrollable extent — the progress bar's denominator. */
@@ -161,29 +236,114 @@ class $ScrollStage {
     return this.scroller.value?.scrollExtent ?? 1;
   }
 
-  /** A track's transform for a scroll value: the whole contract between a
-   *  layer and the scroll is a function of one number. */
-  transformOf(track: ScrollStage.Track, value: number): string {
-    switch (track.kind) {
-      case 'parallax': {
-        // a layer is its pattern's period tall plus the frame, and wraps where
-        // the pattern repeats — so a 46,000 px extent never needs a 46,000 px layer
-        const travel = value * (track.factor ?? 0);
-        const period = track.period ?? 1;
-        const wrapped = ((travel % period) + period) % period;
-        return `translateY(${-Lenis.Class.snapToDevicePixel(wrapped)}px)`;
+  // GEOMETRY — the chapter a scroll value is in, and where that chapter starts
+
+  chapterAt(value: number): number {
+    const at = this.scroller.value?.getIndexAtPosition(Math.max(0, value));
+    const fallback = Math.floor(Math.max(0, value) / this.self.ASSUMED_ROW_PX);
+    const index = Math.min(at?.index ?? fallback, this.items.value.length - 1);
+    return this.items.value[index]?.chapter ?? 1;
+  }
+
+  /** Where a chapter's first row sits: the scroller's anchored position when
+   *  geometry knows it, the assumed row height before. */
+  chapterStart(chapter: number): number {
+    const firstIndex = (chapter - 1) * this.self.CHAPTER_ROWS;
+    return (
+      this.scroller.value?.getAnchoredPosition(firstIndex) ?? firstIndex * this.self.ASSUMED_ROW_PX
+    );
+  }
+
+  chapterSpan(chapter: number): number {
+    return Math.max(1, this.chapterStart(chapter + 1) - this.chapterStart(chapter));
+  }
+
+  /** A scroll value as a chapter and its progress through it, 0 to 1. */
+  localOf(value: number): ScrollStage.Local {
+    const chapter = this.chapterAt(value);
+    const travel = Math.max(0, value - this.chapterStart(chapter));
+    return { chapter, progress: Math.min(1, travel / this.chapterSpan(chapter)), travel };
+  }
+
+  // TRACKS — each a formatter over the scroll value; the slot decides its role
+
+  /** What a slot draws at a scroll value: the current chapter when the
+   *  parity matches, else the next one, waiting under the fade. */
+  roleOf(slot: number, value: number): ScrollStage.Role {
+    const local = this.localOf(value);
+    if (local.chapter % this.self.SLOTS === slot) return { ...local, current: true };
+    return { chapter: local.chapter + 1, progress: 0, travel: 0, current: false };
+  }
+
+  /** A slot's opacity: the current scene fades out over the chapter's last
+   *  fraction while the next fades in. */
+  opacityOf(slot: number, value: number): string {
+    const local = this.localOf(value);
+    const fade = this.self.fadeAt(local.progress);
+    const current = local.chapter % this.self.SLOTS === slot;
+    return (current ? 1 - fade : fade).toFixed(3);
+  }
+
+  /** A ridge's transform in a slot: its fraction of the chapter's progress
+   *  over the tile's overhang, in the stage's own height — bounded, so it
+   *  never wraps and never shows its edge. */
+  ridgeTransform(slot: number, ridge: ScrollStage.Ridge, value: number): string {
+    const role = this.roleOf(slot, value);
+    const rise = (role.progress * ridge.factor * this.self.RIDGE_RISE_CQH).toFixed(3);
+    return `translateY(-${rise}cqh)`;
+  }
+
+  /** The sun in a slot: across the open band on an arc, once per chapter. */
+  sunTransform(slot: number, value: number): string {
+    const role = this.roleOf(slot, value);
+    const x = (this.self.SUN_BAND_START_CQW + role.progress * this.self.SUN_BAND_CQW).toFixed(3);
+    const y = (-Math.sin(role.progress * Math.PI) * this.self.SUN_APEX_CQH).toFixed(3);
+    return `translate(${x}cqw, ${y}cqh)`;
+  }
+
+  progressTransform(value: number): string {
+    return `scaleX(${Math.min(1, Math.max(0, value / this.extent)).toFixed(4)})`;
+  }
+
+  /** Every track on the stage: the element it drives, the property, and
+   *  its formatter — the whole contract between a scene and the scroll. */
+  trackList(): ScrollStage.Track[] {
+    const stage = this.stage.value;
+    if (!stage) return [];
+    const tracks: ScrollStage.Track[] = [];
+    for (let slot = 0; slot < this.self.SLOTS; slot++) {
+      const root = stage.querySelector<HTMLElement>(`[data-slot="${slot}"]`);
+      if (!root) continue;
+      tracks.push({
+        element: root,
+        property: 'opacity',
+        formatOf: (value) => this.opacityOf(slot, value)
+      });
+      for (const ridge of this.self.RIDGES) {
+        const element = root.querySelector<HTMLElement>(`[data-track="${ridge.key}"]`);
+        if (element)
+          tracks.push({
+            element,
+            property: 'transform',
+            formatOf: (value) => this.ridgeTransform(slot, ridge, value)
+          });
       }
-      case 'arc': {
-        // across the open band of the stage in its own units: up from behind
-        // the ridges, over the top, down past the right edge, once per SUN_ARC_PX
-        const progress = (((value / this.self.SUN_ARC_PX) % 1) + 1) % 1;
-        const x = (this.self.SUN_BAND_START_CQW + progress * this.self.SUN_BAND_CQW).toFixed(3);
-        const y = (-Math.sin(progress * Math.PI) * this.self.SUN_APEX_CQH).toFixed(3);
-        return `translate(${x}cqw, ${y}cqh)`;
-      }
-      case 'progress':
-        return `scaleX(${Math.min(1, Math.max(0, value / this.extent))})`;
+      const sun = root.querySelector<HTMLElement>('[data-track="sun"]');
+      if (sun)
+        tracks.push({
+          element: sun,
+          property: 'transform',
+          formatOf: (value) => this.sunTransform(slot, value)
+        });
     }
+    const bar = stage.querySelector<HTMLElement>('[data-track="progress"]');
+    if (bar)
+      tracks.push({
+        element: bar,
+        property: 'transform',
+        formatOf: (value) => this.progressTransform(value)
+      });
+    return tracks;
   }
 
   // METHODS
@@ -193,48 +353,83 @@ class $ScrollStage {
     const lenis = this.scroller.value?.lenis;
     if (!lenis) return;
     lenis.on('scroll', () => this.onScroll(lenis.animatedScroll));
+    this.prepareScenes(lenis.animatedScroll);
     this.writeTracks(lenis.animatedScroll);
   }
 
-  /** A rendered frame from the callback path: the tracks follow in the same
-   *  callback. While the compositor owns the scroll, its tracks own the stage. */
+  /** A rendered frame: the scenes for this chapter and the next are drawn
+   *  in their slots if they are not yet; then, on the callback path, the
+   *  tracks follow in the same callback. While the compositor owns the
+   *  scroll, its tracks own the stage. */
   onScroll(rendered: number) {
     this.position.value = rendered;
+    this.prepareScenes(rendered);
     if (!this.onCompositor.value) this.writeTracks(rendered);
   }
 
+  /** The current chapter's scene in the slot of its parity, the next
+   *  chapter's in the other — drawn only when the chapter changes. */
+  prepareScenes(value: number) {
+    const chapter = this.chapterAt(value);
+    for (const target of [chapter, chapter + 1]) {
+      const slot = target % this.self.SLOTS;
+      if (this.slotChapters[slot] === target) continue;
+      this.slotChapters[slot] = target;
+      this.drawScene(slot, target);
+    }
+  }
+
+  /** Draw a chapter's scene into a slot: the palette and the four ridges. */
+  drawScene(slot: number, chapter: number) {
+    const root = this.stage.value?.querySelector<HTMLElement>(`[data-slot="${slot}"]`);
+    if (!root) return;
+    const self = this.self;
+    const palette = self.palette(chapter);
+    root.style.setProperty('--sky-top', palette.skyTop);
+    root.style.setProperty('--sky-bottom', palette.skyBottom);
+    self.RIDGES.forEach((ridge, index) => {
+      const path = root.querySelector<SVGPathElement>(`[data-track="${ridge.key}"] path`);
+      if (!path) return;
+      path.setAttribute('d', self.ridgePath(chapter, ridge));
+      path.setAttribute('fill', palette.ridges[index] ?? palette.ridges[palette.ridges.length - 1]);
+    });
+  }
+
   writeTracks(value: number) {
-    for (const [track, element] of this.trackElements())
-      element.style.transform = this.transformOf(track, value);
+    for (const track of this.trackList()) {
+      const formatted = track.formatOf(value);
+      if (track.property === 'opacity') track.element.style.opacity = formatted;
+      else track.element.style.transform = formatted;
+    }
   }
 
   /** The scroll handed the compositor a sequence: compose every track over
    *  the same values, aligned with the same animation — alongside a new
-   *  sequence, after the one before for a chained chunk. */
+   *  sequence, after the one before for a chained chunk. The scenes the
+   *  sequence will reach are drawn first, so a chapter change mid-glide has
+   *  its slot ready. */
   onSequence(sequence: Lenis.Sequence) {
-    const elements = this.trackElements();
-    if (!elements.length) return;
+    const tracks = this.trackList();
+    if (!tracks.length) return;
+    this.prepareScenes(sequence.values[sequence.values.length - 1]);
     if (!sequence.after) this.cancelTracks();
     const alignment = sequence.after
       ? { after: this.lastTrackAnimation() }
       : { alongside: sequence.animation };
     const animations: Animation[] = [];
-    for (const [track, element] of elements) {
+    for (const track of tracks) {
+      // a scene track is never interpolated: a chapter boundary inside the
+      // sequence is a step in the role, and only held keyframes step with it
       const animation = Lenis.Class.composeSequence(
-        element,
+        track.element,
         sequence.values,
-        (value) => this.transformOf(track, value),
-        {
-          ...alignment,
-          // a wrapping layer must never be interpolated across its wrap: held keyframes
-          linear: sequence.linear && track.kind !== 'parallax'
-        }
+        track.formatOf,
+        { ...alignment, property: track.property }
       );
       if (animation) animations.push(animation);
     }
     this.tracks.push({ scroll: sequence.animation, animations });
     this.onCompositor.value = true;
-    this.position.value = sequence.values[sequence.values.length - 1];
     sequence.animation.addEventListener(
       'cancel',
       () => this.onScrollSequenceOver(sequence.animation),
@@ -268,18 +463,6 @@ class $ScrollStage {
     this.tracks.length = 0;
   }
 
-  /** The stage's layers, paired with their tracks by `data-track`. */
-  protected trackElements(): Array<[ScrollStage.Track, HTMLElement]> {
-    const stage = this.stage.value;
-    if (!stage) return [];
-    const pairs: Array<[ScrollStage.Track, HTMLElement]> = [];
-    for (const track of this.self.TRACKS) {
-      const element = stage.querySelector<HTMLElement>(`[data-track="${track.key}"]`);
-      if (element) pairs.push([track, element]);
-    }
-    return pairs;
-  }
-
   /** The latest track animation, for a chained chunk to follow. */
   protected lastTrackAnimation(): Animation | null {
     const last = this.tracks[this.tracks.length - 1];
@@ -298,13 +481,42 @@ export namespace ScrollStage {
     body: string;
   }
 
-  /** A layer of the stage: what it does with the scroll value. */
-  export interface Track {
+  /** A ridge of a scene: its fraction of the chapter's travel and its shape. */
+  export interface Ridge {
     key: string;
-    kind: 'parallax' | 'arc' | 'progress';
-    /** a parallax layer's fraction of the scroll */
-    factor?: number;
-    /** a parallax layer's pattern period in px — the translate wraps there */
-    period?: number;
+    factor: number;
+    /** where the ridge sits, as a fraction of the tile's height */
+    base: number;
+    /** how far the skyline wanders, as a fraction of the tile's height */
+    amplitude: number;
+    /** how many points the skyline has across the tile */
+    points: number;
+  }
+
+  export interface Palette {
+    skyTop: string;
+    skyBottom: string;
+    ridges: string[];
+  }
+
+  /** A scroll value inside its chapter. */
+  export interface Local {
+    chapter: number;
+    /** 0 at the chapter's first row, 1 at its last */
+    progress: number;
+    /** px into the chapter */
+    travel: number;
+  }
+
+  /** What a slot draws at a scroll value. */
+  export interface Role extends Local {
+    current: boolean;
+  }
+
+  /** One track on the stage: an element, the property it animates, and the formatter. */
+  export interface Track {
+    element: HTMLElement;
+    property: 'transform' | 'opacity';
+    formatOf: (value: number) => string;
   }
 }

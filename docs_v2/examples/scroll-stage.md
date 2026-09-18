@@ -1,6 +1,6 @@
 ---
-title: 'Example: Scroll Stage — scenes composed on the scroll'
-description: 'A pinned scene of 5 parallax layers, a sun on an arc and a progress bar over a 720-row virtual list — none of it listening to the scroll. Every layer is a track of the same sequence the text moves by, drawn by the compositor when the scroll is, written in the same callback when it is not.'
+title: 'Example: Scroll Stage — a scene per chapter, composed on the scroll'
+description: "Every chapter of a 720-row virtual list owns a scene: its own sky and skyline, 4 ridges at their fractions of the chapter's travel, a sun crossing once, fading into the next chapter's scene. None of it listens to the scroll. Every layer is a track of the same sequence the text moves by, drawn by the compositor when the scroll is, written in the same callback when it is not."
 aside: false
 pageClass: benchmarks-wide examples-page
 relatedPosts: [99-7-and-100-are-worlds-apart, subpixel-perfect-scrolling, a-million-rows-twelve-divs]
@@ -11,16 +11,18 @@ import LazyCodeGroup from '../.vitepress/theme/components/LazyCodeGroup.vue'
 import ExampleScrollStage from '../.vitepress/theme/components/examples/ExampleScrollStage.vue'
 </script>
 
-# Scroll stage: scenes composed on the scroll
+# Scroll stage: a scene per chapter, composed on the scroll
 
 <ClientOnly>
   <ExampleScrollStage />
 </ClientOnly>
 
-Flick, drag, wheel, or press play and let it read. The scenery moves with
-the text at 5 different speeds, the sun crosses the sky once every
-24,000 px, and the bar at the bottom fills to the end of the list. Nothing
-on the stage reads the scroll position. That is the point of the page.
+Flick, drag, wheel, or press play and let it read. Every chapter has its
+own sky: 4 ridges that move at their own fractions of the chapter's
+travel, a sun that crosses once, a palette of its own. As a chapter ends
+its scene fades into the next chapter's, and the bar at the bottom fills
+to the end of the list. Nothing on the stage reads the scroll position.
+That is the point of the page.
 
 ## One clock per frame
 
@@ -49,30 +51,50 @@ The stage follows the same rule, in both directions:
 The thing the stage never does is mix them. A JavaScript track beside a
 compositor scroll would be two clocks, and two clocks drift.
 
+## A scene per chapter, and why not a parallax
+
+The first version of this page was a single parallax: layers wrapping at
+their pattern's period over the whole list. It was wrong at the root. A
+horizon has one skyline, and a layer that wraps stacks skyline over
+skyline up the sky, which is exactly what it looked like. Taller tiles
+would only have stretched the interval between the same mistake.
+
+A scene must be bounded. Each chapter owns one: a seeded skyline and a
+palette nobody drew by hand, ridges that rise by their fraction of the
+chapter's progress over the tile's own overhang, so nothing wraps and no
+edge shows whatever the chapter's span in pixels, and a sun that rises
+and sets inside that chapter. Two slots alternate, the current
+chapter in the slot of its parity and the next one waiting in the other,
+so 60 chapters cost 2 scenes in the DOM. The fade between them is a
+compositor track like the rest: an opacity that goes from 1 to 0 over the
+chapter's last 22% while the other slot goes from 0 to 1.
+
 ## A track is a function of one number
 
 Each layer declares what it does with the scroll value, and nothing else:
 
 ```ts
-static get TRACKS(): ScrollStage.Track[] {
+static get RIDGES(): ScrollStage.Ridge[] {
   return [
-    { key: 'sky',    kind: 'parallax', factor: 0.06, period: 900 },
-    { key: 'far',    kind: 'parallax', factor: 0.14, period: 720 },
-    { key: 'mid',    kind: 'parallax', factor: 0.3,  period: 600 },
-    { key: 'near',   kind: 'parallax', factor: 0.55, period: 480 },
-    { key: 'ground', kind: 'parallax', factor: 0.85, period: 360 },
-    { key: 'sun',    kind: 'arc' },
-    { key: 'progress', kind: 'progress' }
+    { key: 'far',    factor: 0.12, base: 0.5,  amplitude: 0.22, points: 9 },
+    { key: 'mid',    factor: 0.28, base: 0.62, amplitude: 0.16, points: 11 },
+    { key: 'near',   factor: 0.5,  base: 0.74, amplitude: 0.1,  points: 13 },
+    { key: 'ground', factor: 0.8,  base: 0.88, amplitude: 0.04, points: 7 }
   ];
+}
+
+ridgeTransform(slot, ridge, value) {
+  const role = this.roleOf(slot, value);           // this slot's chapter at this value
+  const rise = role.progress * ridge.factor * 40;  // over the tile's overhang, in cqh
+  return `translateY(-${rise.toFixed(3)}cqh)`;
 }
 ```
 
-A parallax layer moves at its fraction of the scroll and wraps where its
-pattern repeats, so a 46,000 px extent never needs a 46,000 px layer. The
-sun turns about a pivot at the bottom of the frame. The bar scales to the
-fraction of the whole extent, which the scroller knows before the rows
-have been measured. Adding a layer is one line here and one element with
-a `data-track` in the template.
+The chapter a value is in comes from the scroller's own row-at-offset
+lookup, the chapter's start from its anchored position, and everything
+after that is arithmetic on the progress through the chapter. The sun is
+a translate in the stage's own units across the half the rows leave open.
+Adding a ridge is one line here and one element in the template.
 
 ## The handoff
 
@@ -81,20 +103,22 @@ its own layer:
 
 ```ts
 onSequence(sequence: Lenis.Sequence) {
-  for (const [track, element] of this.trackElements()) {
+  for (const track of this.trackList()) {
     Lenis.Class.composeSequence(
-      element,
-      sequence.values,                          // the scroll's own keyframe values
-      (value) => this.transformOf(track, value), // this layer's formatter
-      { alongside: sequence.animation }          // same start, same clock
+      track.element,
+      sequence.values,                    // the scroll's own keyframe values
+      track.formatOf,                     // this layer's formatter
+      { alongside: sequence.animation,    // same start, same clock
+        property: track.property }        // a transform, or a slot's opacity
     );
   }
 }
 ```
 
-A held keyframe per distinct value for a glide, so every presented frame
-is on the device grid; the two linear endpoints for the creep, where the
-compositor's filtering of the fraction is the motion. When the scroll's
+A held keyframe per distinct value, always: a chapter boundary inside a
+sequence is a step in which slot is current, and only held keyframes step
+with it. The scenes the sequence will reach are drawn before it starts,
+so a chapter change mid-glide finds its slot ready. When the scroll's
 animation ends, is promoted, or is interrupted, its tracks go with it and
 the stage is written from the rendered position again.
 
