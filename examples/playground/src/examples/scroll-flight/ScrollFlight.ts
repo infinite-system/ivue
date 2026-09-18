@@ -74,18 +74,23 @@ class $ScrollFlight extends ScrollStage.$Class {
       { key: 'cloud-b', drift: -14, lift: 5 }
     ];
 
-  /** The jet flies INTO the screen: it enters near the camera, low left, and
-   *  climbs away toward the far ridge, shrinking as the perspective takes it.
-   *  Positions in the stage's units, depth in px against the stage's
-   *  perspective, the yaw turning its nose into the screen. */
-  static readonly JET_PATH = { fromX: 6, toX: 64, fromY: 80, toY: 28, fromZ: 520, toZ: -1500, yaw: -52, pitch: -8, bank: 52, roll: 10 };
+  /** The jet flies INTO the screen: it enters from below the frame's left
+   *  edge, nearer than the screen, and climbs away toward the far ridge
+   *  until the perspective has shrunk it to a dot. Positions in the stage's
+   *  units, depth in px against the stage's perspective, the yaw turning its
+   *  nose into the screen. A crossing never fades: opacity below one
+   *  flattens a 3D model, and the wings stand out of its plane. */
+  static readonly JET_PATH = { fromX: -18, toX: 70, fromY: 112, toY: 18, fromZ: 520, toZ: -6000, yaw: -52, pitch: -8, bank: 52, roll: 10 };
 
-  /** The seaplane flies OUT of the screen: it appears over the sea near the
-   *  horizon and comes low over the beach toward the camera, growing, and
-   *  leaves past the frame's left edge at its largest. */
-  static readonly SEAPLANE_PATH = { fromX: 80, toX: -34, fromY: 44, toY: 74, fromZ: -1400, toZ: 560, yaw: 142, pitch: 3, bank: -48, roll: -8 };
+  /** The seaplane flies OUT of the screen: it appears as a dot over the sea
+   *  at the horizon and comes low over the beach toward the camera, growing,
+   *  and leaves past the frame's left edge at its largest. */
+  static readonly SEAPLANE_PATH = { fromX: 82, toX: -44, fromY: 46, toY: 78, fromZ: -3200, toZ: 560, yaw: 142, pitch: 3, bank: -48, roll: -8 };
 
-  static readonly PLANE_PARKED: string = 'translate3d(-80cqw, 40cqh, -1500px)';
+  /** Far enough off the frame that the perspective cannot pull it back into
+   *  view: a pose at depth is drawn toward the perspective origin by its
+   *  scale, and -80cqw at -1500px still showed a wing at the left edge. */
+  static readonly PLANE_PARKED: string = 'translate3d(-400cqw, 40cqh, -1500px)';
 
   static readonly FLOCK_PARKED: string = 'translate(130cqw, 12cqh)';
 
@@ -410,14 +415,6 @@ class $ScrollFlight extends ScrollStage.$Class {
     return (entry * (1 - this.self.fadeAt(local.progress))).toFixed(3);
   }
 
-  jetOpacity(value: number): string {
-    return this.crossingOpacity(value, this.self.hasJet(this.textLocalOf(value).chapter));
-  }
-
-  seaplaneOpacity(value: number): string {
-    return this.crossingOpacity(value, this.self.hasSeaplane(this.textLocalOf(value).chapter));
-  }
-
   /** The flock's crossing: right to left over the chapter's text, lifting a little. */
   flockTransform(value: number): string {
     const local = this.textLocalOf(value);
@@ -433,8 +430,8 @@ class $ScrollFlight extends ScrollStage.$Class {
   }
 
   /** The stage's tracks, then the flight's: per slot the clouds, the island,
-   *  the palms and the canopies; once, the jet, the seaplane and the flock —
-   *  a transform and an opacity each. */
+   *  the palms and the canopies; once, the jet and the seaplane (a transform
+   *  each) and the flock (a transform and an opacity). */
   protected override buildTracks(stage: HTMLElement): ScrollStage.Track[] {
     const tracks = super.buildTracks(stage);
     const self = this.self;
@@ -453,12 +450,9 @@ class $ScrollFlight extends ScrollStage.$Class {
       transform(track('palms'), (value) => this.palmsTransform(slot, value));
       for (const canopy of self.CANOPIES) transform(track(canopy.key), (value) => this.ridgeTransform(slot, canopy, value));
     }
-    const jet = stage.querySelector<HTMLElement>('[data-track="jet"]');
-    transform(jet, (value) => this.jetTransform(value));
-    opacity(jet, (value) => this.jetOpacity(value));
-    const seaplane = stage.querySelector<HTMLElement>('[data-track="seaplane"]');
-    transform(seaplane, (value) => this.seaplaneTransform(value));
-    opacity(seaplane, (value) => this.seaplaneOpacity(value));
+    // the planes take no opacity track: they enter and leave by their path
+    transform(stage.querySelector<HTMLElement>('[data-track="jet"]'), (value) => this.jetTransform(value));
+    transform(stage.querySelector<HTMLElement>('[data-track="seaplane"]'), (value) => this.seaplaneTransform(value));
     const flock = stage.querySelector<HTMLElement>('[data-track="flock"]');
     transform(flock, (value) => this.flockTransform(value));
     opacity(flock, (value) => this.flockOpacity(value));

@@ -59,11 +59,14 @@ stage gives them a `perspective`, and the crossing is one transform:
 return `translate3d(${x}cqw, ${y}cqh, ${z}px) rotateY(${yaw}deg) rotateZ(${pitch}deg) rotateX(${bank}deg)`;
 ```
 
-The jet's depth runs from +520 px, nearer than the screen, to −1500 px,
-so it enters large and shrinks into the pass: into the screen. The
-seaplane's runs the other way, so it grows out of the horizon and leaves
-past the frame's edge at its largest. The compositor plays a 3D transform
-as readily as a flat one; there is nothing to interpolate in JavaScript.
+The jet's depth runs from +520 px, nearer than the screen, to −6000 px,
+so it enters from below the frame's edge, large, and shrinks into the
+pass until it is a dot: into the screen. The seaplane's runs the other
+way, so it grows out of a dot at the horizon and leaves past the frame's
+edge at its largest. Neither plane fades, because opacity below one
+flattens a 3D model and the wings stand out of its plane; a crossing
+enters and leaves by its path. The compositor plays a 3D transform as
+readily as a flat one; there is nothing to interpolate in JavaScript.
 
 ## Pictures the list makes room for
 
@@ -108,8 +111,8 @@ row of crowns for the canopies, and the extra tracks:
 protected override buildTracks(stage) {
   const tracks = super.buildTracks(stage);   // the stage's own, media slots included
   // + per slot: 2 clouds, the island, the palms, 3 canopies
-  // + once: the jet, the seaplane, the flock — a transform and an opacity each
-  return tracks;                              // 37
+  // + once: the jet and the seaplane (a transform each), the flock (transform and opacity)
+  return tracks;                              // 35
 }
 ```
 
@@ -121,7 +124,7 @@ it wrong.
 
 ## What it costs
 
-Thirty-seven tracks are thirty-seven Web Animations, each built once per
+Thirty-five tracks are thirty-five Web Animations, each built once per
 flick — or once per two-second piece of a reading run — and played by the
 compositor. Correctness does not change with the count; memory does. A
 composited layer is a raster the size of its element, so the ceiling is

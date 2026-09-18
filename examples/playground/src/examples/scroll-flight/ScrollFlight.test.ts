@@ -93,7 +93,7 @@ function stageWithFlight() {
 // domain-invariant: $ScrollFlight — If a chapter is in a world, then its slot carries that world and its time of day, the jet flies INTO the screen over the mountains (its depth falling), the seaplane OUT of it over the beach (its depth rising), and every skyline, snow band and canopy is seeded by the chapter.
 // impossible-if-true: $ScrollFlight — A plane visible in a chapter that has none.
 // impossible-if-true: $ScrollFlight — A jet whose depth rises as it crosses, or a seaplane whose depth falls.
-test('chapters cycle the worlds; the jet flies into the screen over the mountains, the seaplane out of it over the beach, each parked and clear elsewhere, in over the entry, out with the fade', () => {
+test('chapters cycle the worlds; the jet flies into the screen over the mountains, the seaplane out of it over the beach, each parked elsewhere and never faded; the flock fades in over the entry and out with the fade', () => {
   const flight = new ScrollFlight.Class();
   const { CHAPTER_ROWS, ASSUMED_ROW_PX, ENTRY_FRACTION, FADE_FRACTION, PLANE_PARKED, FLOCK_PARKED } =
     ScrollFlight.Class;
@@ -102,31 +102,35 @@ test('chapters cycle the worlds; the jet flies into the screen over the mountain
   expect([1, 2, 3, 4].map((chapter) => ScrollFlight.Class.themeOf(chapter))).toEqual(['mountains', 'beach', 'rainforest', 'mountains']);
   expect([1, 2, 3, 4, 5].map((chapter) => ScrollFlight.Class.timeOf(chapter))).toEqual(['dawn', 'day', 'dusk', 'night', 'dawn']);
   const depth = (transform: string) => Number(/, (-?[\d.]+)px\)/.exec(transform)![1]);
-  // chapter 1, the mountains: the jet crosses into the screen — no seaplane, no flock
-  expect(flight.jetOpacity(text * 0.5)).toBe('1.000');
+  // chapter 1, the mountains: the jet crosses into the screen — no seaplane, no flock.
+  // A plane never fades (opacity below one flattens its 3D model): it enters from
+  // off the frame, nearer than the screen, and leaves as a dot in the distance
+  const { JET_PATH, SEAPLANE_PATH } = ScrollFlight.Class;
+  expect(depth(flight.jetTransform(0))).toBe(JET_PATH.fromZ);
+  expect(JET_PATH.fromY).toBeGreaterThan(100); // below the frame
   expect(depth(flight.jetTransform(text * 0.1))).toBeGreaterThan(depth(flight.jetTransform(text * 0.5)));
   expect(depth(flight.jetTransform(text * 0.5))).toBeGreaterThan(depth(flight.jetTransform(text * 0.9)));
-  // the crossing is over — and clear — before the interlude takes the frame
-  expect(flight.jetOpacity(text)).toBe('0.000');
-  expect(flight.jetOpacity(span * 0.95)).toBe('0.000');
+  expect(depth(flight.jetTransform(text))).toBe(JET_PATH.toZ);
+  expect(JET_PATH.toZ).toBeLessThan(-5000); // a dot: 260 px at a tenth
+  expect(flight.jetTransform(span * 0.95)).toBe(flight.jetTransform(text)); // held through the interlude
   expect(flight.seaplaneTransform(span * 0.5)).toBe(PLANE_PARKED);
-  expect(flight.seaplaneOpacity(span * 0.5)).toBe('0.000');
   expect(flight.flockTransform(span * 0.5)).toBe(FLOCK_PARKED);
   expect(flight.flockOpacity(span * 0.5)).toBe('0.000');
   // chapter 2, the beach: the seaplane comes out of the screen, with the flock; the jet is parked
   const beach = span;
   expect(flight.jetTransform(beach + span * 0.5)).toBe(PLANE_PARKED);
-  expect(flight.jetOpacity(beach + span * 0.5)).toBe('0.000');
+  expect(depth(flight.seaplaneTransform(beach))).toBe(SEAPLANE_PATH.fromZ); // a dot at the horizon
   expect(depth(flight.seaplaneTransform(beach + text * 0.1))).toBeLessThan(depth(flight.seaplaneTransform(beach + text * 0.9)));
+  expect(SEAPLANE_PATH.toX).toBeLessThan(-30); // past the frame's edge at its largest
   expect(flight.flockOpacity(beach + text * 0.5)).toBe('1.000');
-  // in over the entry fraction of the text, out with the text's fade
-  expect(flight.seaplaneOpacity(beach)).toBe('0.000');
-  expect(flight.seaplaneOpacity(beach + text * ENTRY_FRACTION * 0.5)).toBe('0.500');
-  expect(Number(flight.seaplaneOpacity(beach + text * (1 - FADE_FRACTION / 2)))).toBeCloseTo(0.5, 2);
+  // the flock, a 2D canvas, fades: in over the entry fraction of the text, out with the text's fade
+  expect(flight.flockOpacity(beach)).toBe('0.000');
+  expect(flight.flockOpacity(beach + text * ENTRY_FRACTION * 0.5)).toBe('0.500');
+  expect(Number(flight.flockOpacity(beach + text * (1 - FADE_FRACTION / 2)))).toBeCloseTo(0.5, 2);
   // chapter 3, the rain forest: the flock only
   const forest = 2 * span;
-  expect(flight.jetOpacity(forest + text * 0.5)).toBe('0.000');
-  expect(flight.seaplaneOpacity(forest + text * 0.5)).toBe('0.000');
+  expect(flight.jetTransform(forest + text * 0.5)).toBe(PLANE_PARKED);
+  expect(flight.seaplaneTransform(forest + text * 0.5)).toBe(PLANE_PARKED);
   expect(flight.flockOpacity(forest + text * 0.5)).toBe('1.000');
   // the rows: a titled heading then the world's paragraphs
   const rows = ScrollFlight.Class.buildItems();
@@ -168,9 +172,9 @@ test('skylines, snow and canopies are smooth and seeded, and the palette pales t
 // invariant: A glide plays on the compositor as held snapped keyframes (examples/playground/src/lenis/lenis.invariants.md)
 // domain-invariant: $ScrollFlight — If a layer moves with the scroll, then it is a track over the scroll value and nothing else: a plane's place in perspective, the flock's place in the sky, a cloud's drift, the palms' lean are formatters of the one number, parked or faded where their chapter has none.
 // impossible-if-true: $ScrollFlight — A flight track that reads anything but the scroll value.
-test("the flight has 37 tracks — the stage's 13, plus per slot 2 clouds, the island, the palms and 3 canopies, plus the jet, the seaplane and the flock twice, plus 2 media slots twice — and a sequence composes every one, held", () => {
+test("the flight has 35 tracks — the stage's 13, plus per slot 2 clouds, the island, the palms and 3 canopies, plus the jet and the seaplane once, the flock twice, plus 2 media slots twice — and a sequence composes every changing one", () => {
   const { flight, root, animates } = stageWithFlight();
-  expect(flight.trackCountLabel).toBe('37');
+  expect(flight.trackCountLabel).toBe('35');
   const scroll = new FakeAnimation([], 500);
   flight.onSequence({
     animation: scroll as unknown as Animation,
@@ -183,9 +187,10 @@ test("the flight has 37 tracks — the stage's 13, plus per slot 2 clouds, the i
   // (its ridges, sun, clouds), the jet crossing (transform and opacity), the bar;
   // the waiting slot's scene, the seaplane, the flock and the media are constant
   // over these values and written inline once
-  expect(animates.length).toBeLessThan(37);
+  expect(animates.length).toBeLessThan(35);
   expect(animates.length).toBeGreaterThanOrEqual(10);
-  expect(animates.some((composed) => composed.element === root.querySelector('[data-track="jet"]') && composed.property === 'opacity')).toBe(true);
+  expect(animates.some((composed) => composed.element === root.querySelector('[data-track="jet"]') && composed.property === 'transform')).toBe(true);
+  expect(animates.some((composed) => composed.element === root.querySelector('[data-track="jet"]') && composed.property === 'opacity')).toBe(false);
   expect(animates.some((composed) => composed.element === root.querySelector('[data-track="seaplane"]'))).toBe(false);
   expect(root.querySelector<HTMLElement>('[data-track="seaplane"]')!.style.transform).toBe(ScrollFlight.Class.PLANE_PARKED);
   expect(animates.every((composed) => composed.frames.every((frame) => frame.easing === 'linear'))).toBe(true);

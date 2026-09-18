@@ -65,8 +65,14 @@ const {
           <div class="esf-sun-pivot" data-track="sun">
             <div class="esf-sun"></div>
           </div>
-          <div class="esf-cloud esf-cloud-a" data-track="cloud-a"></div>
-          <div class="esf-cloud esf-cloud-b" data-track="cloud-b"></div>
+          <svg class="esf-cloud esf-cloud-a" data-track="cloud-a" viewBox="0 0 220 100" preserveAspectRatio="xMidYMid meet">
+            <path class="cloud-body" d="M28 82 C8 82 6 58 24 54 C20 34 44 26 58 38 C64 14 98 10 110 30 C124 14 156 18 158 42 C180 36 200 52 190 70 C204 80 192 90 176 86 Z" />
+            <path class="cloud-shade" d="M28 82 C12 84 8 70 20 66 C60 74 120 74 176 68 C196 72 192 88 176 86 Z" />
+          </svg>
+          <svg class="esf-cloud esf-cloud-b" data-track="cloud-b" viewBox="0 0 220 100" preserveAspectRatio="xMidYMid meet">
+            <path class="cloud-body" d="M28 82 C8 82 6 58 24 54 C20 34 44 26 58 38 C64 14 98 10 110 30 C124 14 156 18 158 42 C180 36 200 52 190 70 C204 80 192 90 176 86 Z" />
+            <path class="cloud-shade" d="M28 82 C12 84 8 70 20 66 C60 74 120 74 176 68 C196 72 192 88 176 86 Z" />
+          </svg>
 
           <!-- the mountains: four ridges, the far two under snow -->
           <svg class="esf-ridge esf-mountains" data-track="far" viewBox="0 0 2000 1000" preserveAspectRatio="xMidYMax slice"><path d="" /><path class="snow" d="" /></svg>
@@ -131,7 +137,7 @@ const {
           <canvas ref="flockCanvas" class="esf-flock-canvas"></canvas>
         </div>
 
-        <!-- the jet: a 3D model of CSS planes; one transform in perspective, one opacity -->
+        <!-- the jet: a 3D model of CSS planes; one transform in perspective, no fade -->
         <div class="esf-plane esf-jet" data-track="jet">
           <div class="esf-model">
             <div class="jet-fuselage"></div>
@@ -311,9 +317,9 @@ const {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -40%;
+  bottom: -24%; /* the overhang is the most a ridge can rise over a chapter (RIDGE_RISE_CQH) */
   width: 100%;
-  height: 140%;
+  height: 124%;
   will-change: transform;
 }
 .esf-scene[data-time='night'] .esf-ridge {
@@ -344,33 +350,46 @@ const {
     0 0 60px 16px rgba(200, 214, 255, 0.28),
     0 0 160px 60px rgba(170, 190, 255, 0.1);
 }
-/* clouds: soft bodies of the sky's light, each drifting by its own track */
+/* clouds: flat cartoon shapes — a body and a shade, no filter — each drifting by its own track */
 .esf-cloud {
   position: absolute;
-  height: 18%;
-  border-radius: 50%;
   will-change: transform;
-  background: radial-gradient(60% 70% at 50% 60%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.18) 45%, transparent 72%);
-  filter: blur(6px);
+  overflow: visible;
+}
+.esf-cloud .cloud-body {
+  fill: rgba(255, 255, 255, 0.92);
+}
+.esf-cloud .cloud-shade {
+  fill: rgba(150, 175, 210, 0.22);
 }
 .esf-cloud-a {
-  left: 8%;
-  top: 14%;
-  width: 34%;
+  left: 6%;
+  top: 10%;
+  width: 26%;
+  height: 14%;
 }
 .esf-cloud-b {
-  left: 52%;
-  top: 26%;
-  width: 42%;
-  height: 14%;
-  opacity: 0.75;
+  left: 58%;
+  top: 22%;
+  width: 20%;
+  height: 11%;
+  opacity: 0.85;
+}
+.esf-scene[data-time='dawn'] .esf-cloud .cloud-body,
+.esf-scene[data-time='dusk'] .esf-cloud .cloud-body {
+  fill: rgba(255, 232, 210, 0.92);
+}
+.esf-scene[data-time='dusk'] .esf-cloud .cloud-shade {
+  fill: rgba(200, 110, 90, 0.28);
 }
 .esf-scene[data-time='night'] .esf-cloud {
-  opacity: 0.25;
+  opacity: 0.3;
 }
 .esf-scene[data-theme='rainforest'] .esf-cloud {
-  opacity: 0.55;
-  filter: blur(14px);
+  opacity: 0.7;
+}
+.esf-scene[data-theme='rainforest'] .esf-cloud .cloud-body {
+  fill: rgba(225, 235, 232, 0.88);
 }
 
 /* THE BEACH */
@@ -428,11 +447,10 @@ const {
   width: 62%;
   height: 46%;
   will-change: transform;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
 .esf-scene[data-time='night'] .esf-palms,
 .esf-scene[data-time='dusk'] .esf-palms {
-  filter: brightness(0.35) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+  opacity: 0.45;
 }
 
 /* THE RAIN FOREST */
@@ -498,8 +516,9 @@ const {
   width: 260px;
   height: 60px;
   transform-style: preserve-3d;
-  will-change: transform, opacity;
-  opacity: 0;
+  /* no opacity, ever: opacity below one flattens the 3D context and the wings collapse */
+  will-change: transform;
+  transform: translate3d(-400cqw, 40cqh, -1500px); /* parked until the first write */
 }
 .esf-model {
   position: absolute;
@@ -699,7 +718,7 @@ const {
   border-radius: 18px;
   overflow: hidden;
   box-shadow:
-    0 30px 80px -20px rgba(0, 0, 0, 0.7),
+    0 20px 40px -16px rgba(0, 0, 0, 0.65),
     0 0 0 1px rgba(255, 255, 255, 0.08);
   background: #0b1020;
 }
@@ -758,8 +777,8 @@ const {
   margin: 0 auto 28px;
   padding: 18px 26px;
   border-radius: 14px;
-  background: rgba(5, 10, 24, 0.38);
-  backdrop-filter: blur(2px);
+  /* a plain translucent ground — a backdrop blur re-samples the scene under every row on every frame */
+  background: rgba(5, 10, 24, 0.5);
   color: rgba(236, 241, 250, 0.96);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
@@ -775,7 +794,6 @@ const {
   margin-bottom: 30px;
   max-width: 90%;
   background: transparent;
-  backdrop-filter: none;
   text-align: center;
 }
 .esf-row-eyebrow {

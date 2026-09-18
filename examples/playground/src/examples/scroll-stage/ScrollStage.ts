@@ -103,7 +103,7 @@ class $ScrollStage {
   /** How far a ridge can rise over a chapter, in the stage's own height: the
    *  tile's overhang below the frame, so a full chapter's rise never shows
    *  the tile's edge whatever the chapter's span in pixels. */
-  static readonly RIDGE_RISE_CQH: number = 40;
+  static readonly RIDGE_RISE_CQH: number = 24;
 
   /** The lines of a chapter, one short sentence per row. */
   static readonly LINES = [
@@ -607,7 +607,27 @@ class $ScrollStage {
   onScroll(rendered: number) {
     this.position.value = rendered;
     this.prepareScenes(rendered);
+    this.syncMedia(rendered);
     if (!this.onCompositor.value) this.writeTracks(rendered);
+  }
+
+  /** A video plays only while its interlude is present: a looping video
+   *  decodes every frame whether or not it is shown, and a held slot is
+   *  loaded a chapter before it appears and kept a chapter after it goes.
+   *  Presence is read from the model each frame — cheap, two slots — and
+   *  the element is told only on a change. */
+  syncMedia(value: number) {
+    const stage = this.stage.value;
+    if (!stage) return;
+    for (let slot = 0; slot < this.self.MEDIA_SLOTS; slot++) {
+      const ordinal = this.mediaOrdinals[slot];
+      if (!ordinal) continue;
+      const video = stage.querySelector<HTMLVideoElement>(`[data-media="${slot}"][data-kind="video"] video`);
+      if (!video) continue;
+      const present = this.interludePresence(ordinal, value) > 0;
+      if (present && video.paused) void video.play?.()?.catch?.(() => undefined);
+      else if (!present && !video.paused) video.pause?.();
+    }
   }
 
   /** The current chapter's scene in the slot of its parity, the next
@@ -654,9 +674,9 @@ class $ScrollStage {
     }
     if (video) {
       if (interlude.kind === 'video') {
+        // loaded now, played by syncMedia when its span is present
         video.src = interlude.src;
         if (interlude.poster) video.poster = interlude.poster;
-        void video.play?.()?.catch?.(() => undefined);
       } else {
         video.pause?.();
         video.removeAttribute('src');

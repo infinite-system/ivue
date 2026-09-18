@@ -8,6 +8,7 @@ Goal: A scene per chapter moves WITH the scroll on one clock — composed over t
 // domain-invariant: $ScrollStage — If the scroll plays a linear run, then the stage cuts it into pieces aligned to the run's own start on the document timeline, two in flight, the next composed as one finishes, cut short at a chapter boundary, every track interpolated through samples that lie on the run's line.
 // domain-invariant: $ScrollStage — If the run's rate changes in place, then every piece in flight takes the same rate and a piece composed after inherits it, its offset scaled by it.
 // domain-invariant: $ScrollStage — If a row carries an interlude, then its media's presence is zero until the row's span has entered most of the frame, one once the span fills it, held while the span alone is in the frame, and falling from the moment the next row enters; the interlude the frame is at or before lives in the media slot of its parity, the next in the other.
+// domain-invariant: $ScrollStage — If an interlude is a video, then it plays only while its presence is above zero and is paused otherwise, told on a change and never every frame.
 // domain-invariant: $ScrollStage — If a scroll value lies in a chapter, then that chapter's slot draws it at its progress and the other slot draws the next chapter waiting, the two opacities summing to one through the fade, and a ridge's rise is its fraction of the chapter's progress over the tile's overhang and never wraps.
 Impossible if true: A track written inline while the compositor owns the scroll.
 Impossible if true: A ridge risen by more than its fraction of the tile's overhang.
@@ -18,6 +19,7 @@ Impossible if true: A piece moving at a rate other than the run's.
 Impossible if true: An interlude's media shown while its span is outside the frame.
 Impossible if true: A media track that changes the raster's scale from one keyframe to the next.
 Impossible if true: An animation composed for a track whose value does not change over the piece.
+Impossible if true: A video decoding while its interlude is not present.
 
 === GENERATOR-DESCRIBED ===
 The stage is a table of formatters over one number, a pair of slots the
@@ -349,4 +351,45 @@ test("an interlude is pulled in as its span enters the frame, held while it cove
   expect(figure(1).querySelector('img')!.getAttribute('src')).toBe('/a.png');
   expect(figure(0).querySelector('img')!.getAttribute('src')).toBe('/b.png');
   expect(stage.interludeAt(20 * ASSUMED_ROW_PX)).toBe(3);
+});
+
+// domain-invariant: $ScrollStage — If an interlude is a video, then it plays only while its presence is above zero and is paused otherwise, told on a change and never every frame.
+// impossible-if-true: $ScrollStage — A video decoding while its interlude is not present.
+test('a video interlude plays only while present: loaded paused, played as its span enters, paused as it leaves, told once per change', () => {
+  class $Film extends ScrollStage.$Class {
+    static override readonly ITEM_COUNT: number = 20;
+    static override readonly INTERLUDES: ScrollStage.Interlude[] = [{ kind: 'video', src: '/film.mp4' }];
+    static override buildItems(): ScrollStage.Row[] {
+      return super.buildItems().map((row, index) => (index === 9 ? { ...row, interlude: this.INTERLUDES[0] } : row));
+    }
+  }
+  const stage = new (Reactive(Static($Film)))();
+  const { ASSUMED_ROW_PX } = ScrollStage.Class;
+  const root = document.createElement('div');
+  const calls: string[] = [];
+  for (const slot of [0, 1]) {
+    const figure = document.createElement('figure');
+    figure.dataset.media = String(slot);
+    const video = document.createElement('video');
+    let paused = true;
+    Object.defineProperty(video, 'paused', { get: () => paused });
+    video.play = () => { paused = false; calls.push(`play:${slot}`); return Promise.resolve(); };
+    video.pause = () => { paused = true; calls.push(`pause:${slot}`); };
+    figure.appendChild(video);
+    root.appendChild(figure);
+  }
+  stage.stage.value = root;
+  // far above: the slot is loaded, and nothing plays
+  stage.onScroll(0);
+  expect(root.querySelector<HTMLElement>('[data-media="1"]')!.dataset.kind).toBe('video');
+  expect(calls).toEqual([]);
+  // the span enters the frame: play, once, even across frames
+  stage.onScroll(9 * ASSUMED_ROW_PX - 0.2);
+  stage.onScroll(9 * ASSUMED_ROW_PX);
+  stage.onScroll(9 * ASSUMED_ROW_PX + 30);
+  expect(calls).toEqual(['play:1']);
+  // the next row has taken the frame: pause, once
+  stage.onScroll(10 * ASSUMED_ROW_PX);
+  stage.onScroll(10 * ASSUMED_ROW_PX + 50);
+  expect(calls).toEqual(['play:1', 'pause:1']);
 });
