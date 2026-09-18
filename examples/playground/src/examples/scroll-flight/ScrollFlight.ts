@@ -338,10 +338,6 @@ class $ScrollFlight extends ScrollStage.$Class {
     // the frame meter: the main thread's own frame gaps, on the strip, so a
     // stutter can be placed on the main thread or off it from the device
     onMounted(() => this.startMeter());
-    watch(
-      () => this.mediaRides.value,
-      () => this.onMediaRidesChange()
-    );
     onUnmounted(() => {
       this.flock.value?.stop();
       this.stopMeter();
@@ -352,32 +348,22 @@ class $ScrollFlight extends ScrollStage.$Class {
     return this.constructor as typeof $ScrollFlight;
   }
 
+  /** The flight's constants, hoisted once per instance for the formatters —
+   *  the paths in particular are tables a static getter builds afresh. */
+  protected readonly flightConstants = {
+    jetPath: this.self.JET_PATH,
+    seaplanePath: this.self.SEAPLANE_PATH,
+    planeParked: this.self.PLANE_PARKED,
+    flockParked: this.self.FLOCK_PARKED,
+    entryFraction: this.self.ENTRY_FRACTION,
+    palmDriftCqw: this.self.PALM_DRIFT_CQW,
+    themes: this.self.THEMES
+  };
+
   // STATE
   /** The flock renderer, once its canvas is mounted. */
   protected get flock() {
     return shallowRef<BirdFlock.Model | null>(null);
-  }
-
-  /* The media switches — a diagnostic strip (2026-09-18): the interlude's fade
-   * is choppy on the Galaxy and not on the iPhone, after its ride was made
-   * fractional, its scale removed, its clip and shadow taken off and its
-   * translate replaced by insets. Each switch isolates one remaining variable
-   * so one deploy tests them all. */
-
-  /** Whether the media rides in with its span, or holds still at the centre. */
-  get mediaRides() {
-    return ref(true);
-  }
-
-  /** Whether the media's tracks are interpolated between a piece's ends
-   *  rather than held at every step. */
-  get mediaLinear() {
-    return ref(false);
-  }
-
-  /** Whether the media shows its picture or video, or a blank box. */
-  get mediaContent() {
-    return ref(true);
   }
 
   /** The frame meter: the worst main-thread frame gap in the window, ms. */
@@ -433,7 +419,7 @@ class $ScrollFlight extends ScrollStage.$Class {
   /** The palms lean across the beach as the chapter goes by. */
   palmsTransform(slot: number, value: number): string {
     const role = this.roleOf(slot, value);
-    return `translateX(${(-role.progress * this.self.PALM_DRIFT_CQW).toFixed(3)}cqw)`;
+    return `translateX(${(-role.progress * this.flightConstants.palmDriftCqw).toFixed(3)}cqw)`;
   }
 
   /** A plane along a 3D path at a chapter's progress: a straight line in x, y
@@ -454,18 +440,33 @@ class $ScrollFlight extends ScrollStage.$Class {
    *  Parked elsewhere. */
   jetTransform(value: number): string {
     const local = this.textLocalOf(value);
-    const self = this.self;
-    if (!self.hasJet(local.chapter)) return self.PLANE_PARKED;
-    return this.planeAlong(self.JET_PATH, local.progress);
+    if (!this.hasJet(local.chapter)) return this.flightConstants.planeParked;
+    return this.planeAlong(this.flightConstants.jetPath, local.progress);
   }
 
   /** The seaplane: out of the distance, over the beach, over the chapter's
    *  text. Parked elsewhere. */
   seaplaneTransform(value: number): string {
     const local = this.textLocalOf(value);
-    const self = this.self;
-    if (!self.hasSeaplane(local.chapter)) return self.PLANE_PARKED;
-    return this.planeAlong(self.SEAPLANE_PATH, local.progress);
+    if (!this.hasSeaplane(local.chapter)) return this.flightConstants.planeParked;
+    return this.planeAlong(this.flightConstants.seaplanePath, local.progress);
+  }
+
+  /** The world of a chapter and what crosses it, through the hoisted cycle. */
+  protected themeOf(chapter: number): ScrollFlight.Theme {
+    return this.flightConstants.themes[(chapter - 1) % this.flightConstants.themes.length];
+  }
+
+  protected hasJet(chapter: number): boolean {
+    return this.themeOf(chapter) === 'mountains';
+  }
+
+  protected hasSeaplane(chapter: number): boolean {
+    return this.themeOf(chapter) === 'beach';
+  }
+
+  protected hasBirds(chapter: number): boolean {
+    return this.themeOf(chapter) !== 'mountains';
   }
 
   /** How present a crossing is: in over the entry fraction of the chapter's
@@ -474,23 +475,22 @@ class $ScrollFlight extends ScrollStage.$Class {
   crossingOpacity(value: number, present: boolean): string {
     if (!present) return '0.000';
     const local = this.textLocalOf(value);
-    const self = this.self;
-    const entry = Math.min(1, local.progress / self.ENTRY_FRACTION);
-    return (entry * (1 - self.fadeAt(local.progress))).toFixed(3);
+    const entry = Math.min(1, local.progress / this.flightConstants.entryFraction);
+    return (entry * (1 - this.fadeAt(local.progress))).toFixed(3);
   }
 
   jetOpacity(value: number): string {
-    return this.crossingOpacity(value, this.self.hasJet(this.localOf(value).chapter));
+    return this.crossingOpacity(value, this.hasJet(this.textLocalOf(value).chapter));
   }
 
   seaplaneOpacity(value: number): string {
-    return this.crossingOpacity(value, this.self.hasSeaplane(this.localOf(value).chapter));
+    return this.crossingOpacity(value, this.hasSeaplane(this.textLocalOf(value).chapter));
   }
 
   /** The flock's crossing: right to left over the chapter's text, lifting a little. */
   flockTransform(value: number): string {
     const local = this.textLocalOf(value);
-    if (!this.self.hasBirds(local.chapter)) return this.self.FLOCK_PARKED;
+    if (!this.hasBirds(local.chapter)) return this.flightConstants.flockParked;
     const progress = local.progress;
     const x = (104 - progress * 132).toFixed(3);
     const y = (16 - Math.sin(progress * Math.PI) * 7 + progress * 6).toFixed(3);
@@ -498,7 +498,7 @@ class $ScrollFlight extends ScrollStage.$Class {
   }
 
   flockOpacity(value: number): string {
-    return this.crossingOpacity(value, this.self.hasBirds(this.localOf(value).chapter));
+    return this.crossingOpacity(value, this.hasBirds(this.textLocalOf(value).chapter));
   }
 
   /** The stage's tracks, then the flight's: per slot the clouds, the island,
@@ -531,26 +531,7 @@ class $ScrollFlight extends ScrollStage.$Class {
     const flock = stage.querySelector<HTMLElement>('[data-track="flock"]');
     transform(flock, (value) => this.flockTransform(value));
     opacity(flock, (value) => this.flockOpacity(value));
-    // with the ride off, the media's transform track is left out entirely: the
-    // box then fades with one animation, like the scene slot does (the table
-    // is rebuilt for the switch)
-    if (this.mediaRides.value) return tracks;
-    return tracks.filter((track) => !(track.property === 'transform' && track.element.hasAttribute('data-media')));
-  }
-
-  /** The media's tracks follow the linear switch; every other track is held. */
-  protected override trackIsLinear(track: ScrollStage.Track): boolean {
-    return this.mediaLinear.value && track.element.hasAttribute('data-media');
-  }
-
-  /** The media holds still at the centre when the ride switch is off. */
-  override mediaTransform(slot: number, value: number): string {
-    return this.mediaRides.value ? super.mediaTransform(slot, value) : 'translateY(0.00px)';
-  }
-
-  /** The ride switch changed: the track table is rebuilt at the next write. */
-  onMediaRidesChange() {
-    this.trackCache.value = null;
+    return tracks;
   }
 
   // METHODS

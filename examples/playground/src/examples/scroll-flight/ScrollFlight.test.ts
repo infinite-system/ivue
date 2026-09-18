@@ -179,9 +179,16 @@ test("the flight has 37 tracks — the stage's 13, plus per slot 2 clouds, the i
     after: null,
     durationMs: 3 * (1000 / 120)
   } as Lenis.Sequence);
-  expect(animates.length).toBe(37);
-  expect(animates.filter((composed) => composed.property === 'opacity').length).toBe(7);
-  expect(animates.every((composed) => composed.frames.every((frame) => frame.easing === 'step-end'))).toBe(true);
+  // only the tracks that change over the values are composed: chapter 1's slot
+  // (its ridges, sun, clouds), the jet crossing (transform and opacity), the bar;
+  // the waiting slot's scene, the seaplane, the flock and the media are constant
+  // over these values and written inline once
+  expect(animates.length).toBeLessThan(37);
+  expect(animates.length).toBeGreaterThanOrEqual(10);
+  expect(animates.some((composed) => composed.element === root.querySelector('[data-track="jet"]') && composed.property === 'opacity')).toBe(true);
+  expect(animates.some((composed) => composed.element === root.querySelector('[data-track="seaplane"]'))).toBe(false);
+  expect(root.querySelector<HTMLElement>('[data-track="seaplane"]')!.style.transform).toBe(ScrollFlight.Class.PLANE_PARKED);
+  expect(animates.every((composed) => composed.frames.every((frame) => frame.easing === 'linear'))).toBe(true);
   // the scene carries the world and its time; the snow, the island and the canopies are drawn
   const slot1 = root.querySelector<HTMLElement>('[data-slot="1"]')!;
   expect(slot1.dataset.theme).toBe('mountains');

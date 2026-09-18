@@ -101,8 +101,9 @@ test('every seam names the x axis', () => {
   expect(instance.probeTransform(-42)).toBe('translateX(-42px)');
   expect(instance.probeAxisDelta({ deltaX: 5, deltaY: 9 })).toBe(5);
   expect(instance.probePaddingProps()).toEqual(['padding-left', 'padding-right']);
-  expect(instance.probeThumbProps()).toEqual(['width', 'left']);
-  expect(Object.keys(instance.scrollbarThumbStyle)).toEqual(['width', 'left']);
+  expect(instance.probeThumbProps()).toEqual(['width', 'translateX']);
+  expect(Object.keys(instance.scrollbarThumbStyle)).toEqual(['width', 'transform']);
+  expect(instance.scrollbarThumbStyle.transform).toMatch(/^translateX\(/);
   expect(instance.selectionAxis).toBe('x');
   expect(instance.frameTouchAction).toBe('pan-y');
   const scrolled = document.createElement('div');

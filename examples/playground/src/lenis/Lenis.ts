@@ -225,8 +225,12 @@ class $Lenis {
   ): Animation | null {
     if (typeof element.animate !== 'function' || values.length < 2) return null;
     const duration = durationMs ?? (values.length - 1) * stepMs;
+    // linear: every value a keyframe at its even offset, interpolated to the
+    // next — two values are a line, more are a polyline through samples;
+    // held: a snapped step per distinct value, for a layer written on the grid
+    const last = values.length - 1;
     const frames: Keyframe[] = linear
-      ? [values[0], values[values.length - 1]].map((value) => ({ [property]: formatOf(value) }))
+      ? values.map((value, index) => ({ [property]: formatOf(value), offset: index / last, easing: 'linear' }))
       : this.heldKeyframes(values, formatOf, property);
     const animation = element.animate(frames, { duration, fill: 'forwards' });
     // aligned to another sequence, this one runs at that sequence's rate: its

@@ -475,8 +475,13 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
   }
 
   /** Scrollbar-thumb style properties along the main axis: [size, offset]. */
+  /** The thumb's size property and the translate function along the axis:
+   *  the thumb MOVES by a transform in its own size — a `top` moved every
+   *  frame of a creep laid out and painted on the main thread every frame,
+   *  and its eased relocation, a transition on `top`, could never reach the
+   *  compositor. A transform costs nothing per frame and its easing composites. */
   protected get axisThumbProps(): readonly [string, string] {
-    return ['height', 'top'];
+    return ['height', 'translateY'];
   }
 
   // invariant: The frame is never natively panned along its own axis (examples/playground/src/examples/virtual-scroller/virtual-scroller.invariants.md)
@@ -859,10 +864,14 @@ class $VirtualScroller<T extends VirtualScroller.BaseItem> {
    *  names come from the axis seam, so the same geometry renders as
    *  height/top on the vertical track and width/left on the horizontal. */
   get scrollbarThumbStyle() {
-    const [sizeProp, offsetProp] = this.axisThumbProps;
+    const [sizeProp, translate] = this.axisThumbProps;
+    const fraction = this.scrollbarThumbFraction;
+    // the offset along the track, as a fraction of the thumb's own size: a
+    // percentage translate is relative to the element itself
+    const offset = fraction ? (this.scrollbarProgress * (1 - fraction)) / fraction : 0;
     return {
-      [sizeProp]: this.scrollbarThumbFraction * 100 + '%',
-      [offsetProp]: this.scrollbarProgress * (1 - this.scrollbarThumbFraction) * 100 + '%'
+      [sizeProp]: fraction * 100 + '%',
+      transform: `${translate}(${offset * 100}%)`
     };
   }
 

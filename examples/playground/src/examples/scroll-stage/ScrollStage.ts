@@ -74,11 +74,29 @@ class $ScrollStage {
 
   /** How much of a linear run the stage's tracks take at a time. The scroll
    *  layer plays a creep as ONE run (it carries text, and a text layer
-   *  re-rasters where an animation ends), but a held track needs a keyframe
-   *  per step, so the stage cuts the run into pieces of this length, each
-   *  aligned to the run's own start on the document timeline, two in flight. */
+   *  re-rasters where an animation ends); the stage cuts the run into pieces
+   *  of this length, each aligned to the run's own start on the document
+   *  timeline, two in flight, and cut short at a chapter boundary so nothing
+   *  steps inside a piece. */
   static get TRACK_CHUNK_MS() {
     return 2000;
+  }
+
+  /** How often a piece samples its tracks, in the run's own time. A stage
+   *  track is a smooth function of the value between chapter boundaries and
+   *  is INTERPOLATED between samples: a track held at the compositor's step
+   *  judders on a panel presented at a lower rate (one, two or three steps a
+   *  frame) by its speed — the text's run is interpolated for the same
+   *  reason — and a decoration layer is not written on the grid, so it has
+   *  no reason to be held. Eight samples a piece are a polyline no eye can
+   *  tell from the curve, and a fraction of the keyframes. */
+  static get TRACK_SAMPLE_MS() {
+    return 250;
+  }
+
+  /** A glide's tracks interpolate every this-many of its own samples. */
+  static get GLIDE_SUBSAMPLE() {
+    return 4;
   }
 
   /** The drawing box of a ridge's path: twice as wide as tall, scaled
@@ -222,6 +240,41 @@ class $ScrollStage {
   /** Which interlude (by ordinal, 1-based) each media slot currently holds — 0 until written. */
   protected readonly mediaOrdinals: number[] = [0, 0];
 
+  /** The batch memos: a piece formats every track over the same values, and
+   *  every formatter derives the same chapter, text end and interlude span
+   *  from the scroller's lookups — once per batch, not once per keyframe.
+   *  (Measured: 37 tracks × 240 keyframes re-deriving all of it was a 200 ms
+   *  main-thread stall per piece on a throttled CPU.) */
+  protected readonly memo = {
+    local: new Map<number, ScrollStage.Local>(),
+    textLocal: new Map<number, ScrollStage.Local>(),
+    textEnd: new Map<number, number>(),
+    span: new Map<number, { start: number; end: number } | null>()
+  };
+
+  /** The constants the formatters read, hoisted once per instance: a
+   *  formatter runs for every sample of every track, and a static getter
+   *  read through `self` on each call — some allocating a fresh table —
+   *  was a measurable share of a piece's cost. A subclass's overrides are
+   *  honoured: they resolve through `self` at construction. */
+  protected readonly constants = {
+    slots: this.self.SLOTS,
+    mediaSlots: this.self.MEDIA_SLOTS,
+    chapterRows: this.self.CHAPTER_ROWS,
+    assumedRowPx: this.self.ASSUMED_ROW_PX,
+    ridgeRiseCqh: this.self.RIDGE_RISE_CQH,
+    sunApexCqh: this.self.SUN_APEX_CQH,
+    sunBandStartCqw: this.self.SUN_BAND_START_CQW,
+    sunBandCqw: this.self.SUN_BAND_CQW,
+    fadeFraction: this.self.FADE_FRACTION,
+    interludeFadeFraction: this.self.INTERLUDE_FADE_FRACTION
+  };
+
+  /** The interlude rows, derived once per list. */
+  protected get interludeRowsFor() {
+    return shallowRef<{ items: ScrollStage.Row[]; rows: Array<{ index: number; interlude: ScrollStage.Interlude }> } | null>(null);
+  }
+
 
   // STATE
   get items() {
@@ -316,10 +369,14 @@ class $ScrollStage {
 
   /** The rows that carry an interlude, in order: index and interlude. */
   get interludeRows(): Array<{ index: number; interlude: ScrollStage.Interlude }> {
+    const items = this.items.value;
+    const known = this.interludeRowsFor.value;
+    if (known?.items === items) return known.rows;
     const rows: Array<{ index: number; interlude: ScrollStage.Interlude }> = [];
-    this.items.value.forEach((row, index) => {
+    items.forEach((row, index) => {
       if (row.interlude) rows.push({ index, interlude: row.interlude });
     });
+    this.interludeRowsFor.value = { items, rows };
     return rows;
   }
 
@@ -337,7 +394,7 @@ class $ScrollStage {
 
   chapterAt(value: number): number {
     const at = this.scroller.value?.getIndexAtPosition(Math.max(0, value));
-    const fallback = Math.floor(Math.max(0, value) / this.self.ASSUMED_ROW_PX);
+    const fallback = Math.floor(Math.max(0, value) / this.constants.assumedRowPx);
     const index = Math.min(at?.index ?? fallback, this.items.value.length - 1);
     return this.items.value[index]?.chapter ?? 1;
   }
@@ -345,10 +402,8 @@ class $ScrollStage {
   /** Where a chapter's first row sits: the scroller's anchored position when
    *  geometry knows it, the assumed row height before. */
   chapterStart(chapter: number): number {
-    const firstIndex = (chapter - 1) * this.self.CHAPTER_ROWS;
-    return (
-      this.scroller.value?.getAnchoredPosition(firstIndex) ?? firstIndex * this.self.ASSUMED_ROW_PX
-    );
+    const firstIndex = (chapter - 1) * this.constants.chapterRows;
+    return this.scroller.value?.getAnchoredPosition(firstIndex) ?? firstIndex * this.constants.assumedRowPx;
   }
 
   chapterSpan(chapter: number): number {
@@ -359,11 +414,20 @@ class $ScrollStage {
    *  one, else where the next chapter starts. A crossing plays out over the
    *  text, so it is done before the interlude takes the frame. */
   textEnd(chapter: number): number {
-    const first = (chapter - 1) * this.self.CHAPTER_ROWS;
-    const last = Math.min(this.items.value.length, first + this.self.CHAPTER_ROWS);
+    const memo = this.memo.textEnd.get(chapter);
+    if (memo !== undefined) return memo;
+    const end = this.textEndOf(chapter);
+    this.memo.textEnd.set(chapter, end);
+    return end;
+  }
+
+  protected textEndOf(chapter: number): number {
+    const items = this.items.value;
+    const first = (chapter - 1) * this.constants.chapterRows;
+    const last = Math.min(items.length, first + this.constants.chapterRows);
     for (let index = first; index < last; index++) {
-      if (!this.items.value[index]?.interlude) continue;
-      return this.scroller.value?.getAnchoredPosition(index) ?? index * this.self.ASSUMED_ROW_PX;
+      if (!items[index]?.interlude) continue;
+      return this.scroller.value?.getAnchoredPosition(index) ?? index * this.constants.assumedRowPx;
     }
     return this.chapterStart(chapter + 1);
   }
@@ -371,29 +435,52 @@ class $ScrollStage {
   /** A scroll value inside its chapter's TEXT: the progress runs 0 to 1 over
    *  the rows before the interlude, and holds 1 through the interlude. */
   textLocalOf(value: number): ScrollStage.Local {
+    const memo = this.memo.textLocal.get(value);
+    if (memo) return memo;
     const chapter = this.chapterAt(value);
     const start = this.chapterStart(chapter);
     const travel = Math.max(0, value - start);
     const span = Math.max(1, this.textEnd(chapter) - start);
-    return { chapter, progress: Math.min(1, travel / span), travel };
+    const local = { chapter, progress: Math.min(1, travel / span), travel };
+    this.memo.textLocal.set(value, local);
+    return local;
   }
 
   /** A scroll value as a chapter and its progress through it, 0 to 1. */
   localOf(value: number): ScrollStage.Local {
+    const memo = this.memo.local.get(value);
+    if (memo) return memo;
     const chapter = this.chapterAt(value);
     const travel = Math.max(0, value - this.chapterStart(chapter));
-    return { chapter, progress: Math.min(1, travel / this.chapterSpan(chapter)), travel };
+    const local = { chapter, progress: Math.min(1, travel / this.chapterSpan(chapter)), travel };
+    this.memo.local.set(value, local);
+    return local;
+  }
+
+  /** A batch of formatting begins — a piece, a glide, an inline write: the
+   *  memos are cleared, because geometry may have moved since the last. */
+  protected beginBatch() {
+    this.memo.local.clear();
+    this.memo.textLocal.clear();
+    this.memo.textEnd.clear();
+    this.memo.span.clear();
   }
 
   /** Where an interlude row spans: its anchored start and its measured
    *  size, the assumed row before geometry knows it. */
   interludeSpan(ordinal: number): { start: number; end: number } | null {
+    const memo = this.memo.span.get(ordinal);
+    if (memo !== undefined) return memo;
     const row = this.interludeRows[ordinal - 1];
-    if (!row) return null;
-    const scroller = this.scroller.value;
-    const start = scroller?.getAnchoredPosition(row.index) ?? row.index * this.self.ASSUMED_ROW_PX;
-    const next = scroller?.getAnchoredPosition(row.index + 1) ?? start + this.self.ASSUMED_ROW_PX;
-    return { start, end: Math.max(start + 1, next) };
+    let span: { start: number; end: number } | null = null;
+    if (row) {
+      const scroller = this.scroller.value;
+      const start = scroller?.getAnchoredPosition(row.index) ?? row.index * this.constants.assumedRowPx;
+      const next = scroller?.getAnchoredPosition(row.index + 1) ?? start + this.constants.assumedRowPx;
+      span = { start, end: Math.max(start + 1, next) };
+    }
+    this.memo.span.set(ordinal, span);
+    return span;
   }
 
   /** How present an interlude is at a scroll value: 0 until its span has
@@ -404,7 +491,7 @@ class $ScrollStage {
     const span = this.interludeSpan(ordinal);
     if (!span) return 0;
     const frame = this.frameSpan;
-    const fade = frame * this.self.INTERLUDE_FADE_FRACTION;
+    const fade = frame * this.constants.interludeFadeFraction;
     const threshold = frame - fade;
     // how much of the span has entered from the bottom; how much is still ahead of the top
     const entered = value + frame - span.start;
@@ -431,7 +518,7 @@ class $ScrollStage {
    *  parity matches, else the next one, waiting under the fade. */
   roleOf(slot: number, value: number): ScrollStage.Role {
     const local = this.localOf(value);
-    if (local.chapter % this.self.SLOTS === slot) return { ...local, current: true };
+    if (local.chapter % this.constants.slots === slot) return { ...local, current: true };
     return { chapter: local.chapter + 1, progress: 0, travel: 0, current: false };
   }
 
@@ -439,9 +526,15 @@ class $ScrollStage {
    *  fraction while the next fades in. */
   opacityOf(slot: number, value: number): string {
     const local = this.localOf(value);
-    const fade = this.self.fadeAt(local.progress);
-    const current = local.chapter % this.self.SLOTS === slot;
+    const fade = this.fadeAt(local.progress);
+    const current = local.chapter % this.constants.slots === slot;
     return (current ? 1 - fade : fade).toFixed(3);
+  }
+
+  /** The static fade, through the hoisted fraction. */
+  protected fadeAt(progress: number): number {
+    const fadeStart = 1 - this.constants.fadeFraction;
+    return Math.min(1, Math.max(0, (progress - fadeStart) / this.constants.fadeFraction));
   }
 
   /** A ridge's transform in a slot: its fraction of the chapter's progress
@@ -449,15 +542,15 @@ class $ScrollStage {
    *  never wraps and never shows its edge. */
   ridgeTransform(slot: number, ridge: ScrollStage.Ridge, value: number): string {
     const role = this.roleOf(slot, value);
-    const rise = (role.progress * ridge.factor * this.self.RIDGE_RISE_CQH).toFixed(3);
+    const rise = (role.progress * ridge.factor * this.constants.ridgeRiseCqh).toFixed(3);
     return `translateY(-${rise}cqh)`;
   }
 
   /** The sun in a slot: across the open band on an arc, once per chapter. */
   sunTransform(slot: number, value: number): string {
     const role = this.roleOf(slot, value);
-    const x = (this.self.SUN_BAND_START_CQW + role.progress * this.self.SUN_BAND_CQW).toFixed(3);
-    const y = (-Math.sin(role.progress * Math.PI) * this.self.SUN_APEX_CQH).toFixed(3);
+    const x = (this.constants.sunBandStartCqw + role.progress * this.constants.sunBandCqw).toFixed(3);
+    const y = (-Math.sin(role.progress * Math.PI) * this.constants.sunApexCqh).toFixed(3);
     return `translate(${x}cqw, ${y}cqh)`;
   }
 
@@ -584,7 +677,7 @@ class $ScrollStage {
   prepareScenes(value: number) {
     const chapter = this.chapterAt(value);
     for (const target of [chapter, chapter + 1]) {
-      const slot = target % this.self.SLOTS;
+      const slot = target % this.constants.slots;
       if (this.slotChapters[slot] === target) continue;
       this.slotChapters[slot] = target;
       this.drawScene(slot, target);
@@ -601,7 +694,7 @@ class $ScrollStage {
     const ordinal = this.interludeAt(value);
     for (const target of [ordinal, ordinal + 1]) {
       if (target > rows.length) continue;
-      const slot = target % this.self.MEDIA_SLOTS;
+      const slot = target % this.constants.mediaSlots;
       if (this.mediaOrdinals[slot] === target) continue;
       this.mediaOrdinals[slot] = target;
       this.drawInterlude(slot, rows[target - 1].interlude);
@@ -651,11 +744,13 @@ class $ScrollStage {
   }
 
   writeTracks(value: number) {
-    for (const track of this.trackList()) {
-      const formatted = track.formatOf(value);
-      if (track.property === 'opacity') track.element.style.opacity = formatted;
-      else track.element.style.transform = formatted;
-    }
+    this.beginBatch();
+    for (const track of this.trackList()) this.writeTrack(track, track.formatOf(value));
+  }
+
+  protected writeTrack(track: ScrollStage.Track, formatted: string) {
+    if (track.property === 'opacity') track.element.style.opacity = formatted;
+    else track.element.style.transform = formatted;
   }
 
   /** The scroll handed the compositor a sequence: compose every track over
@@ -685,7 +780,14 @@ class $ScrollStage {
       if (sequence.animation.startTime !== null) this.composePiece(flight);
       else sequence.animation.ready?.then(() => this.onRunStarted(flight));
     } else {
-      flight.pieces.push({ atMs: 0, animations: this.composeTracks(sequence.values, sequence.animation, 0, null) });
+      // a glide: its own samples, every few of them, interpolated over its duration
+      const step = this.self.GLIDE_SUBSAMPLE;
+      const values = sequence.values.filter((_sample, index) => index % step === 0);
+      if ((sequence.values.length - 1) % step !== 0) values.push(sequence.values[sequence.values.length - 1]);
+      flight.pieces.push({
+        atMs: 0,
+        animations: this.composeTracks(values, sequence.animation, 0, sequence.durationMs)
+      });
     }
     this.onCompositor.value = true;
     sequence.animation.addEventListener(
@@ -724,50 +826,64 @@ class $ScrollStage {
     atMs: number,
     durationMs: number | null
   ): Animation[] {
+    this.beginBatch();
     const animations: Animation[] = [];
     for (const track of this.trackList()) {
+      // a track constant over the values — the waiting slot's whole scene, a
+      // parked plane, the media between interludes — is one inline write, not
+      // an animation: the browser parses no keyframes for it, and the write
+      // holds exactly the value the compositor would have held. The test is
+      // exact: every formatted value equal to the first.
+      const first = track.formatOf(values[0]);
+      let constant = true;
+      for (let index = 1; index < values.length && constant; index++) constant = track.formatOf(values[index]) === first;
+      if (constant) {
+        this.writeTrack(track, first);
+        continue;
+      }
       const animation = Lenis.Class.composeSequence(track.element, values, track.formatOf, {
         alongside: scroll,
         offsetMs: atMs,
         durationMs,
         property: track.property,
-        // a track may ask to be interpolated between a piece's two ends instead
-        // of held at every step — only over a linear run, where the ends are the line
-        linear: durationMs !== null && this.trackIsLinear(track)
+        linear: true
       });
       if (animation) animations.push(animation);
     }
     return animations;
   }
 
-  /** Whether a track is composed linear between a piece's ends rather than
-   *  held at every step. Held by default: a scene steps at a chapter
-   *  boundary. A subclass may answer for a track whose values are a line. */
-  protected trackIsLinear(_track: ScrollStage.Track): boolean {
-    return false;
-  }
-
-  /** The next piece of a linear run: its values sampled at the keyframe
-   *  step from the run's two endpoints, composed to begin where the piece
-   *  before ends. When a piece finishes it is dropped and one more is
-   *  composed, so two are always in flight. */
+  /** The next piece of a linear run: its values sampled along the run's
+   *  line, composed to begin where the piece before ends and cut short at
+   *  the next chapter boundary, so a piece never spans the step a boundary
+   *  is. When a piece finishes it is dropped and one more is composed, so
+   *  two are always in flight. */
   protected composePiece(flight: ScrollStage.Flight) {
     const { sequence } = flight;
     if (flight.nextPieceMs >= sequence.durationMs) return;
-    const stepMs = Lenis.Class.KEYFRAME_MS;
+    const self = this.self;
     const fromMs = flight.nextPieceMs;
-    const toMs = Math.min(sequence.durationMs, fromMs + this.self.TRACK_CHUNK_MS);
     const [start, end] = [sequence.values[0], sequence.values[sequence.values.length - 1]];
     const valueAt = (ms: number) => start + ((end - start) * ms) / sequence.durationMs;
+    const msAt = (value: number) => ((value - start) * sequence.durationMs) / (end - start);
+    let toMs = Math.min(sequence.durationMs, fromMs + self.TRACK_CHUNK_MS);
+    let nextMs = toMs;
+    // the boundary ahead: the piece ends a hair before it, the next begins on it
+    const chapter = this.chapterAt(valueAt(fromMs));
+    const boundaryMs = end > start ? msAt(this.chapterStart(chapter + 1)) : Infinity;
+    if (boundaryMs > fromMs && boundaryMs < toMs) {
+      nextMs = boundaryMs;
+      toMs = boundaryMs - 1;
+    }
     const values: number[] = [];
-    for (let ms = fromMs; ms < toMs; ms += stepMs) values.push(valueAt(ms));
+    for (let ms = fromMs; ms < toMs; ms += self.TRACK_SAMPLE_MS) values.push(valueAt(ms));
     values.push(valueAt(toMs));
     const piece: ScrollStage.Piece = {
       atMs: fromMs,
       animations: this.composeTracks(values, sequence.animation, fromMs, toMs - fromMs)
     };
     flight.pieces.push(piece);
-    flight.nextPieceMs = toMs;
+    flight.nextPieceMs = nextMs;
     piece.animations[0]?.addEventListener('finish', () => this.onPieceFinish(flight, piece), { once: true });
   }
 

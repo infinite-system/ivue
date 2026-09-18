@@ -94,11 +94,14 @@ class $BirdFlock {
     out = new Float32Array(birds.length * 6 * 3),
     startle: BirdFlock.Startle | null = null
   ): Float32Array {
+    // hoisted out of the per-bird loop: the static tables are built per read
+    const { burst, flapBoost } = this.STARTLE;
+    const spanUnit = this.SPAN;
     const grip = startle ? this.startleAt(timeMs - startle.atMs) : 0;
-    const flapPhase = timeMs * 0.001 * this.FLAP_HZ * (1 + grip * this.STARTLE.flapBoost) * Math.PI * 2;
+    const flapPhase = timeMs * 0.001 * this.FLAP_HZ * (1 + grip * flapBoost) * Math.PI * 2;
     let at = 0;
     for (const bird of birds) {
-      const span = this.SPAN * bird.size;
+      const span = spanUnit * bird.size;
       const flap = Math.sin(flapPhase + bird.phase);
       const bob = Math.sin(flapPhase * 0.5 + bird.phase) * span * 0.08;
       // a startled bird bursts away from the point, the near ones hardest
@@ -108,7 +111,7 @@ class $BirdFlock {
         const dx = bird.x - startle.x;
         const dy = bird.y - startle.y;
         const distance = Math.hypot(dx, dy) || 0.001;
-        const push = (grip * this.STARTLE.burst) / (0.35 + distance);
+        const push = (grip * burst) / (0.35 + distance);
         x += (dx / distance) * push;
         y += (dy / distance) * push;
       }

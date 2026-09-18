@@ -3,9 +3,9 @@
 Goal: A scene per chapter moves WITH the scroll on one clock — composed over the scroll's own sequence when the compositor draws it, written in the same callback when a callback does — so scenery can never drift against the text, and never repeats.
 [A glide plays on the compositor as held snapped keyframes](../../lenis/lenis.invariants.md#a-glide-plays-on-the-compositor-as-held-snapped-keyframes)
 [The creep plays on the compositor as one linear run](../../lenis/lenis.invariants.md#the-creep-plays-on-the-compositor-as-one-linear-run)
-// domain-invariant: $ScrollStage — If the scroll hands the compositor a sequence, then every track is composed over the same values alongside the same animation, and no track is written inline while it plays.
+// domain-invariant: $ScrollStage — If the scroll hands the compositor a sequence, then every track that changes over its values is composed over the same values alongside the same animation, a track constant over them is written inline once, and no changing track is written inline while it plays.
 // domain-invariant: $ScrollStage — If a scroll sequence ends, is promoted or is interrupted, then its tracks are cancelled with it, and when nothing plays the tracks are written from the rendered position again.
-// domain-invariant: $ScrollStage — If the scroll plays a linear run, then the stage cuts it into held pieces aligned to the run's own start on the document timeline, two in flight, the next composed as one finishes, and every piece's values lie on the run's line.
+// domain-invariant: $ScrollStage — If the scroll plays a linear run, then the stage cuts it into pieces aligned to the run's own start on the document timeline, two in flight, the next composed as one finishes, cut short at a chapter boundary, every track interpolated through samples that lie on the run's line.
 // domain-invariant: $ScrollStage — If the run's rate changes in place, then every piece in flight takes the same rate and a piece composed after inherits it, its offset scaled by it.
 // domain-invariant: $ScrollStage — If a row carries an interlude, then its media's presence is zero until the row's span has entered most of the frame, one once the span fills it, held while the span alone is in the frame, and falling from the moment the next row enters; the interlude the frame is at or before lives in the media slot of its parity, the next in the other.
 // domain-invariant: $ScrollStage — If a scroll value lies in a chapter, then that chapter's slot draws it at its progress and the other slot draws the next chapter waiting, the two opacities summing to one through the fade, and a ridge's rise is its fraction of the chapter's progress over the tile's overhang and never wraps.
@@ -17,6 +17,7 @@ Impossible if true: A piece of a run whose start is not the run's start plus its
 Impossible if true: A piece moving at a rate other than the run's.
 Impossible if true: An interlude's media shown while its span is outside the frame.
 Impossible if true: A media track that changes the raster's scale from one keyframe to the next.
+Impossible if true: An animation composed for a track whose value does not change over the piece.
 
 === GENERATOR-DESCRIBED ===
 The stage is a table of formatters over one number, a pair of slots the
@@ -148,11 +149,12 @@ test('a chapter owns a slot: its ridges move by their fraction of the chapter tr
 });
 
 // invariant: A glide plays on the compositor as held snapped keyframes (examples/playground/src/lenis/lenis.invariants.md)
-// domain-invariant: $ScrollStage — If the scroll hands the compositor a sequence, then every track is composed over the same values alongside the same animation, and no track is written inline while it plays.
+// domain-invariant: $ScrollStage — If the scroll hands the compositor a sequence, then every track that changes over its values is composed over the same values alongside the same animation, a track constant over them is written inline once, and no changing track is written inline while it plays.
 // domain-invariant: $ScrollStage — If a scroll sequence ends, is promoted or is interrupted, then its tracks are cancelled with it, and when nothing plays the tracks are written from the rendered position again.
 // impossible-if-true: $ScrollStage — A track written inline while the compositor owns the scroll.
 // impossible-if-true: $ScrollStage — A track left playing after the scroll animation it was composed over was cancelled with nothing else in flight.
-test('a sequence composes every track over the same values alongside the scroll animation, draws the scenes it will reach, and a cancel takes it all down', async () => {
+// impossible-if-true: $ScrollStage — An animation composed for a track whose value does not change over the piece.
+test('a sequence composes every changing track over its samples alongside the scroll animation, writes the constant ones once, and a cancel takes it all down', async () => {
   const { stage, root, animates } = stageWithSlots();
   const scroll = new FakeAnimation([], 500);
   const values = [0, 30, 55, 75, 90, 100];
@@ -163,19 +165,24 @@ test('a sequence composes every track over the same values alongside the scroll 
     after: null,
     durationMs: 5 * (1000 / 120)
   } as Lenis.Sequence);
-  // 2 slots × (opacity + 4 ridges + sun) + the bar
-  expect(animates.length).toBe(13);
+  // only the tracks that CHANGE over the values are composed: the current slot's
+  // 4 ridges and its sun, and the bar. The rest — both opacities (the fade has
+  // not begun), the waiting slot's whole scene — are constant over the values
+  // and written inline once, so the browser parses no keyframes for them
+  expect(animates.length).toBe(6);
   expect(stage.onCompositor.value).toBe(true);
   for (const composed of animates) {
     expect(Number(composed.options.duration)).toBeCloseTo(5 * (1000 / 120), 3);
     expect(composed.frames[0].offset).toBe(0);
     expect(composed.frames[composed.frames.length - 1].offset).toBe(1);
-    expect(composed.frames.every((frame) => frame.easing === 'step-end')).toBe(true);
+    expect(composed.frames.every((frame) => frame.easing === 'linear')).toBe(true);
   }
-  // the slot roots animate opacity; everything else transform
-  expect(animates.filter((composed) => composed.property === 'opacity').length).toBe(2);
-  // the scenes for chapter 1 and 2 were drawn: each slot's far ridge has its chapter's path
+  expect(animates.filter((composed) => composed.property === 'opacity').length).toBe(0);
   const slots = [...root.querySelectorAll<HTMLElement>('[data-slot]')];
+  expect(Number(slots[1].style.opacity)).toBe(1); // jsdom normalizes the written '1.000'
+  expect(Number(slots[0].style.opacity)).toBe(0);
+  expect(slots[0].querySelector<HTMLElement>('[data-track="sun"]')!.style.transform).toBe(stage.sunTransform(0, 0));
+  // the scenes for chapter 1 and 2 were drawn: each slot's far ridge has its chapter's path
   const far = ScrollStage.Class.RIDGES[0];
   expect(slots[1].querySelector('[data-track="far"] path')!.getAttribute('d')).toBe(
     ScrollStage.Class.ridgePath(1, far)
@@ -194,14 +201,14 @@ test('a sequence composes every track over the same values alongside the scroll 
   expect(stage.onCompositor.value).toBe(false);
   stage.onScroll(40);
   expect(sun.style.transform).toBe(stage.sunTransform(1, 40));
-  expect(Number(slots[1].style.opacity)).toBe(1); // jsdom normalizes the written '1.000'
+  expect(Number(slots[1].style.opacity)).toBe(1);
 });
 
 // invariant: The creep plays on the compositor as one linear run (examples/playground/src/lenis/lenis.invariants.md)
-// domain-invariant: $ScrollStage — If the scroll plays a linear run, then the stage cuts it into held pieces aligned to the run's own start on the document timeline, two in flight, the next composed as one finishes, and every piece's values lie on the run's line.
+// domain-invariant: $ScrollStage — If the scroll plays a linear run, then the stage cuts it into pieces aligned to the run's own start on the document timeline, two in flight, the next composed as one finishes, cut short at a chapter boundary, every track interpolated through samples that lie on the run's line.
 // impossible-if-true: $ScrollStage — A piece of a run whose start is not the run's start plus its offset.
-test("a linear run is cut into held pieces aligned to the run's start, two in flight, the next composed as one finishes, all on the run's line", async () => {
-  const { stage, animates } = stageWithSlots();
+test("a linear run is cut into pieces aligned to the run's start, two in flight, the next composed as one finishes, each track interpolated through samples on the run's line", async () => {
+  const { stage, root, animates } = stageWithSlots();
   const { TRACK_CHUNK_MS } = ScrollStage.Class;
   const run = new FakeAnimation([], 5000); // startTime 1000: known, so the queued piece aligns at once
   stage.onSequence({
@@ -211,27 +218,32 @@ test("a linear run is cut into held pieces aligned to the run's start, two in fl
     after: null,
     durationMs: 5000
   } as Lenis.Sequence);
-  // two pieces × 13 tracks, each held, each aligned to the run's start plus its offset
-  expect(animates.length).toBe(26);
-  const first = animates.slice(0, 13);
-  const second = animates.slice(13);
-  expect(first.every((composed) => composed.frames.every((frame) => frame.easing === 'step-end'))).toBe(true);
-  expect(first.every((composed) => composed.animation.startTime === 1000)).toBe(true);
-  expect(second.every((composed) => composed.animation.startTime === 1000 + TRACK_CHUNK_MS)).toBe(true);
+  // two pieces in flight, each interpolated through its samples, each aligned to the run's start plus its offset;
+  // only the tracks that change over a piece are composed (the current slot's
+  // ridges and sun, the bar), the constant rest written inline once
+  const piece = (startTime: number) => animates.filter((composed) => composed.animation.startTime === startTime);
+  const first = piece(1000);
+  const second = piece(1000 + TRACK_CHUNK_MS);
+  expect(first.length).toBeGreaterThanOrEqual(5);
+  expect(first.length + second.length).toBe(animates.length);
+  expect(first.every((composed) => composed.frames.every((frame) => frame.easing === 'linear'))).toBe(true);
   expect(first.every((composed) => Number(composed.options.duration) === TRACK_CHUNK_MS)).toBe(true);
+  // a piece samples its tracks every TRACK_SAMPLE_MS of the run: 2000 ms is 9 samples
+  expect(first.every((composed) => composed.frames.length === TRACK_CHUNK_MS / ScrollStage.Class.TRACK_SAMPLE_MS + 1)).toBe(true);
   // a piece's values lie on the run's line: the bar's last keyframe at 2000 ms is scaleX of 200 px
-  const bar = first[first.length - 1];
+  const bar = first.find((composed) => composed.element === root.querySelector('[data-track="progress"]'))!;
   expect(bar.frames[bar.frames.length - 1].transform).toBe(stage.progressTransform(200));
   // the first piece finishes: it goes, and a third is composed after the second
   first[0].animation.dispatchEvent(new Event('finish'));
-  expect(animates.length).toBe(39);
-  expect(animates.slice(26).every((composed) => composed.animation.startTime === 1000 + 2 * TRACK_CHUNK_MS)).toBe(true);
+  const third = piece(1000 + 2 * TRACK_CHUNK_MS);
+  expect(third.length).toBeGreaterThanOrEqual(5);
   expect(first.every((composed) => composed.animation.cancelled)).toBe(true);
   // the run ends at 5000: the third piece is the remainder, and no piece follows it
-  expect(Number(animates[26].options.duration)).toBe(1000);
-  animates[13].animation.dispatchEvent(new Event('finish'));
-  animates[26].animation.dispatchEvent(new Event('finish'));
-  expect(animates.length).toBe(39);
+  expect(third.every((composed) => Number(composed.options.duration) === 1000)).toBe(true);
+  const total = animates.length;
+  second[0].animation.dispatchEvent(new Event('finish'));
+  third[0].animation.dispatchEvent(new Event('finish'));
+  expect(animates.length).toBe(total);
   // the run's cancel takes the stage down and it writes inline again
   run.cancel();
   await nextTick();
@@ -251,20 +263,21 @@ test("a rate change on the run reaches every piece in flight, and a later piece 
     after: null,
     durationMs: 8000
   } as Lenis.Sequence);
-  expect(animates.length).toBe(26);
+  const before = animates.length;
   run.updatePlaybackRate(2);
   stage.onSequenceRate({ animation: run as unknown as Animation, rate: 2 });
   expect(animates.every((composed) => composed.animation.playbackRate === 2)).toBe(true);
   // the first piece finishes: the third is composed at the run's rate, its offset in the run's own time halved on the timeline
   animates[0].animation.dispatchEvent(new Event('finish'));
-  const third = animates.slice(26);
-  expect(third.length).toBe(13);
+  const third = animates.slice(before);
+  expect(third.length).toBeGreaterThanOrEqual(5);
   expect(third.every((composed) => composed.animation.playbackRate === 2)).toBe(true);
   expect(third.every((composed) => composed.animation.startTime === 1000 + (2 * TRACK_CHUNK_MS) / 2)).toBe(true);
 });
 
 // domain-invariant: $ScrollStage — If a row carries an interlude, then its media's presence is zero until the row's span has entered most of the frame, one once the span fills it, held while the span alone is in the frame, and falling from the moment the next row enters; the interlude the frame is at or before lives in the media slot of its parity, the next in the other.
 // impossible-if-true: $ScrollStage — An interlude's media shown while its span is outside the frame.
+// impossible-if-true: $ScrollStage — A media track that changes the raster's scale from one keyframe to the next.
 test("an interlude is pulled in as its span enters the frame, held while it covers it, gone as it leaves; the slots hold this one and the next", () => {
   class $Gallery extends ScrollStage.$Class {
     static override readonly ITEM_COUNT: number = 40;

@@ -21,9 +21,6 @@ const {
   items,
   onCompositor,
   speed,
-  mediaRides,
-  mediaLinear,
-  mediaContent,
   // element refs
   scroller,
   stage: stageElement,
@@ -168,7 +165,7 @@ const {
         </div>
 
         <!-- the interludes: two media slots the list makes room for; a picture, or a video on its own clock -->
-        <figure v-for="slot in [0, 1]" :key="slot" class="esf-media" :class="{ blank: !mediaContent, still: !mediaRides }" :data-media="slot">
+        <figure v-for="slot in [0, 1]" :key="slot" class="esf-media" :data-media="slot">
           <img class="esf-media-image" alt="" decoding="async" />
           <video class="esf-media-video" muted loop playsinline preload="metadata"></video>
           <figcaption class="esf-media-caption" data-caption></figcaption>
@@ -221,10 +218,6 @@ const {
         <input v-model.number="speed" type="range" min="1" max="80" step="1" />
         <span class="esf-speed-value">{{ flight.speedLabel }}</span>
       </label>
-      <!-- the media switches: one deploy, every remaining variable of the choppy fade -->
-      <label class="esf-switch"><input v-model="mediaRides" type="checkbox" /> media rides</label>
-      <label class="esf-switch"><input v-model="mediaLinear" type="checkbox" /> media linear</label>
-      <label class="esf-switch"><input v-model="mediaContent" type="checkbox" /> media content</label>
     </div>
   </DemoBox>
 </template>
@@ -695,11 +688,7 @@ const {
 /* THE INTERLUDES — media pinned in the frame while its row's span crosses it */
 .esf-media {
   position: absolute;
-  /* centred by its insets — no `translate` property: a layer carrying the
-     individual translate property under a composited `transform` animation
-     can fall off the compositor onto the main thread on Android Chrome, and a
-     main-thread animation is a choppy one. (2026-09-18, the second diagnostic:
-     the rounded clip and shadow are still off from the first.) */
+  /* centred by its insets: the track's transform is the only transform */
   left: 14%;
   right: 14%;
   top: 18%;
@@ -707,18 +696,12 @@ const {
   margin: 0;
   opacity: 0;
   will-change: transform, opacity;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 30px 80px -20px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
   background: #0b1020;
-}
-/* held still: no transform track and no will-change for it — one fading layer, like the scene slot */
-.esf-media.still {
-  will-change: opacity;
-}
-.esf-media.blank .esf-media-image,
-.esf-media.blank .esf-media-video {
-  visibility: hidden;
-}
-.esf-media.blank {
-  background: #3b4a7a;
 }
 .esf-media-image,
 .esf-media-video {
@@ -841,16 +824,6 @@ const {
   min-width: 52px;
   color: var(--vp-c-text-1);
   font-variant-numeric: tabular-nums;
-}
-.esf-switch {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
-  color: var(--vp-c-text-2);
-}
-.esf-switch input {
-  accent-color: #6366f1;
 }
 @media (prefers-reduced-motion: reduce) {
   .esf-waves,

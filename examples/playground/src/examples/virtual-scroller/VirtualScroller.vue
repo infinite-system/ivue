@@ -157,10 +157,13 @@ defineExpose(virtualScroller as VirtualScroller.Instance<T>);
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.45);
   /* eased relocation: a fast flick or loop-wrap moves the thumb far in
-     one frame — glide it instead of teleporting */
+     one frame — glide it instead of teleporting. The thumb moves by a
+     transform, so the glide composites and a frame of the creep lays
+     nothing out. */
+  will-change: transform;
   transition:
     background 0.15s ease,
-    top 0.2s ease-out,
+    transform 0.2s ease-out,
     height 0.2s ease-out;
 }
 .virtual-scroller__thumb.dragging {

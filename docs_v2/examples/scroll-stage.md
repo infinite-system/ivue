@@ -115,12 +115,16 @@ onSequence(sequence: Lenis.Sequence) {
 }
 ```
 
-A held keyframe per distinct value, always: a chapter boundary inside a
-sequence is a step in which slot is current, and only held keyframes step
-with it. The scenes the sequence will reach are drawn before it starts,
-so a chapter change mid-glide finds its slot ready. When the scroll's
-animation ends, is promoted, or is interrupted, its tracks go with it and
-the stage is written from the rendered position again.
+Every track is interpolated between samples taken along the scroll's
+sequence: a reading run is cut into two-second pieces sampled every
+250 ms, a glide's own samples are taken every fourth, and a piece is cut
+short at a chapter boundary so nothing steps inside one. Held keyframes
+belong to the text layer, which is written on the device grid; a scenery
+layer is not, and a track held at the compositor's step judders by its
+speed on a panel presented at a lower rate. A track whose value does not
+change over a piece is written once and composes nothing. When the
+scroll's animation ends, is promoted, or is interrupted, its tracks go
+with it and the stage is written from the rendered position again.
 
 ## Why this and not a scroll-trigger library
 

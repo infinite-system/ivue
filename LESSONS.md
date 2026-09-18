@@ -1857,3 +1857,23 @@ keyframe, and a change of scale on a raster the size of a picture is a
 re-raster — one per frame, with the shadow — where a translation only
 moves the raster. A held track over a large layer translates and fades;
 it never scales.
+
+## A decoration layer is interpolated, never held; and a piece costs its keyframes (2026-09-18)
+
+The interlude's fade was choppy on the Galaxy and not on the iPhone with
+every property of the layer cleared — clip, shadow, scale, translate,
+content — and the frame meter finally placed it: a 208 ms main-thread
+stall every piece, and a held track. Two facts, one cause each. The stall
+was composition: 37 tracks × 240 keyframes a piece, every formatter
+re-deriving its chapter through the scroller, and the thumb laying out
+every frame by a `top` percentage with a transition on it. Memoised per
+batch, constant tracks written once, the thumb on a transform, tracks
+sampled every 250 ms and interpolated: 35,000 keyframes in nine seconds
+became 2,000 and the steady creep has no long task. The judder was the
+holding: a track held at the compositor's 120 Hz step, presented at
+60 Hz, shows one, two or three steps a frame, by its speed — invisible
+on a ridge at 2 px/s, plain on a picture riding at the text's 14 px/s,
+never on a 120 Hz iPhone. Held keyframes are for a layer written on the
+grid; everything else interpolates. And hoist the formatters' constants:
+a static getter read through `self` per sample, building its table each
+time, was a measurable share of a piece.

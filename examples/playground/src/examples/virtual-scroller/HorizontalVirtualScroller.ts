@@ -52,7 +52,7 @@ class $HorizontalVirtualScroller<
   }
 
   protected override get axisThumbProps(): readonly [string, string] {
-    return ['width', 'left'];
+    return ['width', 'translateX'];
   }
 
   /** Vertical pans are the page's; horizontal ones are the strip's. */

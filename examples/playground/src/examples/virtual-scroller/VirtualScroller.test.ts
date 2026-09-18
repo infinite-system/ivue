@@ -676,9 +676,11 @@ test('the thumb is the container’s share of the content with a floor, progress
   expect(long.instance.scrollbarThumbFraction).toBeCloseTo(100 / 300, 6);
   long.instance.setScrollPosition(-100);
   expect(long.instance.scrollbarProgress).toBe(0.5);
+  // the thumb moves by a transform in its own height: halfway along a track it
+  // covers a third of is one thumb-height down
   expect(long.instance.scrollbarThumbStyle).toEqual({
     height: `${(100 / 300) * 100}%`,
-    top: `${0.5 * (1 - 100 / 300) * 100}%`
+    transform: `translateY(${((0.5 * (1 - 100 / 300)) / (100 / 300)) * 100}%)`
   });
   expect(long.instance.scrollbarVisible).toBe(true);
   long.unmount();
