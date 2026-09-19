@@ -1,50 +1,77 @@
 /*
 === GENERATOR ===
-Goal: The flock breathes on its own clock — the wingbeat and a startle are functions of TIME and the hand, never of the scroll — so the birds can be handed to the GPU while their place in the sky stays a track of the scroll.
-// domain-invariant: $BirdFlock — If the wings beat, then they beat by time and never by the scroll: the flock's vertices at a time are a pure function of the formation, the time and a startle, so the same time draws the same wings.
-// domain-invariant: $BirdFlock — If a hand comes down on the frame, then the flock bursts away from that point and regroups on its own clock, the near birds hardest, with the scroll untouched.
-Impossible if true: A wingbeat that changes with the scroll position.
-Impossible if true: A startled bird pushed toward the hand.
-Impossible if true: A flock that does not regroup.
+Goal: The flock's painter runs where the canvas can be held without costing the main thread — a worker with an OffscreenCanvas when the browser can hand one over, the main thread otherwise — and the controller carries only what a worker cannot read: the layout's size and where a tap landed.
+// domain-invariant: $BirdFlock — If the browser can hand a canvas to a worker, then the painter runs there: the canvas is transferred once, the worker is told the size in device pixels on start and on every resize, a tap as a point in the canvas's unit square, and stop; otherwise the painter runs in this thread with the same size and points.
+Impossible if true: A flock drawn on the main thread in a browser that can hand its canvas to a worker.
+Impossible if true: A worker asked to measure a layout.
 
 === GENERATOR-DESCRIBED ===
-The GPU part is held pure: the formation, the vertices at a time and the
-startle's grip are static functions, so the wingbeat and the startle are
-specified without a context.
+The controller is specified with a fake worker that records what it is
+told, and a canvas stub that can be handed over; the fallback with neither.
 */
 
-import { expect, test } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import { BirdFlock } from './BirdFlock';
 
-// domain-invariant: $BirdFlock — If the wings beat, then they beat by time and never by the scroll: the flock's vertices at a time are a pure function of the formation, the time and a startle, so the same time draws the same wings.
-// impossible-if-true: $BirdFlock — A wingbeat that changes with the scroll position.
-test('the wings beat by time — pure and repeatable — and the formation is the same flock every time', () => {
-  const birds = BirdFlock.Class.formation();
-  expect(birds.length).toBe(BirdFlock.Class.COUNT);
-  expect(BirdFlock.Class.formation()).toEqual(birds);
-  const at = (time: number) => BirdFlock.Class.vertices(birds, time, 1);
-  expect(at(0).length).toBe(birds.length * 18);
-  expect(at(100)).toEqual(at(100));
-  // the wingtip (vertex 1 of the left wing, y at index 4) moves between two times
-  expect(at(0)[4]).not.toBe(at(90)[4]);
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
-// domain-invariant: $BirdFlock — If a hand comes down on the frame, then the flock bursts away from that point and regroups on its own clock, the near birds hardest, with the scroll untouched.
-// impossible-if-true: $BirdFlock — A startled bird pushed toward the hand.
-// impossible-if-true: $BirdFlock — A flock that does not regroup.
-test('a startle pushes the flock away from the point, the near birds hardest, then lets it regroup', () => {
-  const birds = BirdFlock.Class.formation();
-  const at = (time: number, startle: BirdFlock.Startle | null = null) =>
-    BirdFlock.Class.vertices(birds, time, 1, undefined, startle);
-  const lead = birds[0];
-  const startle = { x: lead.x - 0.2, y: lead.y, atMs: 1000 };
-  const restX = at(1000)[0];
-  expect(at(1000, startle)[0]).toBe(restX); // not yet
-  expect(at(1150, startle)[0]).toBeGreaterThan(restX + 0.05);
-  // a far bird is pushed less than the lead
-  const farIndex = (birds.length - 1) * 18;
-  const farPush = Math.abs(at(1150, startle)[farIndex] - at(1150)[farIndex]);
-  expect(farPush).toBeLessThan(at(1150, startle)[0] - restX);
-  // and back
-  expect(Math.abs(at(9000, startle)[0] - at(9000)[0])).toBeLessThan(0.002);
+// domain-invariant: $BirdFlock — If the browser can hand a canvas to a worker, then the painter runs there: the canvas is transferred once, the worker is told the size in device pixels on start and on every resize, a tap as a point in the canvas's unit square, and stop; otherwise the painter runs in this thread with the same size and points.
+// impossible-if-true: $BirdFlock — A flock drawn on the main thread in a browser that can hand its canvas to a worker.
+// impossible-if-true: $BirdFlock — A worker asked to measure a layout.
+test('with a worker at hand the canvas is handed over once and the worker is told size, taps and stop — never asked to measure', () => {
+  const posted: Array<{ message: Record<string, unknown>; transfer: unknown[] | undefined }> = [];
+  let terminated = 0;
+  class FakeWorker {
+    postMessage(message: Record<string, unknown>, transfer?: unknown[]) {
+      posted.push({ message, transfer });
+    }
+    terminate() {
+      terminated++;
+    }
+  }
+  vi.stubGlobal('Worker', FakeWorker);
+  const offscreen = { width: 0, height: 0 } as unknown as OffscreenCanvas;
+  let transfers = 0;
+  const canvas = document.createElement('canvas');
+  Object.defineProperty(canvas, 'clientWidth', { value: 300 });
+  Object.defineProperty(canvas, 'clientHeight', { value: 200 });
+  canvas.getBoundingClientRect = () => ({ left: 100, top: 50, width: 300, height: 200 }) as DOMRect;
+  (canvas as unknown as { transferControlToOffscreen: () => OffscreenCanvas }).transferControlToOffscreen = () => {
+    transfers++;
+    return offscreen;
+  };
+  vi.stubGlobal('HTMLCanvasElement', { prototype: { transferControlToOffscreen: () => offscreen } });
+  vi.spyOn(BirdFlock.$Class, 'createWorker').mockImplementation(() => new FakeWorker() as unknown as Worker);
+  Object.defineProperty(window, 'devicePixelRatio', { value: 2, configurable: true });
+
+  const flock = new BirdFlock.Class(canvas);
+  flock.start();
+  expect(transfers).toBe(1);
+  expect(flock.running.value).toBe(true);
+  expect(posted[0]).toEqual({ message: { type: 'start', canvas: offscreen, width: 600, height: 400 }, transfer: [offscreen] });
+  // a second start hands nothing over again
+  flock.start();
+  expect(transfers).toBe(1);
+  // a tap at the canvas's centre-right: a point in its unit square, mapped here
+  flock.startleAt(100 + 225, 50 + 100);
+  expect(posted[1].message).toEqual({ type: 'startle', unitX: 0.75, unitY: 0.5 });
+  // a resize: device pixels again
+  flock.onResize();
+  expect(posted[2].message).toEqual({ type: 'resize', width: 600, height: 400 });
+  flock.stop();
+  expect(posted[3].message).toEqual({ type: 'stop' });
+  expect(terminated).toBe(1);
+  expect(flock.running.value).toBe(false);
+});
+
+test('without a worker the painter runs in this thread — and with no WebGL, as in this test, the flock does not run', () => {
+  vi.stubGlobal('Worker', undefined);
+  const canvas = document.createElement('canvas');
+  const flock = new BirdFlock.Class(canvas);
+  expect(BirdFlock.$Class.canOffload).toBe(false);
+  flock.start();
+  expect(flock.running.value).toBe(false); // jsdom has no WebGL: the painter's setup declines
+  flock.stop();
 });
