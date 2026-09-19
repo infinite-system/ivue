@@ -1,5 +1,5 @@
 ---
-title: 'Example: Scroll Flight — three worlds, two planes in 3D, a flock on the GPU, and pictures the list makes room for'
+title: 'Example: Scroll Stage — scenes on scroll: three worlds, two planes in 3D, a flock on the GPU, and pictures the list makes room for'
 description: "The scroll stage extended into a flight through three worlds: mountains under snow, a beach with palms and a sea, a rain forest in the rain, each at its own time of day. A jet flies into the screen and a seaplane out of it, both built in real 3D from CSS planes; a flock of birds is drawn by WebGL and scatters at a tap. Between chapters the list makes room for a picture or a video, pulled in as the empty span fills the frame, held, and gone as the next paragraph arrives. Every scroll-linked layer is a transform the compositor plays alongside the scroll's own sequence."
 aside: false
 pageClass: benchmarks-wide examples-page examples-bleed
@@ -11,7 +11,7 @@ import LazyCodeGroup from '../.vitepress/theme/components/LazyCodeGroup.vue'
 import ExampleScrollFlight from '../.vitepress/theme/components/examples/ExampleScrollFlight.vue'
 </script>
 
-# Scroll flight: three worlds, two planes, a flock, and pictures the list makes room for
+# Scroll stage: scenes on scroll
 
 <ClientOnly>
   <ExampleScrollFlight />
@@ -29,10 +29,13 @@ reads the scroll position.
 
 ## Two clocks, split by what moves with what
 
-The [scroll stage](/examples/scroll-stage) established the rule: a layer
-that moves with the scroll is a track over the scroll's own sequence, so
-the compositor samples it and the text on one vsync and they cannot drift.
-The flight keeps that rule and adds the other half of it. A wingbeat does
+The rule the whole stage stands on: a layer that moves with the scroll is
+a track over the scroll's own sequence, so the compositor samples it and
+the text on one vsync and they cannot drift. The [virtual
+scroller](/examples/virtual-scroller) moved its glide and its reading
+creep to the compositor for exactly that reason; the story is in
+[99.7% and 100% are worlds apart](/blog/99-7-and-100-are-worlds-apart).
+The stage keeps that rule and adds the other half of it. A wingbeat does
 not move with the scroll. Nor does rain, or a propeller, or a video. They
 move with time, so each gets a clock of its own: a WebGL canvas drawing
 the flock every frame, a CSS animation on the rain and the propeller, the
@@ -46,6 +49,24 @@ video element's own playback. The split is by what a motion is linked to:
 - **Time-linked, on their own frame.** The wingbeat, a startle, the rain,
   the waves, the propeller, the video. The layer they live on is moved as
   one; what happens inside it is its own business.
+
+## A scene per chapter, and why not a parallax
+
+The first version of this stage was a single parallax: layers wrapping at
+their pattern's period over the whole list. It was wrong at the root. A
+horizon has one skyline, and a layer that wraps stacks skyline over
+skyline up the sky, which is exactly what it looked like. Taller tiles
+would only have stretched the interval between the same mistake.
+
+A scene must be bounded. Each chapter owns one: a seeded skyline and a
+palette nobody drew by hand, ridges that rise by their fraction of the
+chapter's progress over the tile's own overhang, so nothing wraps and no
+edge shows whatever the chapter's span in pixels, and a sun that rises
+and sets inside that chapter. Two slots alternate, the current chapter in
+the slot of its parity and the next one waiting in the other, so sixty
+chapters cost two scenes in the DOM. The fade between them is a
+compositor track like the rest: an opacity that goes from 1 to 0 over the
+chapter's last 22% while the other slot goes from 0 to 1.
 
 ## The planes are real 3D
 
