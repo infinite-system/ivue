@@ -1877,3 +1877,14 @@ never on a 120 Hz iPhone. Held keyframes are for a layer written on the
 grid; everything else interpolates. And hoist the formatters' constants:
 a static getter read through `self` per sample, building its table each
 time, was a measurable share of a piece.
+
+## Judge scroll feel on the built site, never on dev (2026-09-19)
+
+Dev mode puts logging and lazy module loads on the main thread, and a
+main-thread stall is the one thing that can still look like a scroll
+fault once presentation is on the compositor. Served from the docs'
+built output (`npx serve docs_v2/.vitepress/dist -l 5188`), the AI chat
+and the scroll flight read as native parity on the Galaxy at 60 Hz and
+the iPhone at 120 Hz — the reading that marked the six presentation
+records in `lenis.invariants.md` established. Dev is the substrate plus
+noise; a feel judgement made there is a judgement of the noise.

@@ -218,6 +218,19 @@ needs a new trial of the timing question:
   its handoff — the same continuity rule that made the glide's release
   invisible.
 
+## Judged
+
+2026-09-19, on the built site — a static server over the docs' output,
+because dev mode's logging and module loads sit on the main thread and a
+main-thread stall is the one thing that can still look like a scroll
+fault — on the Galaxy S22 Ultra at 60 Hz and the iPhone 16 Pro Max at
+120 Hz, on two pages that share nothing but the mechanism: the AI chat
+(ten thousand fetched rows, selection, autoplay) and the scroll flight
+(35 composed tracks, interludes, 3D crossings, a worker-painted flock).
+The reader's word on both was native parity. That is the cross-domain
+survival the method asks for: the six records above are established,
+not tuned to one page. Judgement from here on is made on the built site.
+
 ## Open
 
 - Whether Chrome votes the panel's full rate for the compositor sequence

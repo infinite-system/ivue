@@ -98,15 +98,15 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 
 - Holding the refresh vote from the page with a 1px compositor animation (`eac-refresh-hold`, in `22083d3f`, out in `9426026a`): on the Galaxy S22 Ultra with it running, every glide frame stayed at 16.7 ms.
 
-**Evidence:** Frame logs copied from the docs feel strip (`ExampleFeelToggle.ts`, `buildReport`) on 2026-09-17. Galaxy S22 Ultra: a glide from 37.8 px per frame to 0, constant deceleration, every gap 16.7 ms, no dropped frame; 8.3 ms gaps only under the finger and at the copy tap. iPhone 16 Pro Max: 16 to 17 ms gaps with Safari's default; 8 to 9 ms with the flag off.
+**Evidence:** Frame logs copied from the docs feel strip (`ExampleFeelToggle.ts`, `buildReport`) on 2026-09-17. Galaxy S22 Ultra: a glide from 37.8 px per frame to 0, constant deceleration, every gap 16.7 ms, no dropped frame; 8.3 ms gaps only under the finger and at the copy tap. iPhone 16 Pro Max: 16 to 17 ms gaps with Safari's default; 8 to 9 ms with the flag off. Judged established 2026-09-19 on the BUILT site (a static server over the docs' output — dev mode's logging and module loads on the main thread had been masking the substrate) on a Galaxy S22 Ultra at 60 Hz and an iPhone 16 Pro Max at 120 Hz, on two pages built on the same mechanism — the AI chat (ten thousand fetched rows, selection, autoplay) and the scroll flight (35 tracks, interludes, 3D crossings): the reader's word on both was native parity.
 
 **Impossible if true:** A JavaScript glide on a stock Safari or a lifted-finger Android Chrome logging 8 ms gaps throughout. A per-frame move column that is exact and a glide that still reads blurrier than native for a reason inside this integrator.
 
 **Verification:** on the device, the feel strip's meter at rest and a copied log across a glide: the gap column.
 
-**Status:** provisional
+**Status:** established
 
-**Last refined:** 2026-09-17
+**Last refined:** 2026-09-19
 
 ## Chosen invariants
 
@@ -148,7 +148,7 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
   - The line-hop that had motivated the first snap was the row-height error (`wrapperScale` over a rounded `offsetHeight`), not the fraction. That finding stands.
 - A snap of the target, or anywhere before the write — it discards the gesture's sub-pixel (see Mechanism): a drag re-targets from the finger each frame, and a rounded target walked the content under the thumb in whole steps.
 
-**Evidence:**
+**Evidence:** Judged established 2026-09-19 on the BUILT site (a static server over the docs' output — dev mode's logging and module loads on the main thread had been masking the substrate) on a Galaxy S22 Ultra at 60 Hz and an iPhone 16 Pro Max at 120 Hz, on two pages built on the same mechanism — the AI chat (ten thousand fetched rows, selection, autoplay) and the scroll flight (35 tracks, interludes, 3D crossings): the reader's word on both was native parity.
 
 - Judged by hand on 2026-09-16 at the slow tail of a glide, eyes on a text line, on an iPhone and a Galaxy S22 Ultra: fraction against device from the docs feel strip (`ExampleFeelToggle.ts`, `pickPixels`), mounted rows and heights unchanged. The device write is crisp; the fraction shimmers.
 - Mounting was cleared first, the same night, with an experiment never committed: a window-hysteresis knob in `computeVisibleItems` that kept the mounted range while the rows the viewport needed stayed 40 rows inside it, the chat list padded to 200 so a glide inside the range mounted nothing. Both phones: no difference from the shipped 6. Removed in place.
@@ -158,9 +158,9 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 
 **Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "device-pixel grid|drag|brakes"` — the write is on the grid, the target is not rounded, the finger's fractional delta reaches the target.
 
-**Status:** provisional
+**Status:** established
 
-**Last refined:** 2026-09-16
+**Last refined:** 2026-09-19
 
 ### The frame write leaves the layer promoted
 
@@ -174,15 +174,15 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 
 - Keeping the reset on Safari unconditionally — the state from `98385b1c` (2026-07-13, grep `willChange = \`auto\``) until `204cd89c` (2026-09-16). The two observations behind it were never re-checked after the render-bias rebasing capped the translate and the write moved to the grid, and the cost was a full raster on every frame. Reopened from the docs feel strip, on against off, on an iPhone: a glide over the chat and a slow drag into rows mounting past the fold, none left blank.
 
-**Evidence:** Judged by hand on an iPhone on 2026-09-16 from the docs feel strip, reset on against off, with a slow drag into rows mounting past the fold: none left blank. Test: "the paint nudge cycles will-change on WebKit and is a no-op elsewhere" (the scroller's autoscroll nudge, which stays) shows what the cycle is; `setScroll` writes no `will-change` unless the option is on.
+**Evidence:** Judged by hand on an iPhone on 2026-09-16 from the docs feel strip, reset on against off, with a slow drag into rows mounting past the fold: none left blank. Test: "the paint nudge cycles will-change on WebKit and is a no-op elsewhere" (the scroller's autoscroll nudge, which stays) shows what the cycle is; `setScroll` writes no `will-change` unless the option is on. Judged established 2026-09-19 on the BUILT site (a static server over the docs' output — dev mode's logging and module loads on the main thread had been masking the substrate) on a Galaxy S22 Ultra at 60 Hz and an iPhone 16 Pro Max at 120 Hz, on two pages built on the same mechanism — the AI chat (ten thousand fetched rows, selection, autoplay) and the scroll flight (35 tracks, interludes, 3D crossings): the reader's word on both was native parity.
 
 **Impossible if true:** A `will-change` write from `setScroll` with the option unset. A row mounted during a glide on iOS that stays blank until the finger lifts.
 
 **Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "device-pixel grid"` — the write is a transform write alone.
 
-**Status:** provisional
+**Status:** established
 
-**Last refined:** 2026-09-16
+**Last refined:** 2026-09-19
 
 ### A frame advances by the reported gap
 
@@ -196,15 +196,15 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 
 - Stepping by whole panel intervals — the mean of a 12-gap window, the count rounded past a 0.65 threshold, a switch detector (`frameStep`, `intervalOf`, `recordGap`, in `c7174f48`, out the same night): built on the premise that Safari's timestamps are jittered and the vsync even. The log after the change showed the moves perfectly even through the 13/3 pairs (7.21, 7.13, 7.04 px …) and the reader saw MORE nudging on the iPhone 16 Pro Max at 120 Hz, which is only consistent with honest timestamps: even steps at uneven moments put content 4–8 ms off its own frame. The premise was wrong; the log that "convicted" it (moves following gaps) was describing correct behaviour.
 
-**Evidence:** Two frame logs from an iPhone 16 Pro Max at 120 Hz on 2026-09-17: before, moves proportional to the reported gaps (50.9 px after a 13, 10.8 after a 3, on a 30 px baseline); after the stepping, moves even and the glide judged worse by eye. Test: "the same motion reports the same speed at 60 Hz and at 120".
+**Evidence:** Two frame logs from an iPhone 16 Pro Max at 120 Hz on 2026-09-17: before, moves proportional to the reported gaps (50.9 px after a 13, 10.8 after a 3, on a 30 px baseline); after the stepping, moves even and the glide judged worse by eye. Test: "the same motion reports the same speed at 60 Hz and at 120". Judged established 2026-09-19 on the BUILT site (a static server over the docs' output — dev mode's logging and module loads on the main thread had been masking the substrate) on a Galaxy S22 Ultra at 60 Hz and an iPhone 16 Pro Max at 120 Hz, on two pages built on the same mechanism — the AI chat (ten thousand fetched rows, selection, autoplay) and the scroll flight (35 tracks, interludes, 3D crossings): the reader's word on both was native parity.
 
 **Impossible if true:** A frame advanced by a time other than the gap its callback reported, within the budget. A glide whose content lags or leads its own callback's moment by design.
 
 **Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "same motion"`
 
-**Status:** provisional
+**Status:** established
 
-**Last refined:** 2026-09-17
+**Last refined:** 2026-09-19
 
 ### A glide plays on the compositor as held snapped keyframes
 
@@ -219,15 +219,15 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 - Stepping the JavaScript-timed glide by an assumed panel interval (`c7174f48`, out in `f6a1bcf9`): even steps at uneven moments — see "A frame advances by the reported gap".
 - Interpolated (unheld) keyframes: the compositor would present fractions at its phase and the slow-tail shimmer would return.
 
-**Evidence:** Judged by hand on 2026-09-17 on a Galaxy S22 Ultra and an iPhone 16 Pro Max (60 Hz and 120 Hz), on the chat and the 1M-row example: more stable than the JavaScript-timed glide on both, the reader's own word "perfection"; on 2026-09-18 the iPhone at 120 Hz with the flag off, on the 1M-row example, judged good as well. Headless: a flick hands over 140 keyframes (friction) or 309 (exponential, from 509 before merging), the inline transform untouched while it plays, the layer at the model's end value when it finishes; build 0.04–0.13 ms, parse 0.2–0.4 ms per flick. Tests: "the compositor keyframes are the remaining curve of either glide model, from the current value to the target", "held keyframes merge equal snapped neighbours and keep the first and last steps at their offsets".
+**Evidence:** Judged by hand on 2026-09-17 on a Galaxy S22 Ultra and an iPhone 16 Pro Max (60 Hz and 120 Hz), on the chat and the 1M-row example: more stable than the JavaScript-timed glide on both, the reader's own word "perfection"; on 2026-09-18 the iPhone at 120 Hz with the flag off, on the 1M-row example, judged good as well. Headless: a flick hands over 140 keyframes (friction) or 309 (exponential, from 509 before merging), the inline transform untouched while it plays, the layer at the model's end value when it finishes; build 0.04–0.13 ms, parse 0.2–0.4 ms per flick. Tests: "the compositor keyframes are the remaining curve of either glide model, from the current value to the target", "held keyframes merge equal snapped neighbours and keep the first and last steps at their offsets". Judged established 2026-09-19 on the BUILT site (a static server over the docs' output — dev mode's logging and module loads on the main thread had been masking the substrate) on a Galaxy S22 Ultra at 60 Hz and an iPhone 16 Pro Max at 120 Hz, on two pages built on the same mechanism — the AI chat (ten thousand fetched rows, selection, autoplay) and the scroll flight (35 tracks, interludes, 3D crossings): the reader's word on both was native parity.
 
 **Impossible if true:** An inline transform write during a compositor glide. A compositor glide whose last keyframe is not the model's target. A handoff (grab, wheel, shift) that shows a value the compositor was not showing.
 
 **Verification:** `npx vitest run examples/playground/src/lenis/Lenis.test.ts -t "compositor keyframes|held keyframes"`; on a device, the feel strip's compositor switch against `off`.
 
-**Status:** provisional
+**Status:** established
 
-**Last refined:** 2026-09-17
+**Last refined:** 2026-09-19
 
 ### The creep plays on the compositor as one linear run
 
@@ -237,7 +237,7 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 
 **Mechanism:** The same as the glide's: a sequence authored for presentation moments has no timing error. The creep is fractional and linear because its speed is below one device pixel per frame (the scope boundary on the grid record). It is one run because the layer carries text, and a text layer is re-rasterised where one animation ends and the next begins: Chrome snaps the raster's translation to the pixel grid at that commit, so every boundary is a 1 px shift of the whole layer. A run to the end has no boundary. The tracks a stage composes over the run are cut into pieces by the stage — those layers carry no text — aligned to the run's own start on the document timeline, never chained, and interpolated between samples rather than held: a track held at the compositor's step judders by its speed on a panel presented at a lower rate, and only a layer written on the grid has a reason to be held.
 
-**Evidence:** On the Galaxy S22 Ultra, 2026-09-18, during the creep on the flight page: a 1 px shift of the whole layer every 2 s with 2000 ms chained chunks; every 5 s with 5000 ms chunks (`2431c358`, the diagnostic); none on the iPhone. Headless on the 1M example, 2026-09-17, the chained form: the next chunk queued at a negative current time while the current played, no inline write while the compositor owned the layer. Spec: `ScrollStage.test.ts` holds the pieces aligned to the run's start plus their offsets.
+**Evidence:** On the Galaxy S22 Ultra, 2026-09-18, during the creep on the flight page: a 1 px shift of the whole layer every 2 s with 2000 ms chained chunks; every 5 s with 5000 ms chunks (`2431c358`, the diagnostic); none on the iPhone. Headless on the 1M example, 2026-09-17, the chained form: the next chunk queued at a negative current time while the current played, no inline write while the compositor owned the layer. Spec: `ScrollStage.test.ts` holds the pieces aligned to the run's start plus their offsets. Judged established 2026-09-19 on the BUILT site (a static server over the docs' output — dev mode's logging and module loads on the main thread had been masking the substrate) on a Galaxy S22 Ultra at 60 Hz and an iPhone 16 Pro Max at 120 Hz, on two pages built on the same mechanism — the AI chat (ten thousand fetched rows, selection, autoplay) and the scroll flight (35 tracks, interludes, 3D crossings): the reader's word on both was native parity.
 
 **Impossible if true:** A visible seam during a creep short of ten minutes. A creep frame written inline while a run plays. A run started while a flick's glide owns the layer. A run ended by a speed change. A stage piece that begins anywhere but the run's start plus its offset, or moving at a rate other than the run's.
 
@@ -245,9 +245,9 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 
 **Verification:** `npx vitest run src/examples/virtual-scroller -t "creep"` and `npx vitest run src/examples/scroll-stage`; on a device, autoplay on the flight page with the compositor switch on: no periodic shift of the paragraphs.
 
-**Status:** provisional
+**Status:** established
 
-**Last refined:** 2026-09-18
+**Last refined:** 2026-09-19
 
 ### A flick under friction stops where its throw runs out
 
