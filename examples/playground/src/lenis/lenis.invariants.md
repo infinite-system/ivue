@@ -258,13 +258,13 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 
 **Mechanism:** Native scroll views recognise a pan only after a threshold — Android's touch slop is 8 dp, iOS's pan gesture about 10 pt — so the wobble of a finger settling never moves the content, and once recognised they track the finger exactly. The fork's touch path emitted the first move's whole delta, so a settling finger nudged the content and the start of every drag read as the finger's tremor; the reader named it as the last thing between the scroller and native. Beginning from the slop's edge rather than the landing point is what keeps the start continuous: the content is exactly where the finger's travel beyond the threshold puts it.
 
-**Evidence:** `VirtualScroll.test.ts` holds the settle, the crossing's delta, the 1:1 after it, the re-arm on a new touch, a flick's first move less the slop, and the knob. Judged on the phones: pending the reader's word after the next push.
+**Evidence:** `VirtualScroll.test.ts` holds the settle, the crossing's delta, the 1:1 after it, the re-arm on a new touch, a flick's first move less the slop, and the knob. Judged 2026-09-19 on the built site on the phones, the AI chat page: a resting finger rolled under the slop moves nothing, and a drag starts under the finger without a jump — the reader's word was that it works.
 
 **Impossible if true:** A finger settling inside the slop that moves the content. A drag that begins with a jump the size of the slop. A flick whose first move is lost to the slop.
 
 **Verification:** `npx vitest run src/lenis/VirtualScroll`; on a phone, rest a finger on the chat and roll it without dragging — nothing moves; then drag — the content starts under the finger without a jump.
 
-**Status:** provisional
+**Status:** established
 
 **Last refined:** 2026-09-19
 
