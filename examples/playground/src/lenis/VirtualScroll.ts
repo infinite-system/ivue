@@ -11,9 +11,16 @@ class $VirtualScroll {
   /** The listeners must be able to preventDefault. */
   protected static readonly LISTENER_OPTIONS: AddEventListenerOptions = { passive: false };
 
+  /** The touch slop, CSS px: how far a finger must travel from where it
+   *  landed before a drag begins — native's guard against the wobble of a
+   *  finger settling (Android's touch slop is 8 dp, iOS's pan threshold
+   *  about 10 pt). The drag then begins from the crossing point, so the
+   *  content never jumps by the slop. */
+  static readonly TOUCH_SLOP_PX: number = 8;
+
   constructor(
     protected element: HTMLElement,
-    protected options = { wheelMultiplier: 1, touchMultiplier: 1 }
+    protected options: VirtualScroll.Options = { wheelMultiplier: 1, touchMultiplier: 1 }
   ) {
     this.emitter = new Emitter.Class();
     // The handlers are prototype methods (overridable, spy-able); bound
@@ -44,10 +51,17 @@ class $VirtualScroll {
     return this.constructor as typeof $VirtualScroll;
   }
 
+  /** The slop in force: the option when given, else the class's. */
+  get touchSlop(): number {
+    return this.options.touchSlop ?? this.self.TOUCH_SLOP_PX;
+  }
+
   touchStart = {
     x: 0,
     y: 0
   };
+  /** Where the finger landed, and whether it has travelled past the slop since. */
+  readonly touchOrigin = { x: 0, y: 0, dragging: false };
   lastDelta = {
     x: 0,
     y: 0
@@ -59,7 +73,7 @@ class $VirtualScroll {
   protected readonly emitter: Emitter.Model;
 
   /** Re-tune the gesture multipliers after construction. */
-  tune(options: Partial<{ wheelMultiplier: number; touchMultiplier: number }>) {
+  tune(options: Partial<VirtualScroll.Options>) {
     Object.assign(this.options, options);
   }
 
@@ -98,6 +112,9 @@ class $VirtualScroll {
 
     this.touchStart.x = clientX;
     this.touchStart.y = clientY;
+    this.touchOrigin.x = clientX;
+    this.touchOrigin.y = clientY;
+    this.touchOrigin.dragging = false;
 
     this.lastDelta = {
       x: 0,
@@ -112,9 +129,26 @@ class $VirtualScroll {
   }
 
   /** Event handler for 'touchmove' event */
+  // invariant: A drag begins past the touch slop (examples/playground/src/lenis/lenis.invariants.md)
   onTouchMove(event: TouchEvent) {
     // @ts-expect-error - event.targetTouches is not defined
     const { clientX, clientY } = event.targetTouches ? event.targetTouches[0] : event;
+
+    const origin = this.touchOrigin;
+    if (!origin.dragging) {
+      // inside the slop the finger is settling, not dragging: nothing moves.
+      // At the crossing the drag begins from the slop's edge — the travel
+      // beyond it is the first delta — so the content never jumps by the slop.
+      const travelX = clientX - origin.x;
+      const travelY = clientY - origin.y;
+      const travel = Math.hypot(travelX, travelY);
+      const slop = this.touchSlop;
+      if (travel < slop) return;
+      origin.dragging = true;
+      const beyond = travel ? (travel - slop) / travel : 0;
+      this.touchStart.x = clientX - travelX * beyond;
+      this.touchStart.y = clientY - travelY * beyond;
+    }
 
     const deltaX = -(clientX - this.touchStart.x) * this.options.touchMultiplier;
     const deltaY = -(clientY - this.touchStart.y) * this.options.touchMultiplier;
@@ -175,6 +209,13 @@ class $VirtualScroll {
 }
 
 export namespace VirtualScroll {
+  /** The gesture knobs: the multipliers, and the touch slop (the class's when unset). */
+  export interface Options {
+    wheelMultiplier: number;
+    touchMultiplier: number;
+    touchSlop?: number;
+  }
+
   export const $Class = Static($VirtualScroll); // anchor — it declares statics
   export let Class = $Class; // plain — no reactive state, no Reactive()
   // raw-instance type — fields, parameters, returns

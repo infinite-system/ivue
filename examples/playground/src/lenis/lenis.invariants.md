@@ -31,6 +31,7 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 - [A flick reads its velocity off the last stretch](#a-flick-reads-its-velocity-off-the-last-stretch) — why a coalesced swipe still glides at the finger's speed.
 - [A touch on a glide keeps it running until the first move](#a-touch-on-a-glide-keeps-it-running-until-the-first-move) — why a re-flick has no stall.
 - [A touchcancel flicks like a touchend](#a-touchcancel-flicks-like-a-touchend) — why a browser claiming the gesture does not freeze the content.
+- [A drag begins past the touch slop](#a-drag-begins-past-the-touch-slop) — why a settling finger moves nothing and a drag starts without a jump.
 - [A flick carries the glide it interrupted](#a-flick-carries-the-glide-it-interrupted) — why flick after flick gains speed instead of restarting.
 - [A flick under friction stops where its throw runs out](#a-flick-under-friction-stops-where-its-throw-runs-out) — why a long throw can still have a short tail.
 - [Speed crosses every seam in px per millisecond](#speed-crosses-every-seam-in-px-per-millisecond) — why a 120 Hz phone feels what a 60 Hz one does.
@@ -246,6 +247,24 @@ STUDY ALSO: [Presented motion — the generator, what fell out, what was refused
 **Verification:** `npx vitest run src/examples/virtual-scroller -t "creep"` and `npx vitest run src/examples/scroll-stage`; on a device, autoplay on the flight page with the compositor switch on: no periodic shift of the paragraphs.
 
 **Status:** established
+
+**Last refined:** 2026-09-19
+
+### A drag begins past the touch slop
+
+**Invariant:** If a finger lands on the frame, then the content holds still until the finger has travelled the touch slop from where it landed (8 CSS px by default, a knob); at the crossing the drag begins from the slop's edge — the first delta is the travel beyond the slop, never the whole — and every move after it is the finger's own travel, 1:1. A new touch arms the slop again.
+
+**Scope:** `VirtualScroll.ts` `onTouchStart`, `onTouchMove`, `touchOrigin`, `TOUCH_SLOP_PX`, the `touchSlop` option and `tune`; `Lenis.ts` passes the option through.
+
+**Mechanism:** Native scroll views recognise a pan only after a threshold — Android's touch slop is 8 dp, iOS's pan gesture about 10 pt — so the wobble of a finger settling never moves the content, and once recognised they track the finger exactly. The fork's touch path emitted the first move's whole delta, so a settling finger nudged the content and the start of every drag read as the finger's tremor; the reader named it as the last thing between the scroller and native. Beginning from the slop's edge rather than the landing point is what keeps the start continuous: the content is exactly where the finger's travel beyond the threshold puts it.
+
+**Evidence:** `VirtualScroll.test.ts` holds the settle, the crossing's delta, the 1:1 after it, the re-arm on a new touch, a flick's first move less the slop, and the knob. Judged on the phones: pending the reader's word after the next push.
+
+**Impossible if true:** A finger settling inside the slop that moves the content. A drag that begins with a jump the size of the slop. A flick whose first move is lost to the slop.
+
+**Verification:** `npx vitest run src/lenis/VirtualScroll`; on a phone, rest a finger on the chat and roll it without dragging — nothing moves; then drag — the content starts under the finger without a jump.
+
+**Status:** provisional
 
 **Last refined:** 2026-09-19
 

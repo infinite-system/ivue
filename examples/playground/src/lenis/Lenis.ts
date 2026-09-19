@@ -291,6 +291,7 @@ class $Lenis {
     gestureOrientation = 'vertical', // vertical, horizontal, both
     ignoreNativeScroll = false, // fully-virtual mode: never adopt native scroll
     touchMultiplier = 1,
+    touchSlop,
     wheelMultiplier = 1,
     wheelMaxPxPerMs = 0,
     touchMaxPxPerMs = 0,
@@ -357,6 +358,7 @@ class $Lenis {
       ignoreNativeScroll,
       orientation,
       touchMultiplier,
+      touchSlop,
       wheelMultiplier,
       wheelMaxPxPerMs,
       touchMaxPxPerMs,
@@ -400,7 +402,8 @@ class $Lenis {
     // Setup virtual scroll instance
     this.virtualScroll = new VirtualScroll.Class(eventsTarget as HTMLElement, {
       touchMultiplier,
-      wheelMultiplier
+      wheelMultiplier,
+      ...(touchSlop !== undefined && { touchSlop })
     });
     this.virtualScroll.on('scroll', this.onVirtualScroll);
 
@@ -1284,6 +1287,7 @@ class $Lenis {
         Lenis.Options,
         | 'wheelMultiplier'
         | 'touchMultiplier'
+        | 'touchSlop'
         | 'lerp'
         | 'syncTouchLerp'
         | 'touchInertiaMultiplier'
@@ -1299,7 +1303,8 @@ class $Lenis {
     Object.assign(this.options, options);
     this.virtualScroll.tune({
       ...(options.wheelMultiplier !== undefined && { wheelMultiplier: options.wheelMultiplier }),
-      ...(options.touchMultiplier !== undefined && { touchMultiplier: options.touchMultiplier })
+      ...(options.touchMultiplier !== undefined && { touchMultiplier: options.touchMultiplier }),
+      ...(options.touchSlop !== undefined && { touchSlop: options.touchSlop })
     });
   }
 
@@ -2143,6 +2148,10 @@ export namespace Lenis {
      * @default 1
      */
     touchMultiplier?: number;
+    /** The touch slop, CSS px: a finger must travel this far from where it
+     *  landed before a drag begins, and the drag begins from the slop's edge.
+     *  Unset means the virtual scroll's own default (8). */
+    touchSlop?: number;
     /**
      * The multiplier to use for touch events
      * @default 1
@@ -2205,7 +2214,7 @@ export namespace Lenis {
   /** The options as resolved: every default filled, four left optional. */
   export type ResolvedOptions = OptionalPick<
     Required<Options>,
-    'duration' | 'easing' | 'prevent' | 'virtualScroll' | 'onSequence' | 'onSequenceRate'
+    'duration' | 'easing' | 'prevent' | 'virtualScroll' | 'onSequence' | 'onSequenceRate' | 'touchSlop'
   >;
   type OptionalPick<T, F extends keyof T> = Omit<T, F> & Partial<Pick<T, F>>;
 }

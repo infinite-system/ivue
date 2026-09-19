@@ -3,9 +3,11 @@
 Goal: Turn wheel and touch events on the frame into signed deltas on one 'scroll' event, so Lenis reads every input the same way.
 [A touchcancel flicks like a touchend](lenis.invariants.md#a-touchcancel-flicks-like-a-touchend)
 [Android holds the first move back and may coalesce a swipe into one](lenis.invariants.md#android-holds-the-first-move-back-and-may-coalesce-a-swipe-into-one)
+[A drag begins past the touch slop](lenis.invariants.md#a-drag-begins-past-the-touch-slop)
 // domain-invariant: $VirtualScroll — If a touch moves, then the delta is the finger's travel since the last touch sample, negated and scaled by the touch multiplier; a touchstart emits zero; a touchend or touchcancel re-emits the last delta with its own event.
 // domain-invariant: $VirtualScroll — If a wheel turns, then the delta is the event's, scaled by its delta mode and the wheel multiplier, and tune re-scales later events.
 Impossible if true: A touchcancel that emits nothing. A wheel notch in line mode read as pixels.
+Impossible if true: A finger settling inside the slop that moves the content. A drag that begins with a jump the size of the slop.
 
 === GENERATOR-DESCRIBED ===
 Upstream Lenis's VirtualScroll, ported with the handlers as prototype
@@ -27,7 +29,8 @@ const touch = (type: string, x: number, y: number) => {
 // invariant: Android holds the first move back and may coalesce a swipe into one (examples/playground/src/lenis/lenis.invariants.md)
 test('a touch emits zero at the start, the negated scaled travel per move, and the last delta again at the end or the cancel', () => {
   const element = document.createElement('div');
-  const scroll = new VirtualScroll.Class(element, { wheelMultiplier: 1, touchMultiplier: 2 });
+  // slop 0: this case is about the deltas themselves; the slop has its own case below
+  const scroll = new VirtualScroll.Class(element, { wheelMultiplier: 1, touchMultiplier: 2, touchSlop: 0 });
   const seen: Array<{ type: string; deltaY: number }> = [];
   scroll.on('scroll', ({ deltaY, event }) => seen.push({ type: event.type, deltaY }));
   element.dispatchEvent(touch('touchstart', 100, 500));
@@ -73,4 +76,39 @@ test('a wheel delta is scaled by its mode and the multiplier, and tune re-scales
   onWheel.mockRestore();
   scroll.destroy();
   another.destroy();
+});
+
+// invariant: A drag begins past the touch slop (examples/playground/src/lenis/lenis.invariants.md)
+// impossible-if-true: $VirtualScroll — A finger settling inside the slop that moves the content. A drag that begins with a jump the size of the slop.
+test('a finger settling inside the slop moves nothing; at the crossing the drag begins from the slop\'s edge, and every move after is 1:1', () => {
+  const element = document.createElement('div');
+  const scroll = new VirtualScroll.Class(element, { wheelMultiplier: 1, touchMultiplier: 1 });
+  const slop = VirtualScroll.Class.TOUCH_SLOP_PX;
+  const seen: Array<{ type: string; deltaX: number; deltaY: number }> = [];
+  scroll.on('scroll', ({ deltaX, deltaY, event }) => seen.push({ type: event.type, deltaX, deltaY }));
+  element.dispatchEvent(touch('touchstart', 100, 500));
+  // the wobble of a finger settling: inside the slop, nothing
+  element.dispatchEvent(touch('touchmove', 102, 497));
+  element.dispatchEvent(touch('touchmove', 99, 504));
+  expect(seen).toEqual([{ type: 'touchstart', deltaX: 0, deltaY: 0 }]);
+  // the crossing: straight up by twice the slop — the first delta is the travel beyond the slop, not the whole
+  element.dispatchEvent(touch('touchmove', 100, 500 - 2 * slop));
+  expect(seen[1]).toEqual({ type: 'touchmove', deltaX: -0, deltaY: slop });
+  // from here on 1:1
+  element.dispatchEvent(touch('touchmove', 100, 500 - 2 * slop - 30));
+  expect(seen[2].deltaY).toBe(30);
+  element.dispatchEvent(touch('touchend', 100, 500 - 2 * slop - 30));
+  expect(seen[3]).toEqual({ type: 'touchend', deltaX: -0, deltaY: 30 });
+  // a new touch arms the slop again
+  element.dispatchEvent(touch('touchstart', 100, 500));
+  element.dispatchEvent(touch('touchmove', 100, 496));
+  expect(seen.length).toBe(5); // the start only
+  // a flick's first move is past the slop at once: the drag begins on it, less the slop
+  element.dispatchEvent(touch('touchmove', 100, 400));
+  expect(seen[5].deltaY).toBeCloseTo(100 - slop, 6);
+  // the slop is a knob
+  scroll.tune({ touchSlop: 0 });
+  element.dispatchEvent(touch('touchstart', 100, 500));
+  element.dispatchEvent(touch('touchmove', 100, 499));
+  expect(seen[seen.length - 1]).toEqual({ type: 'touchmove', deltaX: -0, deltaY: 1 });
 });
