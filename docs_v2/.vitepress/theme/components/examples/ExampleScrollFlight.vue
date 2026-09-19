@@ -760,7 +760,7 @@ const {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 3px;
+  height: 1px;
   background: rgba(255, 255, 255, 0.12);
 }
 .esf-media-progress-bar {
