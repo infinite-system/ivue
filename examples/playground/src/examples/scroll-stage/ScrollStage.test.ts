@@ -346,6 +346,15 @@ test("an interlude is pulled in as its span enters the frame, held while it cove
   // riding with its span, fractional: a snapped ride ticks at reading speed
   expect(stage.mediaTransform(1, 9 * ASSUMED_ROW_PX - 0.25)).toMatch(/^translateY\(\d+\.\d\dpx\)$/);
   expect(stage.mediaTransform(1, 0)).toMatch(/^translateY\(\d+\.\d\dpx\)$/);
+  // its progress bar runs over the HOLD only: 0 while the picture rides in and the moment it
+  // settles, 1 the moment the next row starts to push it out, linear between
+  const holdStart = 9 * ASSUMED_ROW_PX;
+  const holdEnd = 10 * ASSUMED_ROW_PX - 1; // the frame's span is 1 here
+  expect(stage.mediaProgressTransform(1, holdStart - 0.5)).toBe('scaleX(0.0000)');
+  expect(stage.mediaProgressTransform(1, holdStart)).toBe('scaleX(0.0000)');
+  expect(stage.mediaProgressTransform(1, (holdStart + holdEnd) / 2)).toBe('scaleX(0.5000)');
+  expect(stage.mediaProgressTransform(1, holdEnd)).toBe('scaleX(1.0000)');
+  expect(stage.mediaProgressTransform(1, 20 * ASSUMED_ROW_PX)).toBe('scaleX(1.0000)');
   // past the second interlude: the third takes slot 1, the fourth slot 0
   stage.prepareScenes(20 * ASSUMED_ROW_PX);
   expect(figure(1).querySelector('img')!.getAttribute('src')).toBe('/a.png');

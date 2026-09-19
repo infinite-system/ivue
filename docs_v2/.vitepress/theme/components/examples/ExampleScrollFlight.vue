@@ -180,6 +180,10 @@ const {
           <img class="esf-media-image" alt="" decoding="async" />
           <video class="esf-media-video" muted loop playsinline preload="metadata"></video>
           <figcaption class="esf-media-caption" data-caption></figcaption>
+          <!-- how far through its stay the picture is: a track like the stage's own bar -->
+          <div class="esf-media-progress">
+            <div class="esf-media-progress-bar" data-media-progress></div>
+          </div>
         </figure>
 
         <div class="esf-progress">
@@ -750,6 +754,22 @@ const {
   letter-spacing: 0.04em;
   color: rgba(240, 244, 255, 0.92);
   background: linear-gradient(180deg, transparent, rgba(5, 10, 24, 0.75));
+}
+.esf-media-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.esf-media-progress-bar {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, #67e8f9, #818cf8);
+  will-change: transform;
 }
 .esf-interlude {
   /* taller than the frame: the media holds at the centre while the extra scrolls through */

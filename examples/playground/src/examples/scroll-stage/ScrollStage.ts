@@ -522,6 +522,19 @@ class $ScrollStage {
     return `translateY(${ride}px)`;
   }
 
+  /** A media slot's progress bar: how far through its HOLD the picture is —
+   *  0 the moment it has settled (its span owns the whole frame), 1 the
+   *  moment the next row begins to push it out — so a picture standing still
+   *  says how long it will. Nothing moves on the bar while the picture rides. */
+  mediaProgressTransform(slot: number, value: number): string {
+    const ordinal = this.mediaOrdinals[slot];
+    const span = ordinal ? this.interludeSpan(ordinal) : null;
+    if (!span) return 'scaleX(0)';
+    const holdEnd = span.end - this.frameSpan;
+    const progress = Math.min(1, Math.max(0, (value - span.start) / Math.max(1, holdEnd - span.start)));
+    return `scaleX(${progress.toFixed(4)})`;
+  }
+
   progressTransform(value: number): string {
     return `scaleX(${Math.min(1, Math.max(0, value / this.extent)).toFixed(4)})`;
   }
@@ -570,6 +583,8 @@ class $ScrollStage {
       if (!media) continue;
       tracks.push({ element: media, property: 'opacity', formatOf: (value) => this.mediaOpacity(slot, value) });
       tracks.push({ element: media, property: 'transform', formatOf: (value) => this.mediaTransform(slot, value) });
+      const bar = media.querySelector<HTMLElement>('[data-media-progress]');
+      if (bar) tracks.push({ element: bar, property: 'transform', formatOf: (value) => this.mediaProgressTransform(slot, value) });
     }
     const bar = stage.querySelector<HTMLElement>('[data-track="progress"]');
     if (bar)
