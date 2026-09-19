@@ -14,6 +14,7 @@ import { Reactive } from '../../ivue';
 import { Static } from '../../Static';
 import { Lenis } from '../../lenis/Lenis';
 import type { VirtualScroller } from '../virtual-scroller/VirtualScroller';
+import { Ranges } from '../scroll-theater/Ranges';
 
 class $ScrollStage {
   /** Typed as a number, not the literal, so a test double can shrink the list. */
@@ -210,9 +211,17 @@ class $ScrollStage {
   protected readonly memo = {
     local: new Map<number, ScrollStage.Local>(),
     textLocal: new Map<number, ScrollStage.Local>(),
-    textEnd: new Map<number, number>(),
-    span: new Map<number, { start: number; end: number } | null>()
+    textEnd: new Map<number, number>()
   };
+
+  /** The geometry primitive, built on first touch (another class is never
+   *  read at module evaluation): chapters, texts and interludes are ranges
+   *  over the list, and every derivation below is one of its three. The
+   *  stage is its owner — the theater's floor, laid under the stage first. */
+  protected readonly geometry = { ranges: null as Ranges.Model | null };
+
+  /** The named rows a manuscript may declare; none on this stage. */
+  readonly anchors: ReadonlyMap<string, number> = new Map();
 
   /** The interlude rows, derived once per list. */
   protected get interludeRowsFor() {
@@ -329,6 +338,24 @@ class $ScrollStage {
     return this.scroller.value?.containerSpan ?? 1;
   }
 
+  // the ranges owner: the list as the primitive sees it
+  protected get ranges(): Ranges.Model {
+    return (this.geometry.ranges ??= new Ranges.Class(this));
+  }
+
+  /** The whole frame: the stage has no curtains yet. */
+  get aperture(): Ranges.Aperture {
+    return Ranges.Class.WHOLE_FRAME;
+  }
+
+  get rowCount(): number {
+    return this.items.value.length;
+  }
+
+  get assumedRowPx(): number {
+    return this.self.ASSUMED_ROW_PX;
+  }
+
   /** The whole scrollable extent — the progress bar's denominator. */
   get extent(): number {
     return this.scroller.value?.scrollExtent ?? 1;
@@ -345,13 +372,24 @@ class $ScrollStage {
 
   /** Where a chapter's first row sits: the scroller's anchored position when
    *  geometry knows it, the assumed row height before. */
+  /** A row's anchored position, for the ranges owner. */
+  anchoredPosition(index: number): number | undefined {
+    return this.scroller.value?.getAnchoredPosition(index);
+  }
+
+  /** A chapter as a range of rows. */
+  chapterRange(chapter: number): Ranges.Range {
+    const first = (chapter - 1) * this.self.CHAPTER_ROWS;
+    return this.ranges.rows(first, first + this.self.CHAPTER_ROWS);
+  }
+
   chapterStart(chapter: number): number {
-    const firstIndex = (chapter - 1) * this.self.CHAPTER_ROWS;
-    return this.scroller.value?.getAnchoredPosition(firstIndex) ?? firstIndex * this.self.ASSUMED_ROW_PX;
+    return this.ranges.spanOf(this.chapterRange(chapter)).start;
   }
 
   chapterSpan(chapter: number): number {
-    return Math.max(1, this.chapterStart(chapter + 1) - this.chapterStart(chapter));
+    const span = this.ranges.spanOf(this.chapterRange(chapter));
+    return span.end - span.start;
   }
 
   /** Where a chapter's text ends: at its first interlude row when it has
@@ -370,8 +408,7 @@ class $ScrollStage {
     const first = (chapter - 1) * this.self.CHAPTER_ROWS;
     const last = Math.min(items.length, first + this.self.CHAPTER_ROWS);
     for (let index = first; index < last; index++) {
-      if (!items[index]?.interlude) continue;
-      return this.scroller.value?.getAnchoredPosition(index) ?? index * this.self.ASSUMED_ROW_PX;
+      if (items[index]?.interlude) return this.ranges.positionOf(index);
     }
     return this.chapterStart(chapter + 1);
   }
@@ -395,8 +432,9 @@ class $ScrollStage {
     const memo = this.memo.local.get(value);
     if (memo) return memo;
     const chapter = this.chapterAt(value);
-    const travel = Math.max(0, value - this.chapterStart(chapter));
-    const local = { chapter, progress: Math.min(1, travel / this.chapterSpan(chapter)), travel };
+    const range = this.chapterRange(chapter);
+    const travel = Math.max(0, value - this.ranges.spanOf(range).start);
+    const local = { chapter, progress: this.ranges.progressOf(range, value), travel };
     this.memo.local.set(value, local);
     return local;
   }
@@ -408,24 +446,14 @@ class $ScrollStage {
     this.memo.local.clear();
     this.memo.textLocal.clear();
     this.memo.textEnd.clear();
-    this.memo.span.clear();
+    this.ranges.beginBatch();
   }
 
   /** Where an interlude row spans: its anchored start and its measured
    *  size, the assumed row before geometry knows it. */
   interludeSpan(ordinal: number): { start: number; end: number } | null {
-    const memo = this.memo.span.get(ordinal);
-    if (memo !== undefined) return memo;
     const row = this.interludeRows[ordinal - 1];
-    let span: { start: number; end: number } | null = null;
-    if (row) {
-      const scroller = this.scroller.value;
-      const start = scroller?.getAnchoredPosition(row.index) ?? row.index * this.self.ASSUMED_ROW_PX;
-      const next = scroller?.getAnchoredPosition(row.index + 1) ?? start + this.self.ASSUMED_ROW_PX;
-      span = { start, end: Math.max(start + 1, next) };
-    }
-    this.memo.span.set(ordinal, span);
-    return span;
+    return row ? this.ranges.spanOf(this.ranges.row(row.index)) : null;
   }
 
   /** How present an interlude is at a scroll value: 0 until its span has
@@ -434,17 +462,8 @@ class $ScrollStage {
    *  enters, 0 once that row has taken most of the frame. */
   // invariant: An interlude is present while its span owns the frame (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   interludePresence(ordinal: number, value: number): number {
-    const span = this.interludeSpan(ordinal);
-    if (!span) return 0;
-    const frame = this.frameSpan;
-    const fade = frame * this.self.INTERLUDE_FADE_FRACTION;
-    const threshold = frame - fade;
-    // how much of the span has entered from the bottom; how much is still ahead of the top
-    const entered = value + frame - span.start;
-    const ahead = span.end - value;
-    const entering = Math.min(1, Math.max(0, (entered - threshold) / fade));
-    const leaving = Math.min(1, Math.max(0, (ahead - threshold) / fade));
-    return Math.min(entering, leaving);
+    const row = this.interludeRows[ordinal - 1];
+    return row ? this.ranges.presenceOf(this.ranges.row(row.index), value) : 0;
   }
 
   /** The interlude whose span a scroll value is at or before: the one the
