@@ -7,9 +7,11 @@ Goal: Drift the content forward at a reading pace that never reads as judder, an
 // domain-invariant: $VirtualScrollerAutoplay — If a forward glide has decayed to cruise speed while play defers, then the creep adopts the animated position there and continues, rather than waiting for the lerp to reach zero.
 // domain-invariant: $VirtualScrollerAutoplay — If the creep reaches the end with autoRepeat on, then it stops and the repeat chain resets to the top after the hold.
 // domain-invariant: $VirtualScrollerAutoplay — If the creep speed is unset, then the cadence is the tuned default, and the drag factor is one; a faster setting raises the factor proportionally.
+// domain-invariant: $VirtualScrollerAutoplay — If a run plays on the compositor, then each creep frame sets the model to the value the compositor shows instead of integrating its own gap, so a stall or a hidden tab that the model would clamp cannot leave it behind the run.
 // domain-invariant: $VirtualScrollerAutoplay — If the creep's speed changes while its run plays on the compositor, then the run's rate is changed in place — the multiple of the speed it was built at — and the run is never released or ended for it.
 Impossible if true: A creep frame that writes while the reader's own input is live.
 Impossible if true: A creep run ended by a speed change.
+Impossible if true: A model that has fallen behind the run the compositor is playing.
 Impossible if true: A glide decaying below cruise speed before the creep takes it over.
 
 === GENERATOR-DESCRIBED ===
@@ -262,4 +264,40 @@ test('a speed change rates the playing run in place: the multiple of the speed i
   step(Logic.FRAME_MS * 2);
   expect(rates).toEqual([2, 1]);
   expect(started.length).toBe(1);
+});
+
+// domain-invariant: $VirtualScrollerAutoplay — If a run plays on the compositor, then each creep frame sets the model to the value the compositor shows instead of integrating its own gap, so a stall or a hidden tab that the model would clamp cannot leave it behind the run.
+// impossible-if-true: $VirtualScrollerAutoplay — A model that has fallen behind the run the compositor is playing.
+test('while a run plays, a creep frame mirrors the value the compositor shows — a stall the model would clamp leaves it exactly where the run is', () => {
+  const { model, owner, lenis } = autoplay();
+  const composited = Object.assign(lenis, {
+    options: { compositorGlide: true },
+    canComposite: true,
+    keyframeMs: 1000 / 120,
+    compositorGlideActive: false,
+    compositorHasChained: false,
+    compositorRemainingMs: 100_000,
+    compositorPlaying: null as { animation: Animation; lastValue: number } | null,
+    compositorShown: undefined as number | undefined,
+    limit: 3_000,
+    startCompositorSequence: vi.fn(() => {
+      composited.compositorGlideActive = true;
+      composited.compositorShown = lenis.targetScroll;
+      return {} as Animation;
+    }),
+    setCompositorRate: vi.fn(),
+    releaseCompositor: vi.fn()
+  });
+  model.play();
+  step(0); // the run starts from the model's first step
+  const startedAt = lenis.targetScroll;
+  // the compositor advances on its own clock; a frame that the model would have integrated
+  composited.compositorShown = startedAt + 10;
+  step(Logic.FRAME_MS);
+  expect(lenis.targetScroll).toBe(startedAt + 10);
+  expect(lenis.animatedScroll).toBe(startedAt + 10);
+  // a stall past the suspend threshold: the compositor kept the whole second; the model follows it, not its clamp
+  composited.compositorShown = startedAt + 10 + 14;
+  step(Logic.FRAME_MS + 1000);
+  expect(lenis.targetScroll).toBe(startedAt + 24);
 });

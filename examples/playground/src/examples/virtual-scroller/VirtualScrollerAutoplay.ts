@@ -233,7 +233,17 @@ class $VirtualScrollerAutoplay {
     this.creep.lastTs = ts;
     const lenis = owner.lenis;
     if (!lenis) return;
-    lenis.targetScroll += dt / this.msPerPx;
+    // While a run plays on the compositor the model MIRRORS what it shows,
+    // instead of integrating its own frame gaps: a gap the model clamps (a
+    // stall, a hidden tab) is time the compositor keeps, and a model that
+    // integrated it fell behind the run — the scene slots, drawn from the
+    // model, then held a chapter the tracks were not showing, and a finger,
+    // which adopts the shown value, snapped the model forward and the scene
+    // switched. Mirrored, the two cannot diverge.
+    // invariant: The creep plays on the compositor as one linear run (examples/playground/src/lenis/lenis.invariants.md)
+    const shown = this.creep.composited && lenis.compositorGlideActive ? lenis.compositorShown : undefined;
+    if (shown !== undefined) lenis.targetScroll = shown;
+    else lenis.targetScroll += dt / this.msPerPx;
 
     const atEnd =
       lenis.actualScroll + owner.containerSpan >= owner.scrollExtent.value - this.self.END_SLACK_PX;
@@ -389,6 +399,8 @@ export namespace VirtualScrollerAutoplay {
     readonly limit?: number;
     /** change the playing run's speed in place, as a multiple of the speed it was built at */
     setCompositorRate?(rate: number): void;
+    /** the value the compositor is showing while a sequence plays — the model mirrors it */
+    readonly compositorShown?: number;
     startCompositorSequence?(
       values: number[],
       options?: { after?: Animation | null; linear?: boolean; durationMs?: number | null }

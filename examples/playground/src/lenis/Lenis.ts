@@ -644,6 +644,14 @@ class $Lenis {
   }
 
   /** Milliseconds left in the sequence the compositor is playing, or 0. */
+  /** The value the compositor is showing right now, while a sequence plays;
+   *  undefined when none does. The model mirrors this during a creep, so
+   *  the two cannot drift — a frame the model loses is a frame the
+   *  compositor keeps. */
+  get compositorShown(): number | undefined {
+    return this.compositor.animation ? this.compositorShownValue() : undefined;
+  }
+
   /** Wall-clock ms the playing sequence has left, at its rate. */
   get compositorRemainingMs(): number {
     const animation = this.compositor.animation;
