@@ -768,14 +768,16 @@ const {
   right: 0;
   bottom: 0;
   height: 1px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
 }
+/* faint on purpose: a hint of how long the picture stays, never a thing to look at */
 .esf-media-progress-bar {
   position: absolute;
   inset: 0;
   transform-origin: 0 50%;
   transform: scaleX(0);
   background: linear-gradient(90deg, #67e8f9, #818cf8);
+  opacity: 0.35;
   will-change: transform;
 }
 .esf-interlude {
