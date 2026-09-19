@@ -4,10 +4,12 @@ Goal: A flight over the range moves WITH the scroll on one clock and breathes on
 [A glide plays on the compositor as held snapped keyframes](../../lenis/lenis.invariants.md#a-glide-plays-on-the-compositor-as-held-snapped-keyframes)
 // domain-invariant: $ScrollFlight — If a layer moves with the scroll, then it is a track over the scroll value and nothing else: a plane's place in perspective, the flock's place in the sky, a cloud's drift, the palms' lean are formatters of the one number, parked or faded where their chapter has none.
 // domain-invariant: $ScrollFlight — If a chapter crosses nothing of a kind, then that kind's opacity is zero for every value in it and its transform is the parked one; a crossing comes in over the entry fraction and goes out with the chapter's fade.
+// domain-invariant: $ScrollFlight — If a pointer lands on the frame and lifts within the tap slop and the tap time, then the flock is startled from where it landed; a pointer that moved farther, took longer, or was cancelled startles nothing.
 // domain-invariant: $ScrollFlight — If a chapter is in a world, then its slot carries that world and its time of day, the jet flies INTO the screen over the mountains (its depth falling), the seaplane OUT of it over the beach (its depth rising), and every skyline, snow band and canopy is seeded by the chapter.
 Impossible if true: A plane visible in a chapter that has none.
 Impossible if true: A jet whose depth rises as it crosses, or a seaplane whose depth falls.
 Impossible if true: A flight track that reads anything but the scroll value.
+Impossible if true: A drag on the frame that startles the flock.
 
 === GENERATOR-DESCRIBED ===
 The flight is the stage extended: the same slots, roles and handoff, with
@@ -208,4 +210,29 @@ test("the flight has 35 tracks — the stage's 13, plus per slot 2 clouds, the i
   expect(slot0.querySelector('[data-track="island"] path')!.getAttribute('d')).toBe(
     ScrollFlight.Class.ridgePath(2, ScrollFlight.Class.ISLAND)
   );
+});
+
+// domain-invariant: $ScrollFlight — If a pointer lands on the frame and lifts within the tap slop and the tap time, then the flock is startled from where it landed; a pointer that moved farther, took longer, or was cancelled startles nothing.
+// impossible-if-true: $ScrollFlight — A drag on the frame that startles the flock.
+test('a tap startles the flock from where it landed; a drag, a long press, or a cancelled pointer startles nothing', () => {
+  const flight = new ScrollFlight.Class();
+  const startles: Array<[number, number]> = [];
+  (flight as unknown as { flock: { value: unknown } }).flock.value = { startleAt: (x: number, y: number) => startles.push([x, y]), stop: () => undefined };
+  const pointer = (type: string, x: number, y: number, timeStamp: number) => ({ type, clientX: x, clientY: y, timeStamp }) as PointerEvent;
+  const { TAP_SLOP_PX, TAP_MS } = ScrollFlight.Class;
+  // a tap
+  flight.onFramePointerDown(pointer('pointerdown', 100, 200, 1000));
+  flight.onFramePointerUp(pointer('pointerup', 103, 198, 1000 + TAP_MS / 2));
+  expect(startles).toEqual([[100, 200]]);
+  // a drag: the reader resuming a scroll
+  flight.onFramePointerDown(pointer('pointerdown', 100, 200, 2000));
+  flight.onFramePointerUp(pointer('pointerup', 100, 200 + TAP_SLOP_PX * 4, 2100));
+  // a long press
+  flight.onFramePointerDown(pointer('pointerdown', 100, 200, 3000));
+  flight.onFramePointerUp(pointer('pointerup', 100, 200, 3000 + TAP_MS * 2));
+  // a cancelled pointer, then a lift with no landing
+  flight.onFramePointerDown(pointer('pointerdown', 100, 200, 4000));
+  flight.onFramePointerCancel(pointer('pointercancel', 100, 200, 4010));
+  flight.onFramePointerUp(pointer('pointerup', 100, 200, 4020));
+  expect(startles).toEqual([[100, 200]]);
 });

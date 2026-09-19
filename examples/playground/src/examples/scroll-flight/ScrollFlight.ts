@@ -94,6 +94,12 @@ class $ScrollFlight extends ScrollStage.$Class {
 
   static readonly FLOCK_PARKED: string = 'translate(130cqw, 12cqh)';
 
+  /** A tap: a pointer that lifts within this much movement and this much time
+   *  of landing. A drag — the reader resuming a scroll — is not a tap, and
+   *  must not startle the flock. */
+  static readonly TAP_SLOP_PX: number = 8;
+  static readonly TAP_MS: number = 300;
+
   /** The frame meter's window: the worst gap and the long frames in it. */
   static readonly METER_WINDOW_MS: number = 3000;
 
@@ -329,6 +335,9 @@ class $ScrollFlight extends ScrollStage.$Class {
     return ref(0);
   }
 
+  /** Where and when the pointer landed on the frame, until it lifts. */
+  protected readonly pointerDown = { x: 0, y: 0, atMs: 0, live: false };
+
   /** The meter's bookkeeping: the pending frame, the last stamp, the gaps in the window. */
   protected readonly meter = { frame: null as number | null, lastTs: 0, gaps: [] as Array<[number, number]> };
 
@@ -525,11 +534,30 @@ class $ScrollFlight extends ScrollStage.$Class {
     meter.frame = requestAnimationFrame(this.onMeterFrame);
   }
 
-  /** A pointer lands on the frame: the flock is startled from that point.
-   *  The scroll is untouched — a drag still drags; this only tells the
-   *  birds where the hand came down. */
+  /** A pointer lands on the frame: remembered, so the lift can tell a tap
+   *  from a drag. The scroll is untouched either way. */
   onFramePointerDown(event: PointerEvent) {
-    this.flock.value?.startleAt(event.clientX, event.clientY);
+    const down = this.pointerDown;
+    down.x = event.clientX;
+    down.y = event.clientY;
+    down.atMs = event.timeStamp;
+    down.live = true;
+  }
+
+  /** The pointer lifts: a tap — little movement, little time — startles the
+   *  flock from where it landed; a drag startles nothing. */
+  onFramePointerUp(event: PointerEvent) {
+    const down = this.pointerDown;
+    if (!down.live) return;
+    down.live = false;
+    const moved = Math.hypot(event.clientX - down.x, event.clientY - down.y);
+    const held = event.timeStamp - down.atMs;
+    if (moved <= this.self.TAP_SLOP_PX && held <= this.self.TAP_MS) this.flock.value?.startleAt(down.x, down.y);
+  }
+
+  /** A cancelled pointer was never a tap. */
+  onFramePointerCancel(_event: PointerEvent) {
+    this.pointerDown.live = false;
   }
 
   /** The flock's canvas resolved (or cleared): the GPU loop follows it. */

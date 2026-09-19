@@ -56,7 +56,12 @@ const {
       </div>
     </div>
 
-    <div class="esf-frame" @pointerdown="flight.onFramePointerDown($event)">
+    <div
+      class="esf-frame"
+      @pointerdown="flight.onFramePointerDown($event)"
+      @pointerup="flight.onFramePointerUp($event)"
+      @pointercancel="flight.onFramePointerCancel($event)"
+    >
       <!-- the pinned stage: two scene slots, then the crossings the chapters share -->
       <div ref="stageElement" class="esf-stage" aria-hidden="true">
         <div v-for="slot in [0, 1]" :key="slot" class="esf-scene" :data-slot="slot">
