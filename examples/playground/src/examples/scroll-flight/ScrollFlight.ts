@@ -390,6 +390,7 @@ class $ScrollFlight extends ScrollStage.$Class {
    *  through the middle. The model's nose points along +x, so a yaw is a
    *  turn about y, a pitch a turn about z, and a bank a turn about x — in
    *  that order, the bank in the plane's own frame. */
+  // invariant: A 3D model never takes opacity (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   protected planeAlong(path: ScrollFlight.PlanePath, progress: number): string {
     const x = (path.fromX + progress * (path.toX - path.fromX)).toFixed(3);
     const y = (path.fromY + progress * (path.toY - path.fromY) - Math.sin(progress * Math.PI) * 10).toFixed(3);
@@ -546,6 +547,7 @@ class $ScrollFlight extends ScrollStage.$Class {
 
   /** The pointer lifts: a tap — little movement, little time — startles the
    *  flock from where it landed; a drag startles nothing. */
+  // invariant: A startle is a tap (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   onFramePointerUp(event: PointerEvent) {
     const down = this.pointerDown;
     if (!down.live) return;

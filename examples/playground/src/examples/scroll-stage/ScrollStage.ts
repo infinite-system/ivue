@@ -403,6 +403,7 @@ class $ScrollStage {
 
   /** A batch of formatting begins — a piece, a glide, an inline write: the
    *  memos are cleared, because geometry may have moved since the last. */
+  // invariant: Geometry is derived once per batch (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   protected beginBatch() {
     this.memo.local.clear();
     this.memo.textLocal.clear();
@@ -431,6 +432,7 @@ class $ScrollStage {
    *  entered most of the frame, rising to 1 as the span fills it; 1 while
    *  the span alone is in the frame; falling from the moment the next row
    *  enters, 0 once that row has taken most of the frame. */
+  // invariant: An interlude is present while its span owns the frame (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   interludePresence(ordinal: number, value: number): number {
     const span = this.interludeSpan(ordinal);
     if (!span) return 0;
@@ -506,6 +508,7 @@ class $ScrollStage {
    *  the span. A translation only: a change of scale on a raster the size
    *  of a picture is a re-raster, and one per held keyframe is a dropped
    *  frame — a translation just moves the raster. */
+  // invariant: A raster is drawn once and moved (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   mediaTransform(slot: number, value: number): string {
     const ordinal = this.mediaOrdinals[slot];
     const span = ordinal ? this.interludeSpan(ordinal) : null;
@@ -619,6 +622,7 @@ class $ScrollStage {
    *  in their slots if they are not yet; then, on the callback path, the
    *  tracks follow in the same callback. While the compositor owns the
    *  scroll, its tracks own the stage. */
+  // invariant: The stage hears every frame the layer moves (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   onScroll(rendered: number) {
     this.position.value = rendered;
     this.prepareScenes(rendered);
@@ -631,6 +635,7 @@ class $ScrollStage {
    *  loaded a chapter before it appears and kept a chapter after it goes.
    *  Presence is read from the model each frame — cheap, two slots — and
    *  the element is told only on a change. */
+  // invariant: A video plays only while present (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   syncMedia(value: number) {
     const stage = this.stage.value;
     if (!stage) return;
@@ -721,6 +726,7 @@ class $ScrollStage {
     for (const track of this.trackList()) this.writeTrack(track, track.formatOf(value));
   }
 
+  // invariant: A track constant over a piece is written once (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   protected writeTrack(track: ScrollStage.Track, formatted: string) {
     if (track.property === 'opacity') track.element.style.opacity = formatted;
     else track.element.style.transform = formatted;
@@ -730,6 +736,7 @@ class $ScrollStage {
    *  the same values, aligned with the same animation on the document
    *  timeline. A glide's held values are taken whole; a linear run is cut
    *  into held pieces the stage composes as the run plays. */
+  // invariant: A scene is what the presenter shows computed for its frame (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   onSequence(sequence: Lenis.Sequence) {
     const tracks = this.trackList();
     if (!tracks.length) return;
@@ -793,6 +800,7 @@ class $ScrollStage {
    *  animation; a scene track is never interpolated — a chapter boundary
    *  inside the values is a step in the role, and only held keyframes step
    *  with it. */
+  // invariant: A scenery track interpolates through its samples and only the text layer holds (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   protected composeTracks(
     values: readonly number[],
     scroll: Animation,
@@ -831,6 +839,7 @@ class $ScrollStage {
    *  the next chapter boundary, so a piece never spans the step a boundary
    *  is. When a piece finishes it is dropped and one more is composed, so
    *  two are always in flight. */
+  // invariant: A run is cut into pieces aligned to its start and to chapter boundaries (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   protected composePiece(flight: ScrollStage.Flight) {
     const { sequence } = flight;
     if (flight.nextPieceMs >= sequence.durationMs) return;

@@ -63,6 +63,7 @@ class $BirdFlock {
   }
 
   // METHODS
+  // invariant: A time-linked layer owns a clock gated by presence (examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md)
   start() {
     if (this.running.value) return;
     const size = this.deviceSize;
