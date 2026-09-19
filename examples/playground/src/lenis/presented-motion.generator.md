@@ -213,6 +213,18 @@ needs a new trial of the timing question:
   that carries text takes it whole, because the presenter re-rasters text
   where animations meet, and layers without text take it in pieces
   aligned to the run's own start.
+- **Two clocks, split by what moves with what.** A motion linked to the
+  scroll is a track over the one number, played by the presenter; a motion
+  linked to time — a wingbeat, rain, a propeller, a video — owns a clock
+  of its own and is gated by presence. The rule for choosing is whether it
+  should run backwards when the reader scrolls back. Nothing scroll-linked
+  is ever drawn from a callback again, and nothing time-linked is ever
+  asked to be at a point of its timeline because the reader is at a point
+  of the scroll — that is the callback path wearing a costume.
+- **A time-linked layer draws off the main thread.** Its canvas is handed
+  to a worker where the browser allows, so a main-thread stall never
+  reaches it and it never costs the main thread — the flock, and every
+  water or atmosphere after it.
 - **A bounce, a snap point, a choreography** are motion laws over the
   same number, each a sequence the presenter plays, each continuous at
   its handoff — the same continuity rule that made the glide's release

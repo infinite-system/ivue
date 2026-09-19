@@ -53,6 +53,23 @@ throughout.
 
 ## The commits
 
+### 0. The stage's contract — no code change
+
+The stage's mechanism rules exist only as domain-invariant lines in
+`ScrollStage.test.ts`, `ScrollFlight.test.ts`, `BirdFlock*.test.ts`. Before
+anything moves, write `examples/playground/src/examples/scroll-stage/scroll-stage.invariants.md`
+with a record per rule so the checker can hold and migrate them: pieces
+aligned to a run's start and cut at chapter boundaries; scenery tracks
+interpolated through samples, never held; a track constant over a piece is
+written once; scenes prepared for where a sequence begins; presence keyed
+to the next row's entry, measured against the frame; media rides
+translate-only and fractional; a video plays only while present; a 3D
+model never takes opacity; a startle is a tap; a raster is drawn once and
+moved — no backdrop blur under a moving layer, no scale on a large raster
+(from LESSONS). Each with Impossible-if-true and the spec as verification,
+status established where the phones judged it. Annotate the sources.
+Checker baseline must not rise.
+
 ### 1. Ranges and the aperture — no visible change
 
 - New: `Ranges.ts` with `Range`, `spanOf`, `progressOf`, `presenceOf`,
