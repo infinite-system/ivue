@@ -731,12 +731,19 @@ const {
     0 0 0 1px rgba(255, 255, 255, 0.08);
   background: #0b1020;
 }
-.esf-media-image,
-.esf-media-video {
+/* the figure is in the selector to outrank the theme's blog-hero rule, which
+   matches any img whose source is under /blog/ and gives it a margin, a
+   border, a radius and an aspect ratio — none of which belongs inside the box */
+.esf-media .esf-media-image,
+.esf-media .esf-media-video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  aspect-ratio: auto;
   object-fit: cover;
   display: none;
 }
