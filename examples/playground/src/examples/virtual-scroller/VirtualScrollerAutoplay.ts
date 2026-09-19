@@ -266,6 +266,10 @@ class $VirtualScrollerAutoplay {
       this.feedCompositor(lenis);
       lenis.animatedScroll = lenis.targetScroll;
       owner.setScrollPosition(-lenis.targetScroll, false);
+      // the model moved, though this class moved it and not the integrator's
+      // own frame: announce it, or a stage listening for the scroll prepares
+      // its scenes and interludes only at the run's start and next at a touch
+      lenis.announceScroll?.();
     } else {
       owner.setScrollPosition(-lenis.targetScroll);
     }
@@ -401,6 +405,8 @@ export namespace VirtualScrollerAutoplay {
     setCompositorRate?(rate: number): void;
     /** the value the compositor is showing while a sequence plays — the model mirrors it */
     readonly compositorShown?: number;
+    /** tell the scroll listeners the model moved — the creep moves it, not the integrator's frame */
+    announceScroll?(): void;
     startCompositorSequence?(
       values: number[],
       options?: { after?: Animation | null; linear?: boolean; durationMs?: number | null }

@@ -66,7 +66,11 @@ to the next row's entry, measured against the frame; media rides
 translate-only and fractional; a video plays only while present; a 3D
 model never takes opacity; a startle is a tap; a raster is drawn once and
 moved — no backdrop blur under a moving layer, no scale on a large raster
-(from LESSONS). Each with Impossible-if-true and the spec as verification,
+(from LESSONS); and the two records the last two bugs named — the stage
+hears EVERY frame the layer moves, whoever moved it (the integrator's own
+frame, an adopt, the creep mirroring the compositor), and everything the
+stage prepares is a function of that announced position and nothing else
+(never "once at a sequence's start"). Each with Impossible-if-true and the spec as verification,
 status established where the phones judged it. Annotate the sources.
 Checker baseline must not rise.
 

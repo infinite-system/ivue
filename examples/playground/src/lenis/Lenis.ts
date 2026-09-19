@@ -1329,6 +1329,13 @@ class $Lenis {
     this.emitter.emit('scroll', this);
   }
 
+  /** The model moved by a hand other than this class's own frame — the
+   *  creep mirroring the compositor's run — and whoever follows the layer
+   *  must hear it: a stage prepares its scenes and interludes from this. */
+  announceScroll() {
+    this.emit();
+  }
+
   protected onNativeScroll() {
     // Fully-virtual scrollers (the horizontal strip) never accept native
     // adoption: the wrapper's scrollLeft/scrollTop are pinned 0 by design,
