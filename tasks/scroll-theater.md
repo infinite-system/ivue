@@ -127,6 +127,19 @@ The real product: an author writes Markdown per chapter with front-matter
 compiler emits rows + world assignments + ranges. "Make this an easy
 possibility" is this compiler. Everything above is what the compiler targets.
 
+**Rendering strategy (2026-09-21):** items carry `level` (or `parent_id`) —
+the list is a flattened document tree, the scroller stays flat — and a
+`target`: a row whose content belongs on the stage TELEPORTS it (Vue
+`<Teleport>`) into a layer — a curtain's face, a side panel, a title
+card, a media slot — while the row itself stays in the list as the RANGE
+that reserves its span and drives the layer's tracks. Two constraints:
+teleport only when the range fits the mounted window (content that must
+outlive the window is loaded by ordinal, the rail's way); a target is a
+layer moved by tracks and never by anything its content computes from
+the scroll. This is the interlude generalised, and the website-builder
+model: rows with a level, a target and a range are the whole authoring
+surface.
+
 ## 9. Invariants carried (already recorded, in one list)
 
 One clock for scroll-linked motion · the text layer plays one run, no
