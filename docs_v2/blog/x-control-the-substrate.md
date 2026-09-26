@@ -7,14 +7,26 @@ channel: x
 tags: [launch, ai, standard]
 ---
 
-Half the timeline decided you no longer have to look at code. Half right. You don't have to READ the code. You have to control the substrate it is written on.
+Half the timeline decided you don't have to look at code any more.
 
-An AI can write any shape that exists. It cannot write a shape that isn't there. So the moat moved: not the syntax, the possibility space. An unrestrained space is a space for bugs; a controlled one makes the correct move the obvious one. That is what a standard is for, and it works on agents better than it ever worked on us.
+Half right. You don't have to READ it. You have to control the substrate it's written on.
 
-Receipts from this month. A scroll engine on ivue reached native parity with iOS and Android, judged on two phones. Thirty-seven animated layers, planes in 3D, pictures pulled into the text, a flock painted in a worker. Reactivity for all of it: three refs and a meter. Everything else is a plain function of one number, and the class shape put it there. The standard's gate caught nine findings on the way in, every one fair.
+An AI can write any shape that already exists. It cannot write a shape that doesn't. That's where the moat moved: not to syntax, to the space of moves a codebase makes possible.
 
-The human's job did not disappear. It moved up. Structural vision: what must be true here, what can never be true. Write those down as invariants, with the test that would break each one. Hand the shape and the invariants to the agent. Then read the invariants, not the diff.
+An unrestrained space is also a space for bugs. Constrain it and the right move becomes the obvious one. That's what a standard is for, and it lands harder on agents than it ever did on us.
 
-Behind this is a way of reasoning that is bigger than a library: reduce a problem to what reality refuses to delete, keep that, throw the rest away. It produced ivue, it produced the scroll engine, and it produces the standard the agents write to. It is coming.
+This month, on ivue: a scroll engine that reached native parity on iOS and Android, judged by hand on both phones.
 
-Correctness by construction was never about typing less. It was about deciding what the construction is.
+37 animated layers. Planes in real 3D. A flock painted in a worker thread. Pictures that pull into the text and leave again.
+
+Reactive state for all of it: three refs and a frame meter. Everything else is a plain function of one number, because the shape left nowhere else to put it.
+
+The gate caught nine violations on the way in. Every one was right.
+
+So the work didn't disappear. It moved up.
+
+Structural vision is the job now: what must be true here, what can never be true. Write those down as invariants, each with the test that would break it. Hand the agent the shape and the invariants. Then review the invariants, not the diff.
+
+Under both is one method — reduce a thing until only what reality refuses to delete is left. It produced ivue. It produced the scroll engine. It produces the standard the agents write against. It's coming, and it's the bigger half.
+
+Correctness by construction was never about writing less code. It's about deciding what the construction is.
