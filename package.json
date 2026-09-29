@@ -24,6 +24,7 @@
     "format": "prettier --write \"examples/playground/src/**/*.{ts,vue}\" \"docs_v2/.vitepress/theme/components/**/*.{ts,vue}\"",
     "format:check": "prettier --check \"examples/playground/src/**/*.{ts,vue}\" \"docs_v2/.vitepress/theme/components/**/*.{ts,vue}\"",
     "gate": "vite-node skills/ivue/ivue-standards-check.ts --",
+    "lint:prose": "vale",
     "gate:docs": "node scripts/gate-docs.mjs",
     "probe:scroller": "node scripts/probe-scroller.mjs",
     "sweep:components": "NODE_PATH=$PWD/node_modules node docs_v2/scripts/component-sweep.cjs",

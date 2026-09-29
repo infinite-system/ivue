@@ -44,3 +44,4 @@ examples/*/dist
 newsletter/.wrangler/
 newsletter/e2e-shots/
 docs_v2/public/feed.xml
+.vale/styles/
