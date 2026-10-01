@@ -116,9 +116,11 @@ structure gives just-in-time compilers consistent shapes to specialize.
 - **`computed()` becomes signal.** When the keyword appears three times
   instead of three hundred, each occurrence means the derivation behind it is
   expensive. Its rarity is documentation.
-- **Instance cost collapses.** Derivations weigh nothing per instance, so
-  10k-row virtualized lists stop paying megabytes of bookkeeping:
-  [6 to 132× faster creation, up to 5× less live heap](/guide/performance).
+- **Instance cost collapses.** An instance pays for a derivation only when it
+  reads one, so a model per row costs the plain-object floor until something
+  renders it. A grid holding 1,000,000 cell models keeps them in
+  [41.7 MB where composables need 757.7 MB, each added cell costing the same
+  40 bytes a non-reactive object would](/guide/benchmarks).
 - **The graph is constant-size.** Reactive-graph size scales with _how many
   caches you deliberately bought_ rather than with feature count or data
   size. Complexity becomes locally auditable, because each new getter's cost

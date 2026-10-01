@@ -102,7 +102,7 @@ Only prototype getters are shared. Skipping memoization is a policy win.
 The prototype is the structural win. ivue stacks both by default.
 
 Scaled up: a 1,000-row grid of these components drops from ~20 MB to
-~3.7 MB of live reactive state. For 10k virtualized items: ~197 MB →
+~3.7 MB of live reactive state. For 10k live instances: ~197 MB →
 ~37 MB. The GC pressure of creation bursts shrinks with it.
 
 This doesn't matter everywhere. A singleton store with 30 computeds costs
