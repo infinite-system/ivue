@@ -271,7 +271,7 @@ Why this exact shape:
   [Lifecycle & Teardown](/guide/lifecycle-teardown).
 
 The full specification — including when to pass props instead — lives in
-[the standard](/guide/standard#the-store-pattern-a-singleton-behind-use-injected-by-getter).
+[the standard](/guide/standard#stores-a-singleton-behind-use-injected-by-getter).
 
 ## Who owns the composable's effects
 
