@@ -35,7 +35,7 @@ class $Cart {
   get items() {
     return ref<{ price: number }[]>([]);
   }
-  // No computed(). No graph node. Fully reactive.
+  // No computed(), no graph node, still fully reactive.
   get total() {
     return this.items.value.reduce((sum, item) => sum + item.price, 0);
   }
@@ -45,14 +45,12 @@ class $Cart {
 A template reading `cart.total` re-renders when `items` changes, with
 **zero per-instance reactive machinery** for `total` itself. Everything it
 costs at runtime is the arithmetic in its body. The engine has supported
-this since Vue 3.0, as a direct consequence of how tracking works rather
-than a feature anyone had to add.
+this since Vue 3.0.
 
 `computed()` buys one thing: **memoization**, priced at roughly 300 bytes
 per instance, a graph node, and invalidation bookkeeping
-([measured](/guide/performance#memory-derivations-weigh-nothing)). Caching
-is a real service, and sometimes you need it. It was never the way
-derivation works.
+([measured](/guide/performance#memory-derivations-weigh-nothing)). It was
+never the way derivation works.
 
 ## Closure geometry
 
@@ -76,9 +74,9 @@ setup() {
 A `const` evaluates once and goes stale. A function re-evaluates but breaks
 template ergonomics. `computed()` is the only form that is both live and
 reads like a value. **Everyone uses it, and the cache tax comes along
-silently.** Multiply that by every derived value, every component, and
-every instance of every component, and the ecosystem's default became: pay
-for memoization everywhere, need it almost nowhere.
+silently.** Multiply that across every component and every instance, and
+the ecosystem's default became: pay for memoization everywhere, need it
+almost nowhere.
 
 The engine's cheapest mode has no syntax in closure geometry.
 
@@ -99,9 +97,7 @@ surgical opt-in for the rare derivation where caching pays
 ([when, exactly](/guide/computed-watch#computed-your-usememo)).
 
 The transformation happens once per prototype. Steady execution is ordinary
-JavaScript property access. [Performance by
-Design](/guide/performance#designed-for-native-jit-shapes) explains how that
-structure gives just-in-time compilers consistent shapes to specialize.
+JavaScript property access.
 
 ## What falls out
 
@@ -111,11 +107,10 @@ structure gives just-in-time compilers consistent shapes to specialize.
   editing, runs on **three** `computed()`s across ~3,900 lines: one
   expensive search sweep, one render-suppressing window snapshot, one stable
   watched handle. Every other derived value across ~170 getters is a plain
-  getter. Each of the three maps to a named exception in the doctrine. A
-  fourth was deleted when it failed the test.
+  getter.
 - **`computed()` becomes signal.** When the keyword appears three times
   instead of three hundred, each occurrence means the derivation behind it is
-  expensive. Its rarity is documentation.
+  expensive.
 - **Instance cost collapses.** An instance pays for a derivation only when it
   reads one, so a model per row costs the plain-object floor until something
   renders it. A grid holding 1,000,000 cell models keeps them in
@@ -123,30 +118,27 @@ structure gives just-in-time compilers consistent shapes to specialize.
   40 bytes a non-reactive object would](/guide/benchmarks).
 - **The graph is constant-size.** Reactive-graph size scales with _how many
   caches you deliberately bought_ rather than with feature count or data
-  size. Complexity becomes locally auditable, because each new getter's cost
-  is readable off its body.
+  size. Each new getter's cost is readable off its body.
 - **Development matches production.** The engine uses native construction and
-  direct method binding in every environment. Vite and Vue rebuild the owner
-  after script edits, so no development proxy or dispatch layer changes the
-  class geometry being tested ([Development & HMR](/guide/hmr)).
+  direct method binding in every environment. No development proxy or
+  dispatch layer changes the class geometry you test
+  ([Development & HMR](/guide/hmr)).
 
 ## Convergence
 
 Others arrived at the same place:
 
 - **Solid.js** documents it outright: derived values are plain functions, and
-  `createMemo` comes out only when memoization pays. Same invariant, in the
-  closure-geometry dialect
+  `createMemo` comes out only when memoization pays
   ([the full comparison](/guide/model-layer#ivue-vs-solid-js)).
 - **Vue 3.4** shipped equality-based propagation stops for computeds, the
   team trimming the cache tax the convention institutionalized.
 - **MobX** made `computed` an opt-in decoration over plain class getters a
-  decade ago. Different engine, same conclusion about geometry.
+  decade ago.
 
-ivue's contribution is expressing that invariant _inside Vue's own engine_,
-unmodified. A Vue codebase gets it without changing frameworks: zero
-patches, standard `ref()`/`computed()`/`watch` underneath, 1.1 kB of glue.
-React stays outside this: it has no tracked reads for a getter to flow
+ivue's contribution is expressing that invariant _inside Vue's own engine_:
+zero patches, standard `ref()`/`computed()`/`watch` underneath, 1.1 kB of
+glue. React stays outside this, having no tracked reads for a getter to flow
 through.
 
 The cheap mode was always in the engine. There was no way to write it down.
