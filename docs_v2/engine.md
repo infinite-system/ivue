@@ -84,17 +84,12 @@ The engine's cheapest mode has no syntax there.
 
 A class has a prototype, where a composable gets one scope per call with
 nothing shared between them. A derived value declared on the prototype is
-shared by every instance, which answers each thing that forced `computed()`
-into `setup()`:
+shared by every instance. Its body re-executes on every read, so the value
+is never stale, and the template writes `cart.total` with no parentheses.
+That is everything `computed()` was covering for.
 
-| requirement        | composable           | class                      |
-| ------------------ | -------------------- | -------------------------- |
-| stays live         | only `computed()`/fn | getter re-runs per read    |
-| reads like a value | only `computed()`    | getter, `cart.total`       |
-| per-instance cost  | one scope per call   | prototype, shared, 0 bytes |
-
-Given the syntax, `computed()` collapses back to what it always was: a
-surgical opt-in for the rare derivation where caching pays
+With the shape available, `computed()` collapses back to what it always
+was: a surgical opt-in for the rare derivation where caching pays
 ([when, exactly](/guide/computed-watch#computed-your-usememo)).
 
 The transformation happens once per prototype. Steady execution is ordinary
