@@ -6,14 +6,14 @@ relatedPosts: [computed-is-a-cache, discovered-not-invented, introducing-ivue]
 
 # The Engine
 
-> **Vue's reactivity engine has a native, zero-node mode for derived values,
-> and the way Vue is normally written hides it.** `computed()` was never the derivation
-> primitive. It is a _cache annotation_. The derivation primitive is the
-> tracked read, and it flows through plain functions without creating another
-> reactive node.
+> **Vue's reactivity engine has a native, zero-node mode for derived
+> values. The way Vue is normally written hides it.** `computed()` was never
+> the derivation primitive. It is a _cache annotation_. The derivation
+> primitive is the tracked read. It flows through plain functions without
+> creating another reactive node.
 
-ivue, a 1.1 kB class layer over that engine, changes the _authoring
-geometry_ so the cheapest mode becomes the default instead of the
+ivue is a 1.1 kB class layer over that engine. It changes the _authoring
+geometry_. The cheapest mode becomes the default instead of the
 exception.
 
 ## The engine's three moves
@@ -26,9 +26,9 @@ Vue's reactivity is three moves:
 3. Tracking flows **through arbitrary function calls**. The engine neither
    knows nor cares how many stack frames sit between the effect and the leaf.
 
-The third move is the one Vue code rarely uses. When a render effect reads a
-plain getter, the getter's body executes _inside the effect_, so every leaf
-it touches subscribes the effect directly:
+The third move is the one Vue code rarely uses. A render effect reads a
+plain getter. The body runs _inside that effect_. Every leaf it touches
+subscribes the effect directly:
 
 ```ts
 class $Cart {
@@ -74,18 +74,18 @@ setup() {
 A `const` evaluates once and goes stale. A function re-evaluates but breaks
 template ergonomics. `computed()` is the only form that is both live and
 reads like a value. **Everyone uses it, and the cache tax comes along
-silently.** Multiply that across every component and every instance, and
-the ecosystem's default became: pay for memoization everywhere, need it
-almost nowhere.
+silently.** Multiply that across every component and every instance. The
+ecosystem's default became: pay for memoization everywhere, need it almost
+nowhere.
 
 The engine's cheapest mode has no syntax there.
 
 ## The prototype
 
-A class has a prototype, where a composable gets one scope per call with
-nothing shared between them. A derived value declared on the prototype is
+A class has a prototype, unlike a composable. Each call to a composable
+makes a fresh scope, and the scopes don't share. A derived value on the prototype is
 shared by every instance. Its body re-executes on every read, so the value
-is never stale, and the template writes `cart.total` with no parentheses.
+is never stale. The template writes `cart.total` with no parentheses.
 That is everything `computed()` was covering for.
 
 With the shape available, `computed()` collapses back to what it always
@@ -97,24 +97,24 @@ JavaScript property access.
 
 ## What falls out
 
-- **A census.** A shipped reader application, with virtualized scrolling on
-  the same class that [drives 1,000,000 rows live on this
-  site](/examples/virtual-scroller), plus seek, search, autoplay and inline
-  editing, runs on **three** `computed()`s across ~3,900 lines: one
-  expensive search sweep, one render-suppressing window snapshot, one stable
-  watched handle. Every other derived value across ~170 getters is a plain
-  getter.
-- **`computed()` becomes signal.** When the keyword appears three times
-  instead of three hundred, each occurrence means the derivation behind it is
+- **A census.** A shipped reader application runs on **three**
+  `computed()`s across ~3,900 lines. It does seek, search, autoplay and inline
+  editing. Its virtualized scrolling runs on the same class that [drives
+  1,000,000 rows live on this site](/examples/virtual-scroller). The three
+  are one expensive search sweep, one render-suppressing window snapshot,
+  and one stable watched handle. Every other derived value across ~170
+  getters is a plain getter.
+- **`computed()` becomes signal.** The keyword appears three times instead
+  of three hundred. Each occurrence means the derivation behind it is
   expensive.
-- **Instance cost collapses.** An instance pays for a derivation only when it
-  reads one, so a model per row costs the plain-object floor until something
-  renders it. A grid holding 1,000,000 cell models keeps them in
-  [41.7 MB where composables need 757.7 MB, each added cell costing the same
-  40 bytes a non-reactive object would](/guide/benchmarks).
+- **Instance cost collapses.** An instance pays for a derivation only when
+  it reads one. Until something renders a row, its model costs the
+  plain-object floor. A grid of 1,000,000 cell models holds them in
+  [41.7 MB, where composables need 757.7 MB](/guide/benchmarks). Each added
+  cell costs 40 bytes, what a non-reactive object costs.
 - **The graph is constant-size.** Reactive-graph size scales with _how many
-  caches you deliberately bought_ rather than with feature count or data
-  size. Each new getter's cost is readable off its body.
+  caches you deliberately bought_. Feature count and data size do not move
+  it. Each new getter's cost is readable off its body.
 - **Development matches production.** The engine uses native construction and
   direct method binding in every environment. No development proxy or
   dispatch layer changes the class geometry you test
@@ -132,9 +132,9 @@ Others arrived at the same place:
 - **MobX** made `computed` an opt-in decoration over plain class getters a
   decade ago.
 
-ivue's contribution is expressing that invariant _inside Vue's own engine_:
-zero patches, standard `ref()`/`computed()`/`watch` underneath, 1.1 kB of
-glue. React stays outside this, having no tracked reads for a getter to flow
+ivue's contribution is expressing that invariant _inside Vue's own engine_.
+Zero patches, standard `ref()`/`computed()`/`watch` underneath, 1.1 kB of
+glue. React stays outside this. It has no tracked reads for a getter to flow
 through.
 
 The cheap mode was always in the engine. There was no way to write it down.
