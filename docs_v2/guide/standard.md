@@ -600,9 +600,9 @@ getter answers at the read. When in doubt about a cycle or an
 environment, the getter is never wrong. The field is faster only where
 it is safe.
 
-One consequence of `readonly` to remember. It narrows a literal to itself,
-so `= 15` has the type `15`. So a knob a subclass re-tunes carries its widened type (`: number`), or
-the subclass's value fails against the base's `self`.
+`readonly` narrows a literal to itself, so `= 15` has the type `15`. A
+knob a subclass re-tunes needs its widened type (`: number`), or the
+subclass's value fails against the base's `self`.
 
 The forms interoperate across a hierarchy. Statics are own properties of
 each constructor, so lookup is a chain walk, the form is per class, and
@@ -932,8 +932,7 @@ session.dispose();
 | ✅ `class $X` + `export namespace X { $Class; Class = Reactive($Class); Instance }` | ❌ export a bare `Reactive(class {...})` for anything that grows a parent/dependent |
 | ✅ mutable state = `get x() { return ref(v) }` | ❌ put mutable state in a plain field. Writes trigger nothing |
 | ✅ `.value` for every Ref/Computed inside the class and in the script body | ❌ write `this.x = v` for a Ref/Computed in the class. It clobbers the ref or no-ops |
-| ✅ derive with a plain getter | ❌ wrap every derivation in `computed()`. It pays ~300 bytes/instance for nothing |
-| ✅ `computed()` only for expensive / render-suppressing / stable-handle needs | ❌ reach for `computed()` by default |
+| ✅ derive with a plain getter, keeping `computed()` for expensive / render-suppressing / stable-handle needs | ❌ reach for `computed()` by default. Each one pays ~300 bytes/instance for nothing |
 | ✅ inject stores via `protected get $store() { return useStore() }` | ❌ `store = useStore()` field initializer. It runs at construction and breaks tests/SSR/cycles |
 | ✅ `new X.Class(props, emit)`, a raw instance everywhere | ❌ wrap in `reactive(instance)` or any shallow-unwrap view as the standard |
 | ✅ destructure all template-touched Refs/Computeds + element refs, grouped | ❌ destructure plain getters or methods. It snapshots a dead value, or loses nothing but clarity |
@@ -1460,9 +1459,8 @@ Take the first rung that applies:
 3. **Overriding must not happen** → name the class directly,
    `$Tooltip.TOOLTIP_DWELL_SECONDS`, and let the code say so.
 
-Never introduce a `protected get <ClassName>()` self-reference getter. It
-is a cast wearing a getter costume, which looks live and is not. Use
-`self` instead.
+No `protected get <ClassName>()` self-reference getter, ever. `self`
+replaces all of them.
 
 ## Naming: unfold to the domain
 
@@ -1561,7 +1559,7 @@ get offsetY() {
 - **Blank line the moment a member carries a doc comment or multi-line
   logic.** Comments and paragraphs of code need air.
 - **Blank line + `// --- section ---` banner between categories**
-  (state → derived → methods), the boundary that actually matters.
+  (state → derived → methods), the boundary that matters.
 - **Methods: always separated.** Each one is a paragraph.
 
 None of this is machine-enforceable, because linters can't tell a
