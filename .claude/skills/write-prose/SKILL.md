@@ -10,8 +10,8 @@ things that exist.
 
 **This runs on everything, every time.** A first draft is never finished
 text. Nobody has to ask for a reduction. The passes below are what makes a
-draft done, and skipping them because the writing "reads fine" is how all
-of pass 2 ships.
+draft done. Skipping them because the writing "reads fine" is how all of
+pass 2 ships.
 
 Where this sits next to the other skills: `ste-expression` has the sentence
 rules, `write-article` has titles and structure, `my-voice` has the public
@@ -153,19 +153,14 @@ grep -rn '<term>' docs_v2/       # used nowhere else means it is not a term
 ## Pass 5: sentence length
 
 ```sh
-python3 - <<'PY'
-import io,re
-s=io.open('<file>',encoding='utf-8').read()
-s=re.sub(r'```.*?```','',s,flags=re.S)
-s=re.sub(r'^---.*?^---','',s,flags=re.S|re.M)
-text=' '.join(l for l in s.split('\n') if not l.startswith('#'))
-sents=[x.strip() for x in re.split(r'(?<=[.:!?])\s+',text) if x.strip()]
-lens=[len(x.split()) for x in sents]
-print(f"n={len(lens)} mean={sum(lens)/len(lens):.1f} max={max(lens)}")
-for x in sents:
-    if len(x.split())>=20: print(f"  {len(x.split()):3d}  {x}")
-PY
+python3 .claude/skills/write-prose/scripts/sentence-lengths.py <file>
 ```
+
+It strips frontmatter, code fences, tables, headings and link URLs. Then it
+reports sentence count, mean, maximum, and every sentence at or over the
+threshold. It exits 1 when any sentence is over, so a loop or a hook can
+stop on it. Pass `--max 16` to tighten, a glob for a directory, or nothing
+to read stdin.
 
 Split every sentence of 20 words or more. Aim for a mean near 10 and a
 maximum under 20.
@@ -214,8 +209,8 @@ View the regenerated banner. A longer description truncates mid-sentence.
 Reduction removes words, never evidence. If a pass removes a number, it was
 the wrong pass.
 
-A page ending on a link ends flat. Make the last line a sentence that
-survives with no context and would still be true if the product did not
+A page ending on a link ends flat. Make the last line a sentence that reads on its
+own, with nothing around it. It should still be true if the product did not
 exist.
 
 ```text
