@@ -545,7 +545,7 @@ The namespace is not an ivue convention exported to Node. ivue and Node are
 different expressions generated from the same smaller invariant.
 
 [Static() — Capability Classes](/guide/static) is the shipped adapter,
-from `ivue/extras`. [Node Development by Restart](/guide/node-class-hmr?experiment=1)
+from `ivue/extras`. [Node Development by Restart](/guide/node-class-hmr)
 defines why the pattern stops before a custom HMR runtime.
 
 ## Reading a class's own statics

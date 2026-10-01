@@ -257,7 +257,7 @@ flag: a kernel starts from `$Class`, applies extensions, and calls
 `Static()` once on the composed result. Changing the plugin set
 restarts the process and produces a new sealed generation — why the
 pattern deliberately stops before a custom reload runtime is
-[Node Development by Restart](/guide/node-class-hmr?experiment=1).
+[Node Development by Restart](/guide/node-class-hmr).
 
 **One privacy rule.** Avoid `this.#member` in static capability
 classes: native static `#private` brands only its declaring class, and

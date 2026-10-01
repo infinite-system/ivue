@@ -8,10 +8,7 @@ pageClass: benchmarks-wide examples-page
 
 <script setup>
 import ExampleScrollTheaterLab from '../.vitepress/theme/components/examples/ExampleScrollTheaterLab.vue'
-import ExperimentGate from '../.vitepress/theme/components/ExperimentGate.vue'
 </script>
-
-<ExperimentGate>
 
 # Scroll theater: the bench
 
@@ -42,5 +39,3 @@ ranges animate at once, forwards and backwards, without an observer:
 The aperture is the region of the frame the text is seen through, with a
 focus line inside it. Narrow it above and watch presence follow the
 aperture's edges, not the frame's.
-
-</ExperimentGate>

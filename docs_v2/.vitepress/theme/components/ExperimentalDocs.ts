@@ -9,13 +9,11 @@ import { Static } from '../../../../lib/Static';
 class $ExperimentalDocs {
   /* Knobs — STATIC */
 
-  static get STORAGE_KEY() {
-    return 'ivue.docs.experiment';
-  }
+  static readonly STORAGE_KEY: string = 'ivue.docs.experiment';
 
-  static get LINKS(): ExperimentalDocs.Link[] {
-    return [{ text: 'Node Development by Restart', link: '/guide/node-class-hmr' }];
-  }
+  static readonly LINKS: ExperimentalDocs.Link[] = [
+    { text: 'Scroll Theater: the bench', link: '/examples/scroll-theater' }
+  ];
 
   constructor(readonly route: Route = useRoute()) {
     onMounted(() => this.readExperimentFlag());
