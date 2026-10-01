@@ -52,14 +52,14 @@ per instance, a graph node, and invalidation bookkeeping
 ([measured](/guide/performance#memory-derivations-weigh-nothing)). It was
 never the way derivation works.
 
-## Closure geometry
+## Inside setup()
 
 Every tutorial teaches "derived state = computed property." If the engine
 doesn't need it, why does everyone write it?
 
-The answer is **closure geometry**, and it means the convention is _correct
-for Vue's authoring shape_. Inside `setup()` there is no good home for a live
-derived value:
+Because of where the code is written. The convention is _correct for Vue's
+authoring shape_. A `setup()` body, or any composable it calls, has no good
+home for a live derived value:
 
 ```ts
 setup() {
@@ -78,19 +78,20 @@ silently.** Multiply that across every component and every instance, and
 the ecosystem's default became: pay for memoization everywhere, need it
 almost nowhere.
 
-The engine's cheapest mode has no syntax in closure geometry.
+The engine's cheapest mode has no syntax there.
 
 ## The prototype
 
-A class has a prototype and a closure does not. A derived value declared on
-the prototype is shared by every instance. That answers each thing that
-forced `computed()` into closures, with no per-instance machinery:
+A class has a prototype, where a composable gets one scope per call with
+nothing shared between them. A derived value declared on the prototype is
+shared by every instance, which answers each thing that forced `computed()`
+into `setup()`:
 
-| requirement        | closure                  | class                       |
-| ------------------ | ------------------------ | --------------------------- |
-| stays live         | only `computed()`/fn     | getter re-runs per read     |
-| reads like a value | only `computed()`        | getter, `cart.total`        |
-| per-instance cost  | closure or cell for each | prototype, shared, 0 bytes  |
+| requirement        | composable           | class                      |
+| ------------------ | -------------------- | -------------------------- |
+| stays live         | only `computed()`/fn | getter re-runs per read    |
+| reads like a value | only `computed()`    | getter, `cart.total`       |
+| per-instance cost  | one scope per call   | prototype, shared, 0 bytes |
 
 Given the syntax, `computed()` collapses back to what it always was: a
 surgical opt-in for the rare derivation where caching pays
