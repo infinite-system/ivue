@@ -334,13 +334,10 @@ lives there.
   defaults. `static get emits()` holds object-declared validators.
 
   `propsTypes`, `propsDefaults`, `props` and `emits` are always getters,
-  one form across every class. A contract is what gets merged across classes (a base, a peer, a
-  mixin), and a getter reads at first use, after every module has loaded.
-  It is read once per construction. The getter is free at that rate.
-
-  Tuning constants and tables are `static readonly` fields (see "Static
-  data is a field"). The `$` prefix stays reserved for compute-once
-  caches. Types and defaults stay two members on purpose: a variant
+  one form across every class. Tuning constants and tables are
+  `static readonly` fields, and the `$` prefix stays reserved for
+  compute-once caches. "Static data is a field" below gives the reason
+  for each. Types and defaults stay two members on purpose: a variant
   re-tunes defaults without re-typing.
 
   A nested object prop (a knobs tree) is filled from the defaults at every
@@ -518,12 +515,9 @@ class $TaggedBox extends Box.$Class {
 }
 ```
 
-The anchor rule is unchanged and now covers every component class. A
-class that declares statics anchors at `$Class` with `Static()`
-(`export const $Class = Static($Box)`), and the contract is statics. So
-does a subclass that overrides one. A subclass that only inherits stays
-raw. The anchor costs nothing on getters, which are native reads, and it
-is what gives a `$`-cached static its compute-once semantics.
+The contract is statics, so every component class that carries one
+anchors at `$Class` with `Static()`, and so does a subclass that
+overrides a contract member. A subclass that only inherits needs no anchor.
 
 **One seam, any size.** A contract of forty documented props is still
 authored on its class. A static table scrolls like any other member, and
