@@ -659,6 +659,8 @@ Prefer the structural fix to the micro one. Sampling the tracks every
 same nine seconds. No amount of hoisting inside the old loop would have
 found that.
 
+## Visibility and overrides
+
 **Overrides say so out loud.** `noImplicitOverride` is on: every member
 that overrides a base member carries the `override` keyword
 (`protected override get offsetSize() { ... }`). A silent override
