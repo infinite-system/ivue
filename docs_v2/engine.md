@@ -82,9 +82,9 @@ The engine's cheapest mode has no syntax in closure geometry.
 
 ## The prototype
 
-A closure has no prototype and a class does. Every requirement that forced
-`computed()` in closures is met on one, without per-instance derivation
-machinery:
+A class has a prototype and a closure does not. A derived value declared on
+the prototype is shared by every instance. That answers each thing that
+forced `computed()` into closures, with no per-instance machinery:
 
 | requirement        | closure                  | class                       |
 | ------------------ | ------------------------ | --------------------------- |
