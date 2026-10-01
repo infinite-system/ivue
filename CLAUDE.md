@@ -4,6 +4,10 @@
   of hard-won lessons (benchmark protocol, VitePress traps, shell/VM traps,
   packaging gates, docs rules). When a session learns something the hard way,
   append it there — never store repo knowledge only in private agent memory.
+- **All prose runs through `.claude/skills/write-prose/SKILL.md`** — every
+  docs page, blog post, launch artifact, commit message and report, whether
+  or not anyone asked for a reduction. A draft is not done until its passes
+  have run and `vale` reports zero findings.
 - Docs are written per `.claude/skills/write-docs/SKILL.md`; ivue code per
   `.claude/skills/ivue/SKILL.md` (its mirror is `docs_v2/guide/standard.md` —
   never edit the mirror).
