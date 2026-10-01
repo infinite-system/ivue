@@ -2,12 +2,16 @@
 title: 'Example: Scroll Theater — the bench'
 description: "The test bench of the scroll theater: each primitive is exercised live as it lands. Ranges first — a row, a chapter, an anchor pair over a plain list, the three derivations read out every frame, and the aperture narrowed by sliders."
 aside: false
+search: false
 pageClass: benchmarks-wide examples-page
 ---
 
 <script setup>
 import ExampleScrollTheaterLab from '../.vitepress/theme/components/examples/ExampleScrollTheaterLab.vue'
+import ExperimentGate from '../.vitepress/theme/components/ExperimentGate.vue'
 </script>
+
+<ExperimentGate>
 
 # Scroll theater: the bench
 
@@ -38,3 +42,5 @@ ranges animate at once, forwards and backwards, without an observer:
 The aperture is the region of the frame the text is seen through, with a
 focus line inside it. Narrow it above and watch presence follow the
 aperture's edges, not the frame's.
+
+</ExperimentGate>
